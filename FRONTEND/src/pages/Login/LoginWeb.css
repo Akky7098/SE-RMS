@@ -1,0 +1,1158 @@
+.se-web-login-page {
+  position: relative;
+
+  width: 100%;
+  min-height: 100vh;
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 44px;
+
+  background-color: #101114;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* =========================================================
+   BACKGROUND
+
+   Factory image comes from LoginWeb.js:
+   style={{ backgroundImage: "url('/se-factory.jpg')" }}
+========================================================= */
+
+.se-web-login-backdrop {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   PAGE OVERLAY
+========================================================= */
+
+.se-web-login-shade {
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at 82% 20%,
+      rgba(205, 18, 38, 0.16),
+      transparent 30%
+    ),
+    linear-gradient(
+      110deg,
+      rgba(7, 10, 15, 0.70) 0%,
+      rgba(10, 15, 24, 0.60) 42%,
+      rgba(55, 12, 20, 0.52) 100%
+    );
+
+  backdrop-filter: blur(1.2px);
+  -webkit-backdrop-filter: blur(1.2px);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   MAIN LOGIN SHELL
+========================================================= */
+
+.se-web-login-shell {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(
+      440px,
+      0.95fr
+    )
+    minmax(
+      420px,
+      0.85fr
+    );
+
+  width: min(
+    1060px,
+    100%
+  );
+
+  min-height: 660px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.17
+    );
+
+  border-radius: 30px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.97
+    );
+
+  box-shadow:
+    0 35px 100px
+      rgba(
+        0,
+        0,
+        0,
+        0.42
+      ),
+    0 8px 30px
+      rgba(
+        0,
+        0,
+        0,
+        0.16
+      );
+}
+
+/* =========================================================
+   LEFT LOGIN SIDE
+========================================================= */
+
+.se-web-login-auth {
+  padding:
+    38px
+    52px
+    28px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #fbfbfc 100%
+    );
+}
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.se-web-login-brand {
+  display: flex;
+
+  align-items: center;
+
+  gap: 17px;
+}
+
+.se-web-login-logo {
+  width: 160px;
+  height: 56px;
+
+  object-fit: contain;
+
+  object-position: left center;
+}
+
+.se-web-login-product {
+  display: block;
+
+  color: #16181d;
+
+  font-size: 13px;
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 1.5px;
+}
+
+.se-web-login-product-sub {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #838792;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.4px;
+}
+
+/* =========================================================
+   HEADING
+========================================================= */
+
+.se-web-login-heading {
+  margin-top: 57px;
+}
+
+.se-web-login-eyebrow {
+  color: #bf1021;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.5px;
+}
+
+.se-web-login-heading h1 {
+  margin: 11px 0 8px;
+
+  color: #16181d;
+
+  font-size: 37px;
+
+  line-height: 1.08;
+
+  font-weight: 850;
+
+  letter-spacing: -1.3px;
+}
+
+.se-web-login-heading p {
+  max-width: 390px;
+
+  margin: 0;
+
+  color: #727680;
+
+  font-size: 14px;
+
+  line-height: 1.65;
+
+  font-weight: 500;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.se-web-login-form {
+  margin-top: 31px;
+}
+
+.se-web-login-field {
+  margin-bottom: 18px;
+}
+
+.se-web-login-field label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #33363c;
+
+  font-size: 12px;
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   EMAIL INPUT
+========================================================= */
+
+.se-web-login-field > input {
+  width: 100%;
+  height: 54px;
+
+  outline: none;
+
+  border:
+    1px solid
+    #dedfe3;
+
+  border-radius: 13px;
+
+  padding: 0 16px;
+
+  background: #ffffff;
+
+  color: #17191e;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.se-web-login-field > input::placeholder {
+  color: #a2a4aa;
+}
+
+.se-web-login-field > input:focus {
+  border-color: #c9182b;
+
+  box-shadow:
+    0 0 0 4px
+      rgba(
+        201,
+        24,
+        43,
+        0.1
+      );
+}
+
+.se-web-login-field > input:disabled {
+  background: #f6f6f7;
+}
+
+/* =========================================================
+   PASSWORD HEADING
+========================================================= */
+
+.se-web-login-password-label {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 15px;
+}
+
+.se-web-login-password-label label {
+  margin-bottom: 8px;
+}
+
+.se-web-login-forgot {
+  margin: 0 0 8px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #bf1021;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.se-web-login-forgot:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================
+   PASSWORD BOX
+========================================================= */
+
+.se-web-login-password-box {
+  height: 54px;
+
+  display: flex;
+
+  align-items: center;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    #dedfe3;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-web-login-password-box:focus-within {
+  border-color: #c9182b;
+
+  box-shadow:
+    0 0 0 4px
+      rgba(
+        201,
+        24,
+        43,
+        0.1
+      );
+}
+
+.se-web-login-password-box input {
+  flex: 1;
+
+  min-width: 0;
+
+  height: 100%;
+
+  border: 0;
+
+  outline: 0;
+
+  padding: 0 16px;
+
+  background: transparent;
+
+  color: #17191e;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+.se-web-login-password-box input::placeholder {
+  color: #a2a4aa;
+}
+
+.se-web-login-password-toggle {
+  height: 34px;
+
+  margin-right: 9px;
+
+  padding: 0 12px;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  background: #f3f3f5;
+
+  color: #555861;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.se-web-login-error {
+  margin: -3px 0 16px;
+
+  padding:
+    11px 13px;
+
+  border:
+    1px solid
+    rgba(
+      199,
+      25,
+      44,
+      0.18
+    );
+
+  border-radius: 10px;
+
+  background:
+    rgba(
+      199,
+      25,
+      44,
+      0.06
+    );
+
+  color: #ab1020;
+
+  font-size: 12px;
+
+  line-height: 1.45;
+
+  font-weight: 650;
+}
+
+/* =========================================================
+   PRIMARY LOGIN BUTTON
+========================================================= */
+
+.se-web-login-primary {
+  width: 100%;
+  height: 55px;
+
+  border: 0;
+
+  border-radius: 13px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 13px;
+
+  cursor: pointer;
+
+  background:
+    linear-gradient(
+      135deg,
+      #d1192c 0%,
+      #a80818 100%
+    );
+
+  color: #ffffff;
+
+  font-size: 14px;
+
+  font-weight: 850;
+
+  box-shadow:
+    0 14px 28px
+      rgba(
+        190,
+        14,
+        32,
+        0.2
+      );
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.se-web-login-primary:hover:not(:disabled) {
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    0 17px 34px
+      rgba(
+        190,
+        14,
+        32,
+        0.27
+      );
+}
+
+.se-web-login-primary:active:not(:disabled) {
+  transform:
+    scale(0.99);
+}
+
+.se-web-login-primary:disabled {
+  opacity: 0.65;
+
+  cursor: wait;
+}
+
+.se-web-login-arrow {
+  font-size: 19px;
+
+  line-height: 1;
+}
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.se-web-login-divider {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin:
+    22px 0 17px;
+}
+
+.se-web-login-divider span {
+  flex: 1;
+
+  height: 1px;
+
+  background: #e8e8eb;
+}
+
+.se-web-login-divider p {
+  margin: 0;
+
+  color: #989ba4;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   GOOGLE
+========================================================= */
+
+.se-web-login-google {
+  min-height: 44px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+}
+
+.se-web-login-domain-note {
+  margin: 12px 0 0;
+
+  color: #90939b;
+
+  text-align: center;
+
+  font-size: 10px;
+
+  line-height: 1.5;
+}
+
+.se-web-login-domain-note strong {
+  color: #555860;
+}
+
+/* =========================================================
+   LOGIN FOOTER
+========================================================= */
+
+.se-web-login-footer {
+  margin-top: auto;
+
+  padding-top: 26px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 9px;
+
+  color: #9b9da4;
+
+  font-size: 10px;
+
+  font-weight: 650;
+}
+
+.se-web-login-footer-dot {
+  color: #c4c5c8;
+}
+
+/* =========================================================
+   RIGHT PANEL
+========================================================= */
+
+.se-web-login-insight {
+  position: relative;
+
+  overflow: hidden;
+
+  display: flex;
+
+  flex-direction: column;
+
+  padding:
+    39px
+    42px
+    33px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #15171b 0%,
+      #23242a 45%,
+      #5d1018 100%
+    );
+
+  color: #ffffff;
+}
+
+.se-web-login-insight::before {
+  content: "";
+
+  position: absolute;
+
+  width: 360px;
+  height: 360px;
+
+  right: -145px;
+  top: -150px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      224,
+      23,
+      43,
+      0.2
+    );
+
+  filter: blur(5px);
+}
+
+.se-web-login-insight::after {
+  content: "";
+
+  position: absolute;
+
+  width: 280px;
+  height: 280px;
+
+  left: -150px;
+  bottom: -150px;
+
+  border-radius: 50%;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+/* =========================================================
+   RIGHT PANEL TOP
+========================================================= */
+
+.se-web-login-insight-top {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    );
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+}
+
+.se-web-login-live {
+  padding: 6px 9px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.13
+    );
+
+  border-radius: 999px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   SLIDE CONTENT
+========================================================= */
+
+.se-web-login-slide {
+  position: relative;
+
+  z-index: 2;
+
+  margin: auto 0;
+
+  animation:
+    seWebSlideEnter
+    0.45s ease;
+}
+
+@keyframes seWebSlideEnter {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+.se-web-login-slide-eyebrow {
+  display: inline-block;
+
+  padding:
+    7px 11px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.13
+    );
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.06
+    );
+
+  color: #ffb4bc;
+
+  font-size: 9px;
+
+  font-weight: 850;
+
+  letter-spacing: 1.2px;
+}
+
+.se-web-login-slide h2 {
+  max-width: 400px;
+
+  margin:
+    22px
+    0
+    15px;
+
+  color: #ffffff;
+
+  font-size: 36px;
+
+  line-height: 1.12;
+
+  font-weight: 850;
+
+  letter-spacing: -1.4px;
+}
+
+.se-web-login-slide > p {
+  max-width: 390px;
+
+  margin: 0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.65
+    );
+
+  font-size: 13px;
+
+  line-height: 1.75;
+}
+
+/* =========================================================
+   STAT
+========================================================= */
+
+.se-web-login-slide-stat {
+  margin-top: 38px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+}
+
+.se-web-login-slide-stat strong {
+  color: #ffffff;
+
+  font-size: 30px;
+
+  line-height: 1;
+
+  letter-spacing: -1px;
+}
+
+.se-web-login-slide-stat span {
+  max-width: 175px;
+
+  padding-left: 15px;
+
+  border-left:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.18
+    );
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    );
+
+  font-size: 10px;
+
+  line-height: 1.45;
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   SLIDE DOTS
+========================================================= */
+
+.se-web-login-slide-dots {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+
+  gap: 7px;
+
+  margin-bottom: 24px;
+}
+
+.se-web-login-dot {
+  width: 7px;
+  height: 7px;
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.23
+    );
+
+  cursor: pointer;
+
+  transition:
+    width 0.2s ease,
+    background 0.2s ease;
+}
+
+.se-web-login-dot.active {
+  width: 25px;
+
+  background: #e31d32;
+}
+
+/* =========================================================
+   RIGHT PANEL BOTTOM
+========================================================= */
+
+.se-web-login-insight-bottom {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+
+  gap: 13px;
+
+  align-items: flex-start;
+}
+
+.se-web-login-insight-line {
+  width: 24px;
+  height: 2px;
+
+  margin-top: 7px;
+
+  flex-shrink: 0;
+
+  background: #df1c31;
+}
+
+.se-web-login-insight-bottom p {
+  margin: 0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.46
+    );
+
+  font-size: 9px;
+
+  line-height: 1.55;
+
+  font-weight: 600;
+}
+
+/* =========================================================
+   DESKTOP RESPONSIVENESS
+========================================================= */
+
+@media (max-width: 1050px) {
+  .se-web-login-page {
+    padding: 28px;
+  }
+
+  .se-web-login-shell {
+    grid-template-columns:
+      minmax(
+        420px,
+        1fr
+      )
+      minmax(
+        350px,
+        0.78fr
+      );
+  }
+
+  .se-web-login-auth {
+    padding:
+      34px
+      40px
+      26px;
+  }
+
+  .se-web-login-insight {
+    padding:
+      35px
+      34px
+      30px;
+  }
+
+  .se-web-login-slide h2 {
+    font-size: 31px;
+  }
+}
+
+/* =========================================================
+   WEB MOBILE WIDTH
+
+   This remains the WEB component.
+   Installed PWA uses LoginPwa.js / LoginPwa.css.
+========================================================= */
+
+@media (max-width: 820px) {
+  .se-web-login-page {
+    padding: 18px;
+  }
+
+  .se-web-login-shell {
+    display: block;
+
+    width: min(
+      500px,
+      100%
+    );
+
+    min-height: auto;
+  }
+
+  .se-web-login-insight {
+    display: none;
+  }
+
+  .se-web-login-auth {
+    min-height: 630px;
+
+    padding:
+      32px
+      28px
+      25px;
+  }
+
+  .se-web-login-heading {
+    margin-top: 43px;
+  }
+}
+
+@media (max-width: 480px) {
+  .se-web-login-page {
+    padding: 12px;
+  }
+
+  .se-web-login-shell {
+    border-radius: 24px;
+  }
+
+  .se-web-login-auth {
+    min-height: 610px;
+
+    padding:
+      27px
+      21px
+      22px;
+  }
+
+  .se-web-login-logo {
+    width: 145px;
+    height: 50px;
+  }
+
+  .se-web-login-heading {
+    margin-top: 34px;
+  }
+
+  .se-web-login-heading h1 {
+    font-size: 31px;
+  }
+
+  .se-web-login-heading p {
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,73 @@
+# ==========================================================
+# SE-RMS BACKEND
+# ==========================================================
+
+# Node dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime
+pids/
+*.pid
+*.pid.lock
+
+# Uploads
+uploads/
+
+# Temporary files
+temp/
+tmp/
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.eslintcache
+
+# Certificates / private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+certs/
+
+# Build output
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Backup / temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo

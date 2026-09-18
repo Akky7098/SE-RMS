@@ -1,0 +1,209 @@
+SE-RMS
+│
+├── 01 Department
+│
+├── 02 Manpower
+│   ├── Create Requirement
+│   ├── List Requirements
+│   ├── Requirement Details
+│   ├── Approval Inbox
+│   ├── Approve
+│   ├── Reject
+│   ├── HR Hiring Queue
+│   └── Start Hiring
+│
+└── 03 Recruitment
+    ├── Duplicate Check
+    ├── Create Candidate
+    ├── List Requirement Candidates
+    ├── Candidate Details
+    ├── Call - Connected
+    ├── Call - No Answer
+    ├── Call - Callback
+    ├── Screening - Shortlist
+    ├── Screening - Follow Up
+    ├── Screening - Not Interested
+    ├── Direct Shortlist
+    ├── Reject Candidate
+    ├── Candidate Timeline
+    └── My Tasks
+
+
+
+
+1. MANPOWER REQUIREMENT
+   ↓
+   HOD/Admin raises requirement
+   ↓
+   Department automatically inherited
+   ↓
+   Approver automatically identified
+   ↓
+   PENDING_APPROVAL
+   ↓
+   Approve / Reject
+   ↓
+   APPROVED
+   ✅ DONE
+
+
+2. HR HIRING QUEUE
+   ↓
+   Approved requirement automatically visible to HR
+   ↓
+   HR clicks Start Hiring
+   ↓
+   HIRING_IN_PROGRESS
+   ✅ DONE
+
+
+3. CANDIDATE SOURCING
+   ↓
+   Candidate against Manpower Requirement
+   ↓
+   Department + Position automatically inherited
+   ↓
+   Candidate number generated
+   ↓
+   Duplicate Mobile/Email check
+   ↓
+   Candidate assigned to HR
+   ✅ DONE
+
+
+4. RESUME UPLOAD
+   ↓
+   HR uploads PDF
+   ↓
+   Multer temporary storage
+   ↓
+   pdf-parse extracts text locally
+   ↓
+   Auto-extract candidate fields
+   ↓
+   Skill/experience comparison
+   ↓
+   Duplicate check
+   ↓
+   HR gets editable preview
+   ↓
+   HR corrects extracted information
+   ↓
+   Confirm Candidate
+   ↓
+   Candidate created
+   ↓
+   PDF moved to permanent Candidate CV
+   ↓
+   CV available from Candidate profile
+   ✅ DONE
+
+
+5. HR CALLING
+   ↓
+   CALL_CANDIDATE
+   ↓
+   Call attempt/history
+   ↓
+   Connected / Not Answered
+   ↓
+   Follow-up
+   ↓
+   Interested / Not Interested
+   ✅ DONE
+
+
+6. SCREENING
+   ↓
+   HR fills screening
+   ↓
+   Salary
+   ↓
+   Experience
+   ↓
+   Notice Period
+   ↓
+   Location
+   ↓
+   Ratings
+   ↓
+   SHORTLIST / HOLD / REJECT
+   ✅ DONE
+
+
+7. SHORTLIST
+   ↓
+   SHORTLISTED
+   ↓
+   nextAction = SCHEDULE_INTERVIEW
+   ✅ DONE
+
+
+8. INTERVIEW SCHEDULING
+   ↓
+   Candidate information AUTO
+   Position AUTO
+   Department AUTO
+   Email/Mobile AUTO
+   CV AUTO
+   ↓
+   HR selects:
+      Round
+      Mode
+      Delhi / Sonipat
+      Date
+      Time
+      Duration
+      Interviewer
+      Meeting link if online
+   ↓
+   Interview created
+   ↓
+   Candidate = INTERVIEW_SCHEDULED
+   ↓
+   nextAction = WAIT_FOR_INTERVIEW
+   ↓
+   Email status = PENDING
+   ↓
+   Interviewer notification = PENDING
+   ✅ BACKEND DONE
+
+
+9. INTERVIEW MANAGEMENT
+   ↓
+   List interviews
+   ↓
+   Interview details
+   ↓
+   Reschedule
+   ↓
+   Cancel
+   ↓
+   Check-in
+   ✅ DONE
+
+
+10. INTERVIEW EVALUATION
+    ↓
+    Technical Skills
+    Relevant Experience
+    Communication
+    Problem Solving
+    Role Fit
+    Professionalism
+    Overall Rating
+    ↓
+    Recommendation
+    ↓
+    SELECT / HOLD / REJECT
+    ↓
+    SELECTED
+       → nextAction = PREPARE_LOI
+
+    REJECTED
+       → REJECTED_INTERVIEW
+       → NONE
+
+    HOLD
+       → INTERVIEWED
+    ✅ DONE

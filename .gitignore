@@ -1,0 +1,65 @@
+# ==========================================================
+# SE-RMS ROOT
+# ==========================================================
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Keep example environment files
+!.env.example
+!**/.env.example
+
+# Build outputs
+build/
+dist/
+**/build/
+**/dist/
+
+# Logs
+*.log
+logs/
+**/logs/
+
+# Coverage
+coverage/
+**/coverage/
+
+# Cache
+.cache/
+**/.cache/
+.eslintcache
+**/.eslintcache/
+
+# IDE
+.vscode/
+**/.vscode/
+.idea/
+**/.idea/
+
+# OS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.backup
+
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz

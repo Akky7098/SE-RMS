@@ -1,0 +1,56 @@
+# ==========================================================
+# SE-RMS FRONTEND
+# ==========================================================
+
+# Node dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Production builds
+build/
+dist/
+
+# React / tooling cache
+.cache/
+.parcel-cache/
+.vite/
+
+# Next.js - harmless if not used
+.next/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ESLint
+.eslintcache
+
+# TypeScript cache
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary / backup
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo

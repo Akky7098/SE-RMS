@@ -1,0 +1,2603 @@
+/* =========================================================
+   RECRUITMENT DESIGN SYSTEM
+========================================================= */
+
+:root {
+  --se-rec-red:
+    #e30613;
+
+  --se-rec-red-dark:
+    #c50010;
+
+  --se-rec-ink:
+    #17191f;
+
+  --se-rec-text:
+    #30333a;
+
+  --se-rec-muted:
+    #91959d;
+
+  --se-rec-border:
+    #e6e8ec;
+
+  --se-rec-surface:
+    #ffffff;
+
+  --se-rec-bg:
+    #f6f7f9;
+
+  --se-rec-green:
+    #218a4c;
+
+  --se-rec-green-bg:
+    #eaf8ef;
+
+  --se-rec-blue:
+    #326fc0;
+
+  --se-rec-blue-bg:
+    #eaf3ff;
+
+  --se-rec-purple:
+    #7250bd;
+
+  --se-rec-purple-bg:
+    #f2edff;
+
+  --se-rec-orange:
+    #c87012;
+
+  --se-rec-orange-bg:
+    #fff1e4;
+
+  --se-rec-amber:
+    #ad700a;
+
+  --se-rec-amber-bg:
+    #fff6df;
+
+  --se-rec-cyan:
+    #16839d;
+
+  --se-rec-cyan-bg:
+    #e7f7fb;
+
+  --se-rec-danger:
+    #c83240;
+
+  --se-rec-danger-bg:
+    #ffebed;
+}
+
+/* =========================================================
+   OVERVIEW
+========================================================= */
+
+.se-rec-overview {
+  width: 100%;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.se-rec-page-head {
+  display: flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+
+  gap: 24px;
+
+  margin-bottom: 18px;
+}
+
+.se-rec-page-head > div:first-child {
+  min-width: 0;
+}
+
+.se-rec-eyebrow {
+  display: block;
+
+  color:
+    var(
+      --se-rec-red
+    );
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    1.6px;
+}
+
+.se-rec-page-head h2 {
+  margin:
+    7px 0 5px;
+
+  color:
+    var(
+      --se-rec-ink
+    );
+
+  font-size: 27px;
+
+  line-height: 1.08;
+
+  letter-spacing:
+    -0.9px;
+}
+
+.se-rec-page-head p {
+  max-width: 640px;
+
+  margin: 0;
+
+  color:
+    var(
+      --se-rec-muted
+    );
+
+  font-size: 10px;
+
+  line-height: 1.55;
+}
+
+.se-rec-head-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+}
+
+.se-rec-primary-btn,
+.se-rec-secondary-btn {
+  min-height: 40px;
+
+  padding:
+    0 14px;
+
+  border-radius: 11px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.se-rec-primary-btn {
+  border: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f01726 0%,
+      #e30613 55%,
+      #c60010 100%
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 9px 22px
+      rgba(
+        227,
+        6,
+        19,
+        0.2
+      );
+}
+
+.se-rec-primary-btn:hover {
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    0 13px 28px
+      rgba(
+        227,
+        6,
+        19,
+        0.25
+      );
+}
+
+.se-rec-secondary-btn {
+  border:
+    1px solid
+    #e1e3e6;
+
+  background: #ffffff;
+
+  color: #555960;
+}
+
+.se-rec-secondary-btn:hover {
+  border-color:
+    #ced1d6;
+}
+
+.se-rec-secondary-btn:disabled {
+  opacity: 0.55;
+
+  cursor: wait;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.se-rec-error-banner {
+  margin-bottom: 14px;
+
+  padding:
+    12px 14px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  border:
+    1px solid
+    rgba(
+      200,
+      50,
+      64,
+      0.18
+    );
+
+  border-radius: 13px;
+
+  background:
+    #fff4f5;
+}
+
+.se-rec-error-banner > span {
+  width: 30px;
+  height: 30px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background:
+    var(
+      --se-rec-danger-bg
+    );
+
+  color:
+    var(
+      --se-rec-danger
+    );
+
+  font-weight: 900;
+}
+
+.se-rec-error-banner div {
+  flex: 1;
+}
+
+.se-rec-error-banner strong {
+  display: block;
+
+  color: #66353b;
+
+  font-size: 9px;
+}
+
+.se-rec-error-banner p {
+  margin:
+    2px 0 0;
+
+  color: #a56a70;
+
+  font-size: 8px;
+}
+
+.se-rec-error-banner button {
+  border: 0;
+
+  background: transparent;
+
+  color:
+    var(
+      --se-rec-danger
+    );
+
+  font-size: 8px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   COMMAND HERO
+========================================================= */
+
+.se-rec-command-hero {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height: 196px;
+
+  padding:
+    30px 34px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 34px;
+
+  border-radius: 23px;
+
+  background:
+    radial-gradient(
+      circle at 82% 20%,
+      rgba(
+        227,
+        6,
+        19,
+        0.35
+      ),
+      transparent 29%
+    ),
+    linear-gradient(
+      125deg,
+      #17191e 0%,
+      #24272d 58%,
+      #8e0711 100%
+    );
+
+  box-shadow:
+    0 22px 50px
+      rgba(
+        22,
+        24,
+        29,
+        0.13
+      );
+
+  color: #ffffff;
+}
+
+.se-rec-command-hero::after {
+  content: "";
+
+  position: absolute;
+
+  width: 310px;
+  height: 310px;
+
+  right: -130px;
+  top: -170px;
+
+  border-radius: 50%;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+.se-rec-command-copy {
+  position: relative;
+
+  z-index: 2;
+
+  max-width: 620px;
+}
+
+.se-rec-command-copy > span {
+  color: #ffb7bd;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    1.5px;
+}
+
+.se-rec-command-copy h3 {
+  margin:
+    10px 0;
+
+  max-width: 600px;
+
+  font-size: 29px;
+
+  line-height: 1.14;
+
+  letter-spacing:
+    -1px;
+}
+
+.se-rec-command-copy p {
+  max-width: 580px;
+
+  margin: 0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.64
+    );
+
+  font-size: 10px;
+
+  line-height: 1.7;
+}
+
+.se-rec-command-flow {
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 330px;
+
+  padding: 16px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    center;
+
+  gap: 8px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.13
+    );
+
+  border-radius: 16px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.07
+    );
+
+  backdrop-filter:
+    blur(9px);
+}
+
+.se-rec-command-flow > div {
+  min-width: 77px;
+
+  padding:
+    10px 8px;
+
+  border-radius: 11px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+
+  text-align: center;
+}
+
+.se-rec-command-flow div span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #ffb8be;
+
+  font-size: 7px;
+
+  font-weight: 900;
+}
+
+.se-rec-command-flow div strong {
+  color: #ffffff;
+
+  font-size: 8px;
+}
+
+.se-rec-command-flow > i {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.35
+    );
+
+  font-size: 12px;
+
+  font-style: normal;
+}
+
+/* =========================================================
+   METRICS
+========================================================= */
+
+.se-rec-metric-grid {
+  margin-top: 15px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      6,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 10px;
+}
+
+.se-rec-metric-card {
+  position: relative;
+
+  min-width: 0;
+
+  min-height: 153px;
+
+  padding: 15px;
+
+  border:
+    1px solid
+    var(
+      --se-rec-border
+    );
+
+  border-radius: 16px;
+
+  background:
+    var(
+      --se-rec-surface
+    );
+
+  color:
+    var(
+      --se-rec-text
+    );
+
+  text-align: left;
+
+  box-shadow:
+    0 8px 22px
+      rgba(
+        26,
+        29,
+        34,
+        0.025
+      );
+
+  transition:
+    transform 0.17s ease,
+    border-color 0.17s ease,
+    box-shadow 0.17s ease;
+
+  cursor: pointer;
+}
+
+.se-rec-metric-card:hover {
+  transform:
+    translateY(-3px);
+
+  border-color:
+    #d7d9de;
+
+  box-shadow:
+    0 15px 30px
+      rgba(
+        26,
+        29,
+        34,
+        0.065
+      );
+}
+
+.se-rec-metric-top {
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 8px;
+}
+
+.se-rec-metric-icon {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: #f2f3f5;
+
+  color: #6d7178;
+
+  font-size: 10px;
+
+  font-weight: 900;
+}
+
+.se-rec-metric-card.tone-blue
+.se-rec-metric-icon {
+  background:
+    var(
+      --se-rec-blue-bg
+    );
+
+  color:
+    var(
+      --se-rec-blue
+    );
+}
+
+.se-rec-metric-card.tone-purple
+.se-rec-metric-icon {
+  background:
+    var(
+      --se-rec-purple-bg
+    );
+
+  color:
+    var(
+      --se-rec-purple
+    );
+}
+
+.se-rec-metric-card.tone-orange
+.se-rec-metric-icon {
+  background:
+    var(
+      --se-rec-orange-bg
+    );
+
+  color:
+    var(
+      --se-rec-orange
+    );
+}
+
+.se-rec-metric-card.tone-warning
+.se-rec-metric-icon {
+  background:
+    var(
+      --se-rec-amber-bg
+    );
+
+  color:
+    var(
+      --se-rec-amber
+    );
+}
+
+.se-rec-metric-card.tone-green
+.se-rec-metric-icon {
+  background:
+    var(
+      --se-rec-green-bg
+    );
+
+  color:
+    var(
+      --se-rec-green
+    );
+}
+
+.se-rec-metric-card.tone-cyan
+.se-rec-metric-icon {
+  background:
+    var(
+      --se-rec-cyan-bg
+    );
+
+  color:
+    var(
+      --se-rec-cyan
+    );
+}
+
+.se-rec-metric-open {
+  display: flex;
+
+  align-items: center;
+
+  gap: 3px;
+
+  color: #a1a4aa;
+
+  font-size: 7px;
+
+  font-weight: 750;
+}
+
+.se-rec-metric-value {
+  display: block;
+
+  margin:
+    18px 0 5px;
+
+  color:
+    var(
+      --se-rec-ink
+    );
+
+  font-size: 29px;
+
+  line-height: 1;
+
+  letter-spacing:
+    -1.2px;
+}
+
+.se-rec-metric-card h3 {
+  margin: 0;
+
+  color: #33363d;
+
+  font-size: 10px;
+}
+
+.se-rec-metric-card p {
+  margin:
+    5px 0 0;
+
+  color: #9a9da4;
+
+  font-size: 8px;
+
+  line-height: 1.45;
+}
+
+/* =========================================================
+   OVERVIEW GRID
+========================================================= */
+
+.se-rec-overview-grid {
+  margin-top: 15px;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(
+      0,
+      1.65fr
+    )
+    minmax(
+      250px,
+      0.55fr
+    );
+
+  gap: 14px;
+}
+
+.se-rec-panel {
+  border:
+    1px solid
+    var(
+      --se-rec-border
+    );
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px
+      rgba(
+        26,
+        29,
+        34,
+        0.025
+      );
+}
+
+.se-rec-attention-panel,
+.se-rec-workload-panel,
+.se-rec-hiring-panel {
+  padding: 19px;
+}
+
+.se-rec-panel-head {
+  display: flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap: 18px;
+}
+
+.se-rec-panel-head > div > span {
+  color:
+    var(
+      --se-rec-red
+    );
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    1.25px;
+}
+
+.se-rec-panel-head h3 {
+  margin:
+    5px 0 3px;
+
+  color:
+    var(
+      --se-rec-text
+    );
+
+  font-size: 16px;
+
+  letter-spacing:
+    -0.3px;
+}
+
+.se-rec-panel-head p {
+  margin: 0;
+
+  color:
+    var(
+      --se-rec-muted
+    );
+
+  font-size: 8px;
+}
+
+.se-rec-panel-head > button {
+  min-height: 34px;
+
+  padding:
+    0 10px;
+
+  border:
+    1px solid
+    #e3e5e8;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #62666d;
+
+  font-size: 8px;
+
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.se-rec-panel-head > button span {
+  margin-left: 4px;
+}
+
+/* =========================================================
+   ATTENTION
+========================================================= */
+
+.se-rec-attention-list {
+  margin-top: 15px;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+.se-rec-attention-item {
+  width: 100%;
+
+  min-height: 61px;
+
+  padding:
+    9px 8px;
+
+  border: 0;
+
+  border-bottom:
+    1px solid
+    #f0f1f3;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  background: transparent;
+
+  color:
+    var(
+      --se-rec-text
+    );
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.14s ease;
+}
+
+.se-rec-attention-item:last-child {
+  border-bottom: 0;
+}
+
+.se-rec-attention-item:hover {
+  background: #fafafb;
+}
+
+.se-rec-attention-icon {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: #f1f2f4;
+
+  color: #70747b;
+
+  font-size: 9px;
+
+  font-weight: 900;
+}
+
+.se-rec-attention-icon.tone-warning {
+  background:
+    var(
+      --se-rec-amber-bg
+    );
+
+  color:
+    var(
+      --se-rec-amber
+    );
+}
+
+.se-rec-attention-icon.tone-orange {
+  background:
+    var(
+      --se-rec-orange-bg
+    );
+
+  color:
+    var(
+      --se-rec-orange
+    );
+}
+
+.se-rec-attention-icon.tone-blue,
+.se-rec-attention-icon.tone-cyan {
+  background:
+    var(
+      --se-rec-blue-bg
+    );
+
+  color:
+    var(
+      --se-rec-blue
+    );
+}
+
+.se-rec-attention-copy {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.se-rec-attention-copy strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #383b42;
+
+  font-size: 9px;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.se-rec-attention-copy small {
+  display: block;
+
+  margin-top: 3px;
+
+  overflow: hidden;
+
+  color: #9a9da4;
+
+  font-size: 8px;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.se-rec-attention-meta {
+  min-width: 48px;
+
+  color: #8b8e95;
+
+  font-size: 8px;
+
+  font-weight: 750;
+
+  text-align: right;
+}
+
+.se-rec-attention-arrow {
+  color: #b2b5ba;
+
+  font-size: 14px;
+}
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
+.se-rec-status-badge {
+  width: fit-content;
+
+  min-height: 24px;
+
+  padding:
+    0 8px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  border-radius: 999px;
+
+  background: #f1f2f4;
+
+  color: #70737a;
+
+  font-size: 7px;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+.se-rec-status-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background:
+    currentColor;
+}
+
+.se-rec-status-badge.tone-success {
+  background:
+    var(
+      --se-rec-green-bg
+    );
+
+  color:
+    var(
+      --se-rec-green
+    );
+}
+
+.se-rec-status-badge.tone-info,
+.se-rec-status-badge.tone-blue {
+  background:
+    var(
+      --se-rec-blue-bg
+    );
+
+  color:
+    var(
+      --se-rec-blue
+    );
+}
+
+.se-rec-status-badge.tone-purple {
+  background:
+    var(
+      --se-rec-purple-bg
+    );
+
+  color:
+    var(
+      --se-rec-purple
+    );
+}
+
+.se-rec-status-badge.tone-orange {
+  background:
+    var(
+      --se-rec-orange-bg
+    );
+
+  color:
+    var(
+      --se-rec-orange
+    );
+}
+
+.se-rec-status-badge.tone-warning {
+  background:
+    var(
+      --se-rec-amber-bg
+    );
+
+  color:
+    var(
+      --se-rec-amber
+    );
+}
+
+.se-rec-status-badge.tone-danger {
+  background:
+    var(
+      --se-rec-danger-bg
+    );
+
+  color:
+    var(
+      --se-rec-danger
+    );
+}
+
+/* =========================================================
+   WORKLOAD
+========================================================= */
+
+.se-rec-workload-list {
+  margin-top: 13px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.se-rec-workload-list button {
+  width: 100%;
+
+  min-height: 54px;
+
+  padding:
+    7px 8px;
+
+  border:
+    1px solid
+    transparent;
+
+  border-radius: 11px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  background: #fafafb;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.se-rec-workload-list button:hover {
+  border-color:
+    #e5e7ea;
+
+  background: #ffffff;
+}
+
+.se-rec-workload-icon {
+  width: 31px;
+  height: 31px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 9px;
+
+  font-size: 8px;
+
+  font-weight: 900;
+}
+
+.se-rec-workload-icon.orange {
+  background:
+    var(
+      --se-rec-orange-bg
+    );
+
+  color:
+    var(
+      --se-rec-orange
+    );
+}
+
+.se-rec-workload-icon.amber {
+  background:
+    var(
+      --se-rec-amber-bg
+    );
+
+  color:
+    var(
+      --se-rec-amber
+    );
+}
+
+.se-rec-workload-icon.purple {
+  background:
+    var(
+      --se-rec-purple-bg
+    );
+
+  color:
+    var(
+      --se-rec-purple
+    );
+}
+
+.se-rec-workload-icon.blue {
+  background:
+    var(
+      --se-rec-blue-bg
+    );
+
+  color:
+    var(
+      --se-rec-blue
+    );
+}
+
+.se-rec-workload-list button div {
+  flex: 1;
+}
+
+.se-rec-workload-list strong {
+  display: block;
+
+  color: #45484f;
+
+  font-size: 9px;
+}
+
+.se-rec-workload-list small {
+  color: #9b9ea5;
+
+  font-size: 7px;
+}
+
+.se-rec-workload-list b {
+  color: #2c2f35;
+
+  font-size: 16px;
+}
+
+/* =========================================================
+   ACTIVE HIRING
+========================================================= */
+
+.se-rec-hiring-panel {
+  margin-top: 15px;
+}
+
+.se-rec-hiring-list {
+  margin-top: 15px;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+.se-rec-hiring-row {
+  width: 100%;
+
+  min-height: 70px;
+
+  padding:
+    9px 8px;
+
+  border: 0;
+
+  border-top:
+    1px solid
+    #f0f1f3;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(
+      230px,
+      1.4fr
+    )
+    75px
+    minmax(
+      115px,
+      0.7fr
+    )
+    auto
+    92px
+    20px;
+
+  align-items: center;
+
+  gap: 10px;
+
+  background: transparent;
+
+  color:
+    var(
+      --se-rec-text
+    );
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.se-rec-hiring-row:hover {
+  background: #fafafb;
+}
+
+.se-rec-hiring-main {
+  min-width: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.se-rec-hiring-avatar {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #22252a,
+      #3a3e45
+    );
+
+  color: #ffffff;
+
+  font-size: 11px;
+
+  font-weight: 900;
+}
+
+.se-rec-hiring-main > span:last-child {
+  min-width: 0;
+}
+
+.se-rec-hiring-main strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #34373e;
+
+  font-size: 9px;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.se-rec-hiring-main small {
+  display: block;
+
+  margin-top: 4px;
+
+  overflow: hidden;
+
+  color: #9699a0;
+
+  font-size: 7px;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.se-rec-hiring-openings,
+.se-rec-hiring-owner,
+.se-rec-hiring-date {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.se-rec-hiring-row small {
+  color: #a1a4aa;
+
+  font-size: 6px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    0.55px;
+}
+
+.se-rec-hiring-row
+.se-rec-hiring-openings
+strong {
+  color: #2d3036;
+
+  font-size: 14px;
+}
+
+.se-rec-hiring-owner strong,
+.se-rec-hiring-date strong {
+  overflow: hidden;
+
+  color: #4b4f56;
+
+  font-size: 8px;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.se-rec-row-arrow {
+  color: #aeb1b6;
+
+  font-size: 14px;
+}
+
+/* =========================================================
+   PIPELINE
+========================================================= */
+
+.se-rec-pipeline {
+  margin-top: 15px;
+
+  padding:
+    18px 20px;
+
+  border:
+    1px solid
+    var(
+      --se-rec-border
+    );
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      105deg,
+      #ffffff 0%,
+      #fcfcfd 100%
+    );
+}
+
+.se-rec-pipeline-head {
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+}
+
+.se-rec-pipeline-head > div > span {
+  color:
+    var(
+      --se-rec-red
+    );
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    1.25px;
+}
+
+.se-rec-pipeline-head h3 {
+  margin:
+    4px 0 0;
+
+  color:
+    var(
+      --se-rec-text
+    );
+
+  font-size: 14px;
+}
+
+.se-rec-pipeline-live {
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  color:
+    var(
+      --se-rec-green
+    );
+
+  font-size: 7px;
+
+  font-weight: 800;
+}
+
+.se-rec-pipeline-live i {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background:
+    #33b264;
+
+  box-shadow:
+    0 0 0 4px
+      rgba(
+        51,
+        178,
+        100,
+        0.08
+      );
+}
+
+.se-rec-pipeline-track {
+  margin-top: 17px;
+
+  display: flex;
+
+  align-items: stretch;
+
+  justify-content:
+    space-between;
+
+  gap: 9px;
+}
+
+.se-rec-pipeline-track > button {
+  flex: 1;
+
+  min-height: 68px;
+
+  padding: 10px;
+
+  border:
+    1px solid
+    #e8e9ec;
+
+  border-radius: 12px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  background: #fafafb;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.se-rec-pipeline-track > button:hover {
+  border-color:
+    #dfe1e5;
+
+  background: #ffffff;
+}
+
+.se-rec-pipeline-track > button > span {
+  width: 29px;
+  height: 29px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #fff0f1;
+
+  color:
+    var(
+      --se-rec-red
+    );
+
+  font-size: 7px;
+
+  font-weight: 900;
+}
+
+.se-rec-pipeline-track strong {
+  display: block;
+
+  color: #44474e;
+
+  font-size: 8px;
+}
+
+.se-rec-pipeline-track small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #9da0a6;
+
+  font-size: 7px;
+}
+
+.se-rec-pipeline-track > i {
+  align-self: center;
+
+  color: #c2c4c8;
+
+  font-size: 12px;
+
+  font-style: normal;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.se-rec-empty {
+  min-height: 145px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 12px;
+}
+
+.se-rec-empty-icon {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background:
+    var(
+      --se-rec-green-bg
+    );
+
+  color:
+    var(
+      --se-rec-green
+    );
+
+  font-size: 11px;
+
+  font-weight: 900;
+}
+
+.se-rec-empty strong {
+  color: #44474e;
+
+  font-size: 9px;
+}
+
+.se-rec-empty p {
+  max-width: 330px;
+
+  margin:
+    4px 0 0;
+
+  color: #999ca3;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.se-rec-list-skeleton,
+.se-rec-hiring-skeleton {
+  margin-top: 15px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.se-rec-list-skeleton span,
+.se-rec-hiring-skeleton span {
+  display: block;
+
+  height: 54px;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #f3f4f5 0%,
+      #fafafb 48%,
+      #f3f4f5 100%
+    );
+
+  background-size:
+    220% 100%;
+
+  animation:
+    seRecSkeleton
+    1.3s linear
+    infinite;
+}
+
+@keyframes seRecSkeleton {
+  0% {
+    background-position:
+      100% 0;
+  }
+
+  100% {
+    background-position:
+      -100% 0;
+  }
+}
+
+/* =========================================================
+   FUTURE WORKSPACE PLACEHOLDER
+========================================================= */
+
+.se-rec-coming-workspace {
+  min-height: 420px;
+
+  padding: 40px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 18px;
+
+  border:
+    1px dashed
+    #dce0e5;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #fafafb
+    );
+}
+
+.se-rec-coming-icon {
+  width: 58px;
+  height: 58px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 16px;
+
+  background: #fff0f1;
+
+  color:
+    var(
+      --se-rec-red
+    );
+
+  font-size: 17px;
+
+  font-weight: 900;
+}
+
+.se-rec-coming-workspace > div:last-child {
+  max-width: 500px;
+}
+
+.se-rec-coming-workspace span {
+  color:
+    var(
+      --se-rec-red
+    );
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    1.3px;
+}
+
+.se-rec-coming-workspace h2 {
+  margin:
+    6px 0;
+
+  color:
+    var(
+      --se-rec-ink
+    );
+
+  font-size: 23px;
+}
+
+.se-rec-coming-workspace p {
+  margin: 0;
+
+  color:
+    var(
+      --se-rec-muted
+    );
+
+  font-size: 9px;
+}
+
+.se-rec-coming-workspace small {
+  display: block;
+
+  margin-top: 10px;
+
+  color: #b0b3b9;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (
+  max-width: 1320px
+) {
+  .se-rec-metric-grid {
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+}
+
+@media (
+  max-width: 1120px
+) {
+  .se-rec-command-hero {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+  .se-rec-command-flow {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .se-rec-overview-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .se-rec-hiring-row {
+    grid-template-columns:
+      minmax(
+        210px,
+        1.4fr
+      )
+      70px
+      minmax(
+        110px,
+        0.8fr
+      )
+      auto
+      85px;
+  }
+
+  .se-rec-row-arrow {
+    display: none;
+  }
+}
+
+@media (
+  max-width: 900px
+) {
+  .se-rec-page-head {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+  .se-rec-head-actions {
+    width: 100%;
+  }
+
+  .se-rec-primary-btn,
+  .se-rec-secondary-btn {
+    flex: 1;
+  }
+
+  .se-rec-metric-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+  .se-rec-pipeline-track {
+    flex-direction:
+      column;
+  }
+
+  .se-rec-pipeline-track > i {
+    transform:
+      rotate(
+        90deg
+      );
+  }
+}
+
+/* =========================================================
+   =========================================================
+   SE-RMS RECRUITMENT
+   EVALUATION + SELECTION WORKFLOW EXTENSION
+   ADD AT VERY END OF Recruitment.css
+   =========================================================
+========================================================= */
+
+/* =========================================================
+   ACCESS DENIED BUTTON
+========================================================= */
+
+.se-rec-access-back-btn {
+  min-height: 38px;
+
+  margin-top: 16px;
+
+  padding:
+    0 14px;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f01726,
+      #e30613
+    );
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 20px
+      rgba(
+        227,
+        6,
+        19,
+        0.16
+      );
+
+  transition:
+    transform
+      0.16s
+      ease,
+    box-shadow
+      0.16s
+      ease;
+}
+
+.se-rec-access-back-btn:hover {
+  transform:
+    translateY(
+      -1px
+    );
+
+  box-shadow:
+    0 12px 25px
+      rgba(
+        227,
+        6,
+        19,
+        0.22
+      );
+}
+
+/* =========================================================
+   EXTENDED COMMAND FLOW
+
+   Requirement → Candidate → Interview → Selection
+========================================================= */
+
+.se-rec-command-flow--extended {
+  min-width:
+    440px;
+
+  gap: 6px;
+
+  padding: 13px;
+}
+
+.se-rec-command-flow--extended
+> div {
+  min-width:
+    76px;
+
+  padding:
+    10px 7px;
+}
+
+.se-rec-command-flow--extended
+> i {
+  flex: 0 0 auto;
+}
+
+.se-rec-command-stage-selected {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.13
+    ) !important;
+
+  box-shadow:
+    inset
+    0 0 0 1px
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+/* =========================================================
+   FULL RECRUITMENT METRICS
+
+   We now have:
+   Open Hiring
+   My Hiring
+   Calls Pending
+   Follow-ups
+   Interviews
+   Selected
+   Selection Actions
+
+   Large screens = 7 compact cards.
+========================================================= */
+
+.se-rec-metric-grid--recruitment-full {
+  grid-template-columns:
+    repeat(
+      7,
+      minmax(
+        0,
+        1fr
+      )
+    );
+}
+
+.se-rec-metric-grid--recruitment-full
+.se-rec-metric-card {
+  min-height:
+    148px;
+}
+
+.se-rec-metric-grid--recruitment-full
+.se-rec-metric-card
+.se-rec-metric-value {
+  margin-top:
+    16px;
+}
+
+/* =========================================================
+   SELECTION WORKLOAD
+========================================================= */
+
+.se-rec-workload-icon.green {
+  background:
+    var(
+      --se-rec-green-bg
+    );
+
+  color:
+    var(
+      --se-rec-green
+    );
+}
+
+.se-rec-workload-list
+button.se-rec-workload-selection {
+  border-color:
+    rgba(
+      33,
+      138,
+      76,
+      0.08
+    );
+
+  background:
+    linear-gradient(
+      135deg,
+      #fbfefc,
+      #f7fcf9
+    );
+}
+
+.se-rec-workload-list
+button.se-rec-workload-selection:hover {
+  border-color:
+    rgba(
+      33,
+      138,
+      76,
+      0.18
+    );
+
+  background:
+    #ffffff;
+}
+
+/* =========================================================
+   FULL PIPELINE
+========================================================= */
+
+.se-rec-pipeline-track--full {
+  gap: 7px;
+}
+
+.se-rec-pipeline-track--full
+> button {
+  min-width: 0;
+
+  padding:
+    9px;
+}
+
+.se-rec-pipeline-track--full
+> button
+> div {
+  min-width: 0;
+}
+
+.se-rec-pipeline-track--full
+strong,
+.se-rec-pipeline-track--full
+small {
+  overflow: hidden;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+/* =========================================================
+   FINAL SELECTION PIPELINE CARD
+========================================================= */
+
+.se-rec-pipeline-track
+> button.se-rec-pipeline-selection {
+  border-color:
+    #cde7d6;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f3fbf6,
+      #ffffff
+    );
+}
+
+.se-rec-pipeline-track
+> button.se-rec-pipeline-selection
+> span {
+  background:
+    var(
+      --se-rec-green-bg
+    );
+
+  color:
+    var(
+      --se-rec-green
+    );
+}
+
+.se-rec-pipeline-track
+> button.se-rec-pipeline-selection
+strong {
+  color:
+    #31734c;
+}
+
+.se-rec-pipeline-track
+> button.se-rec-pipeline-selection:hover {
+  border-color:
+    #b5dcc4;
+
+  box-shadow:
+    0 8px 20px
+      rgba(
+        33,
+        138,
+        76,
+        0.06
+      );
+}
+
+/* =========================================================
+   IMPORTANT READABILITY UPGRADE
+
+   Your original Recruitment.css uses many 7px / 8px labels.
+   Keep layout compact but prevent important interactive text
+   becoming difficult for normal/non-technical users.
+========================================================= */
+
+.se-rec-page-head p,
+.se-rec-command-copy p {
+  font-size:
+    11.5px;
+}
+
+.se-rec-metric-card h3 {
+  font-size:
+    11px;
+}
+
+.se-rec-metric-card p {
+  font-size:
+    9.5px;
+
+  line-height:
+    1.5;
+}
+
+.se-rec-panel-head h3 {
+  font-size:
+    17px;
+}
+
+.se-rec-panel-head p {
+  font-size:
+    9.5px;
+}
+
+.se-rec-attention-copy
+strong {
+  font-size:
+    10.5px;
+}
+
+.se-rec-attention-copy
+small {
+  font-size:
+    9px;
+}
+
+.se-rec-workload-list
+strong {
+  font-size:
+    10.5px;
+}
+
+.se-rec-workload-list
+small {
+  font-size:
+    8.5px;
+}
+
+.se-rec-hiring-main
+strong {
+  font-size:
+    10.5px;
+}
+
+.se-rec-hiring-main
+small {
+  font-size:
+    8.5px;
+}
+
+.se-rec-hiring-owner
+strong,
+.se-rec-hiring-date
+strong {
+  font-size:
+    9px;
+}
+
+.se-rec-pipeline-track
+strong {
+  font-size:
+    9.5px;
+}
+
+.se-rec-pipeline-track
+small {
+  font-size:
+    8px;
+}
+
+/* =========================================================
+   RESPONSIVE — METRICS
+========================================================= */
+
+@media (
+  max-width:
+    1500px
+) {
+  .se-rec-metric-grid--recruitment-full {
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+}
+
+@media (
+  max-width:
+    1180px
+) {
+  .se-rec-command-flow--extended {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .se-rec-pipeline-track--full {
+    display: grid;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+  .se-rec-pipeline-track--full
+  > i {
+    display: none;
+  }
+
+  .se-rec-pipeline-track--full
+  > button {
+    width: 100%;
+  }
+}
+
+@media (
+  max-width:
+    900px
+) {
+  .se-rec-metric-grid--recruitment-full {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+  .se-rec-command-flow--extended {
+    display: grid;
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap: 8px;
+  }
+
+  .se-rec-command-flow--extended
+  > i {
+    display: none;
+  }
+
+  .se-rec-command-flow--extended
+  > div {
+    width: auto;
+
+    min-width: 0;
+  }
+}
+
+@media (
+  max-width:
+    650px
+) {
+  .se-rec-metric-grid--recruitment-full {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap: 8px;
+  }
+
+  .se-rec-metric-grid--recruitment-full
+  .se-rec-metric-card {
+    min-height:
+      135px;
+  }
+
+  .se-rec-pipeline-track--full {
+    grid-template-columns:
+      1fr;
+  }
+
+  .se-rec-command-flow--extended {
+    grid-template-columns:
+      1fr
+      1fr;
+  }
+}

@@ -1,0 +1,876 @@
+.se-pwa-login-page {
+  position: relative;
+
+  width: 100%;
+  min-height: 100dvh;
+
+  overflow: hidden;
+
+  background-color: #111318;
+}
+
+/* =========================================================
+   FACTORY BACKGROUND
+========================================================= */
+
+.se-pwa-login-background {
+  position: absolute;
+
+  inset: -5%;
+
+  background-size: cover;
+
+  background-position:
+    58% center;
+
+  background-repeat:
+    no-repeat;
+
+  transform:
+    scale(1.08);
+
+  filter:
+    saturate(1.05)
+    contrast(1.02);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   BACKGROUND SHADE
+========================================================= */
+
+.se-pwa-login-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at 82% 10%,
+      rgba(205, 18, 38, 0.14),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(7, 10, 15, 0.46) 0%,
+      rgba(12, 15, 21, 0.50) 40%,
+      rgba(49, 9, 17, 0.72) 100%
+    );
+
+  backdrop-filter:
+    blur(0.6px);
+
+  -webkit-backdrop-filter:
+    blur(0.6px);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   PAGE CONTENT
+========================================================= */
+
+.se-pwa-login-content {
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+  min-height: 100dvh;
+
+  padding:
+    calc(
+      18px +
+        env(safe-area-inset-top)
+    )
+    18px
+    calc(
+      18px +
+        env(safe-area-inset-bottom)
+    );
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+/* =========================================================
+   TOP BRAND AREA
+========================================================= */
+
+.se-pwa-login-top {
+  width: 100%;
+
+  min-height: 58px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.se-pwa-login-logo {
+  width: 145px;
+
+  height: 48px;
+
+  object-fit: contain;
+
+  object-position:
+    left center;
+}
+
+.se-pwa-login-system-name {
+  padding:
+    7px 10px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.20
+    );
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    );
+
+  color: #ffffff;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.2px;
+
+  backdrop-filter:
+    blur(10px);
+
+  -webkit-backdrop-filter:
+    blur(10px);
+}
+
+/* =========================================================
+   LOGIN CARD
+========================================================= */
+
+.se-pwa-login-card {
+  width: 100%;
+
+  max-width: 410px;
+
+  margin:
+    auto auto;
+
+  padding:
+    28px
+    24px
+    22px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.20
+    );
+
+  border-radius: 26px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.97
+    );
+
+  box-shadow:
+    0 30px 70px
+      rgba(
+        0,
+        0,
+        0,
+        0.34
+      ),
+    inset
+      0
+      0
+      0
+      1px
+      rgba(
+        255,
+        255,
+        255,
+        0.28
+      );
+
+  backdrop-filter:
+    blur(18px);
+
+  -webkit-backdrop-filter:
+    blur(18px);
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.se-pwa-login-eyebrow {
+  display: inline-block;
+
+  color: #bd1122;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.25px;
+}
+
+.se-pwa-login-card h1 {
+  margin:
+    8px 0 6px;
+
+  color: #191b20;
+
+  font-size: 30px;
+
+  line-height: 1.05;
+
+  font-weight: 900;
+
+  letter-spacing: -1px;
+}
+
+.se-pwa-login-subtitle {
+  margin:
+    0 0 24px;
+
+  color: #777a82;
+
+  font-size: 12.5px;
+
+  line-height: 1.5;
+
+  font-weight: 500;
+}
+
+/* =========================================================
+   FORM FIELD WRAPPER
+========================================================= */
+
+.se-pwa-login-field {
+  margin-bottom: 16px;
+}
+
+.se-pwa-login-field label {
+  display: block;
+
+  margin:
+    0
+    0
+    7px
+    2px;
+
+  color: #34373d;
+
+  font-size: 10px;
+
+  font-weight: 850;
+}
+
+/* =========================================================
+   EMAIL INPUT
+========================================================= */
+
+.se-pwa-login-field > input {
+  width: 100%;
+
+  height: 52px;
+
+  border:
+    1px solid
+    #dedfe3;
+
+  outline: none;
+
+  border-radius: 13px;
+
+  padding:
+    0 15px;
+
+  background:
+    #ffffff;
+
+  color:
+    #17191d;
+
+  font-size: 15px;
+
+  font-weight: 500;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.se-pwa-login-field > input::placeholder {
+  color:
+    #a2a4aa;
+}
+
+.se-pwa-login-field > input:focus {
+  border-color:
+    #c31729;
+
+  box-shadow:
+    0 0 0 3px
+      rgba(
+        195,
+        23,
+        41,
+        0.09
+      );
+}
+
+.se-pwa-login-field > input:disabled {
+  background:
+    #f6f6f7;
+
+  cursor:
+    not-allowed;
+}
+
+/* =========================================================
+   PASSWORD HEADER
+========================================================= */
+
+.se-pwa-login-password-heading {
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 12px;
+}
+
+.se-pwa-login-password-heading label {
+  margin-bottom: 7px;
+}
+
+.se-pwa-login-forgot {
+  margin-bottom: 7px;
+
+  padding: 0;
+
+  border: 0;
+
+  background:
+    transparent;
+
+  color:
+    #bd1122;
+
+  font-size: 10px;
+
+  font-weight: 850;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   PASSWORD INPUT
+========================================================= */
+
+.se-pwa-login-password {
+  width: 100%;
+
+  height: 52px;
+
+  display: flex;
+
+  align-items: center;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    #dedfe3;
+
+  border-radius:
+    13px;
+
+  background:
+    #ffffff;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-pwa-login-password:focus-within {
+  border-color:
+    #c31729;
+
+  box-shadow:
+    0 0 0 3px
+      rgba(
+        195,
+        23,
+        41,
+        0.09
+      );
+}
+
+.se-pwa-login-password input {
+  flex: 1;
+
+  min-width: 0;
+
+  height: 100%;
+
+  border: 0;
+
+  outline: none;
+
+  padding:
+    0 15px;
+
+  background:
+    transparent;
+
+  color:
+    #17191d;
+
+  font-size: 15px;
+}
+
+.se-pwa-login-password input::placeholder {
+  color:
+    #a2a4aa;
+}
+
+.se-pwa-login-password button {
+  height: 36px;
+
+  margin-right: 8px;
+
+  padding:
+    0 11px;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  background:
+    #f1f2f4;
+
+  color:
+    #50535a;
+
+  font-size: 10px;
+
+  font-weight: 850;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.se-pwa-login-password button:active {
+  transform:
+    scale(0.96);
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.se-pwa-login-error {
+  margin:
+    -2px
+    0
+    13px;
+
+  padding:
+    10px
+    11px;
+
+  border:
+    1px solid
+    rgba(
+      193,
+      20,
+      39,
+      0.12
+    );
+
+  border-radius:
+    10px;
+
+  background:
+    rgba(
+      193,
+      20,
+      39,
+      0.07
+    );
+
+  color:
+    #aa1222;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.45;
+
+  font-weight:
+    650;
+}
+
+/* =========================================================
+   LOGIN BUTTON
+========================================================= */
+
+.se-pwa-login-submit {
+  width:
+    100%;
+
+  height:
+    53px;
+
+  border:
+    0;
+
+  border-radius:
+    13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #df1d31
+        0%,
+      #b8071c
+        100%
+    );
+
+  color:
+    #ffffff;
+
+  font-size:
+    13px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    0.15px;
+
+  cursor:
+    pointer;
+
+  box-shadow:
+    0 14px 28px
+      rgba(
+        181,
+        11,
+        29,
+        0.23
+      );
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.se-pwa-login-submit:active:not(:disabled) {
+  transform:
+    scale(0.985);
+}
+
+.se-pwa-login-submit:disabled {
+  opacity:
+    0.65;
+
+  cursor:
+    wait;
+
+  box-shadow:
+    none;
+}
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.se-pwa-login-separator {
+  margin:
+    19px
+    0
+    15px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    11px;
+}
+
+.se-pwa-login-separator span {
+  flex:
+    1;
+
+  height:
+    1px;
+
+  background:
+    #e5e5e8;
+}
+
+.se-pwa-login-separator p {
+  margin:
+    0;
+
+  color:
+    #96989e;
+
+  font-size:
+    8px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    1px;
+}
+
+/* =========================================================
+   GOOGLE BUTTON
+========================================================= */
+
+.se-pwa-login-google {
+  width:
+    100%;
+
+  min-height:
+    44px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  overflow:
+    hidden;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.se-pwa-login-company {
+  margin:
+    19px
+    0
+    0;
+
+  text-align:
+    center;
+
+  color:
+    #999ba1;
+
+  font-size:
+    9px;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   MEDIUM MOBILE
+========================================================= */
+
+@media (
+  max-width: 430px
+) {
+  .se-pwa-login-content {
+    padding-left:
+      16px;
+
+    padding-right:
+      16px;
+  }
+
+  .se-pwa-login-card {
+    max-width:
+      100%;
+
+    padding:
+      27px
+      22px
+      21px;
+  }
+}
+
+/* =========================================================
+   SHORT MOBILE SCREENS
+========================================================= */
+
+@media (
+  max-height: 760px
+) {
+  .se-pwa-login-content {
+    padding-top:
+      calc(
+        11px +
+          env(
+            safe-area-inset-top
+          )
+      );
+
+    padding-bottom:
+      calc(
+        11px +
+          env(
+            safe-area-inset-bottom
+          )
+      );
+  }
+
+  .se-pwa-login-top {
+    min-height:
+      48px;
+  }
+
+  .se-pwa-login-logo {
+    width:
+      126px;
+
+    height:
+      40px;
+  }
+
+  .se-pwa-login-card {
+    padding:
+      22px
+      21px
+      18px;
+  }
+
+  .se-pwa-login-card h1 {
+    font-size:
+      27px;
+  }
+
+  .se-pwa-login-subtitle {
+    margin-bottom:
+      19px;
+  }
+
+  .se-pwa-login-field {
+    margin-bottom:
+      13px;
+  }
+
+  .se-pwa-login-field > input,
+  .se-pwa-login-password {
+    height:
+      49px;
+  }
+
+  .se-pwa-login-submit {
+    height:
+      50px;
+  }
+
+  .se-pwa-login-separator {
+    margin:
+      15px
+      0
+      11px;
+  }
+
+  .se-pwa-login-company {
+    margin-top:
+      14px;
+  }
+}
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (
+  max-width: 375px
+) {
+  .se-pwa-login-content {
+    padding-left:
+      12px;
+
+    padding-right:
+      12px;
+  }
+
+  .se-pwa-login-logo {
+    width:
+      116px;
+  }
+
+  .se-pwa-login-system-name {
+    padding:
+      5px
+      8px;
+
+    font-size:
+      8px;
+  }
+
+  .se-pwa-login-card {
+    padding:
+      22px
+      18px
+      18px;
+
+    border-radius:
+      22px;
+  }
+
+  .se-pwa-login-card h1 {
+    font-size:
+      26px;
+  }
+
+  .se-pwa-login-subtitle {
+    font-size:
+      11.5px;
+  }
+}

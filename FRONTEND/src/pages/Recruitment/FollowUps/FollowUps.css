@@ -1,0 +1,291 @@
+/* =========================================================
+   FOLLOW UPS
+========================================================= */
+
+.se-followup-page {
+  width: 100%;
+  padding: 30px 32px 48px;
+  box-sizing: border-box;
+}
+
+.se-followup-head {
+  margin-bottom: 19px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.se-followup-head > div > span {
+  color: #e30613;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+}
+
+.se-followup-head h1 {
+  margin: 7px 0 5px;
+  font-size: 32px;
+  letter-spacing: -1px;
+}
+
+.se-followup-head p {
+  margin: 0;
+  color: #8c9098;
+  font-size: 10px;
+}
+
+.se-followup-head > button {
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid #e0e3e7;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 8px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.se-followup-metrics {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      5,
+      minmax(0,1fr)
+    );
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.se-followup-metrics button {
+  min-height: 75px;
+  padding: 11px;
+  border: 1px solid #e7e9ed;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #fff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.se-followup-metrics button.active {
+  border-color:
+    rgba(227,6,19,0.25);
+  box-shadow:
+    0 7px 22px
+    rgba(20,25,34,0.05);
+}
+
+.se-followup-metrics button > span {
+  width: 33px;
+  height: 33px;
+  flex: 0 0 33px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #f1f2f4;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.se-followup-metrics .follow_up > span {
+  background: #fff5df;
+  color: #a96d09;
+}
+
+.se-followup-metrics .call > span {
+  background: #eaf3ff;
+  color: #326fc0;
+}
+
+.se-followup-metrics .screening > span {
+  background: #f1ecff;
+  color: #7250bd;
+}
+
+.se-followup-metrics .overdue > span {
+  background: #fff0f1;
+  color: #ca3340;
+}
+
+.se-followup-metrics div {
+  display: flex;
+  flex-direction: column;
+}
+
+.se-followup-metrics strong {
+  font-size: 19px;
+}
+
+.se-followup-metrics small {
+  margin-top: 3px;
+  color: #92969e;
+  font-size: 7px;
+}
+
+.se-followup-toolbar {
+  height: 42px;
+  margin-bottom: 12px;
+  padding: 0 11px;
+  border: 1px solid #e4e7eb;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+}
+
+.se-followup-toolbar input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 9px;
+}
+
+.se-followup-toolbar strong {
+  font-size: 11px;
+}
+
+.se-followup-toolbar small {
+  color: #969aa2;
+  font-size: 7px;
+}
+
+.se-followup-list {
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.se-followup-list > button {
+  width: 100%;
+  min-height: 68px;
+  padding: 9px 13px;
+  border: 0;
+  border-bottom: 1px solid #eef0f2;
+  display: grid;
+  grid-template-columns:
+    38px
+    minmax(180px,1fr)
+    auto
+    170px
+    150px
+    20px;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.se-followup-list > button:hover {
+  background: #fafafb;
+}
+
+.se-followup-list > button.overdue {
+  background:
+    linear-gradient(
+      90deg,
+      #fff8f8,
+      #fff
+    );
+}
+
+.se-followup-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: #25282e;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.se-followup-person,
+.se-followup-action,
+.se-followup-due {
+  display: flex;
+  flex-direction: column;
+}
+
+.se-followup-person strong,
+.se-followup-action strong,
+.se-followup-due strong {
+  color: #454950;
+  font-size: 8px;
+}
+
+.se-followup-person small,
+.se-followup-action small,
+.se-followup-due small {
+  margin-top: 3px;
+  color: #969aa2;
+  font-size: 6px;
+}
+
+.se-followup-due.overdue strong,
+.se-followup-due.overdue small {
+  color: #c83240;
+}
+
+.se-followup-list .arrow {
+  color: #afb3b9;
+  font-size: 13px;
+}
+
+.se-followup-loading {
+  padding: 12px;
+}
+
+.se-followup-loading span {
+  display: block;
+  height: 58px;
+  margin-bottom: 7px;
+  border-radius: 10px;
+  background: #f1f2f4;
+}
+
+@media (max-width: 1000px) {
+  .se-followup-metrics {
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(0,1fr)
+      );
+  }
+
+  .se-followup-list {
+    overflow-x: auto;
+  }
+
+  .se-followup-list > button {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 700px) {
+  .se-followup-page {
+    padding: 20px 14px 38px;
+  }
+
+  .se-followup-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .se-followup-metrics {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0,1fr)
+      );
+  }
+}

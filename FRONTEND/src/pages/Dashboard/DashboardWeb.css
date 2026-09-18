@@ -1,0 +1,3185 @@
+.se-web-dashboard {
+  width: 100%;
+  min-height: 100vh;
+
+  display: grid;
+
+  grid-template-columns:
+    82px
+    242px
+    minmax(0, 1fr);
+
+  background: #f6f7f9;
+
+  color: #17191f;
+}
+
+/* =========================================================
+   APP RAIL
+========================================================= */
+
+.se-web-dashboard-rail {
+  position: sticky;
+  top: 0;
+
+  height: 100vh;
+
+  z-index: 40;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  padding: 18px 10px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #141619 0%,
+      #1c1e23 58%,
+      #202228 100%
+    );
+
+  border-right:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.06
+    );
+
+  box-shadow:
+    8px 0 30px
+    rgba(
+      16,
+      18,
+      22,
+      0.06
+    );
+}
+
+.se-web-dashboard-rail-logo {
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 28px
+    rgba(
+      0,
+      0,
+      0,
+      0.18
+    );
+}
+
+.se-web-dashboard-rail-logo img {
+  width: 48px;
+  height: 40px;
+
+  object-fit: contain;
+}
+
+.se-web-dashboard-app-list {
+  width: 100%;
+
+  margin-top: 28px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.se-web-dashboard-app-btn {
+  width: 100%;
+
+  min-height: 60px;
+
+  padding: 7px 3px;
+
+  border: 0;
+
+  border-radius: 14px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  background: transparent;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.55
+    );
+
+  cursor: pointer;
+
+  font-size: 9px;
+  font-weight: 750;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-web-dashboard-app-btn:hover {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.06
+    );
+
+  color: #ffffff;
+
+  transform:
+    translateY(-1px);
+}
+
+.se-web-dashboard-app-btn.active {
+  background:
+    linear-gradient(
+      145deg,
+      #f01827 0%,
+      #e30613 55%,
+      #c90010 100%
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 12px 24px
+    rgba(
+      227,
+      6,
+      19,
+      0.28
+    );
+}
+
+.se-web-dashboard-app-icon {
+  width: 30px;
+  height: 30px;
+
+  border-radius: 9px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+
+  color: inherit;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.se-web-dashboard-app-btn.active
+.se-web-dashboard-app-icon {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.16
+    );
+}
+
+.se-web-dashboard-rail-bottom {
+  margin-top: auto;
+}
+
+.se-web-dashboard-help-btn {
+  width: 38px;
+  height: 38px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.1
+    );
+
+  border-radius: 12px;
+
+  background: transparent;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.65
+    );
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   SECONDARY PANEL
+========================================================= */
+
+.se-web-dashboard-module-panel {
+  position: sticky;
+
+  top: 0;
+
+  height: 100vh;
+
+  z-index: 30;
+
+  display: flex;
+  flex-direction: column;
+
+  padding:
+    28px
+    18px
+    18px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.98
+    );
+
+  border-right:
+    1px solid
+    #e8e9ec;
+}
+
+.se-web-dashboard-module-head {
+  padding:
+    0
+    7px
+    20px;
+
+  border-bottom:
+    1px solid
+    #ededf0;
+}
+
+.se-web-dashboard-module-eyebrow {
+  color: #e30613;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 1.4px;
+}
+
+.se-web-dashboard-module-head h2 {
+  margin:
+    7px 0 5px;
+
+  color: #191b20;
+
+  font-size: 25px;
+
+  line-height: 1.1;
+
+  letter-spacing: -0.7px;
+}
+
+.se-web-dashboard-module-head p {
+  margin: 0;
+
+  color: #9799a0;
+
+  font-size: 10px;
+
+  line-height: 1.45;
+}
+
+/* =========================================================
+   MODULE LIST
+========================================================= */
+
+.se-web-dashboard-module-list {
+  margin-top: 15px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  overflow-y: auto;
+
+  scrollbar-width: none;
+}
+
+.se-web-dashboard-module-list::-webkit-scrollbar {
+  display: none;
+}
+
+.se-web-dashboard-nav-section {
+  margin:
+    16px
+    10px
+    6px;
+
+  color: #a5a8af;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.25px;
+}
+
+.se-web-dashboard-module-btn {
+  width: 100%;
+
+  min-height: 43px;
+
+  border: 0;
+
+  border-radius: 11px;
+
+  padding:
+    0
+    10px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  background: transparent;
+
+  color: #555961;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.se-web-dashboard-module-btn:hover:not(:disabled) {
+  background: #f6f7f8;
+
+  color: #202228;
+
+  transform:
+    translateX(1px);
+}
+
+.se-web-dashboard-module-btn.active {
+  background:
+    linear-gradient(
+      90deg,
+      #fff0f1 0%,
+      #fff7f7 100%
+    );
+
+  color: #d60012;
+
+  box-shadow:
+    inset 3px 0 0
+    #e30613;
+}
+
+.se-web-dashboard-module-btn:disabled {
+  opacity: 0.46;
+
+  cursor: default;
+}
+
+.se-web-dashboard-module-icon {
+  width: 26px;
+  height: 26px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  background: #f4f5f6;
+
+  color: #73767d;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.se-web-dashboard-module-btn.active
+.se-web-dashboard-module-icon {
+  background: #ffffff;
+
+  color: #e30613;
+
+  box-shadow:
+    0 3px 10px
+    rgba(
+      227,
+      6,
+      19,
+      0.08
+    );
+}
+
+.se-web-dashboard-module-label {
+  flex: 1;
+
+  font-size: 10px;
+
+  font-weight: 750;
+}
+
+.se-web-dashboard-module-arrow {
+  color: #aaaeb5;
+
+  font-size: 17px;
+}
+
+.se-web-dashboard-soon {
+  padding:
+    4px
+    6px;
+
+  border-radius: 999px;
+
+  background: #f2f2f4;
+
+  color: #a2a4aa;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 0.4px;
+
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   USER CARD
+========================================================= */
+
+.se-web-dashboard-user-card {
+  position: relative;
+
+  margin-top: auto;
+
+  min-height: 62px;
+
+  padding: 10px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  border:
+    1px solid
+    #e7e8eb;
+
+  border-radius: 14px;
+
+  background: #fafafb;
+}
+
+.se-web-dashboard-user-avatar {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #f01827 0%,
+      #e30613 55%,
+      #c90010 100%
+    );
+
+  color: #ffffff;
+
+  font-size: 14px;
+
+  font-weight: 900;
+}
+
+.se-web-dashboard-user-info {
+  flex: 1;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.se-web-dashboard-user-info strong {
+  overflow: hidden;
+
+  color: #27292e;
+
+  font-size: 10px;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.se-web-dashboard-user-info span {
+  color: #96989f;
+
+  font-size: 8px;
+
+  text-transform: capitalize;
+}
+
+.se-web-dashboard-user-menu-btn {
+  border: 0;
+
+  background: transparent;
+
+  color: #8d9097;
+
+  cursor: pointer;
+}
+
+.se-web-dashboard-profile-menu {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+
+  bottom: 70px;
+
+  padding: 7px;
+
+  border:
+    1px solid
+    #e4e5e8;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 18px 45px
+    rgba(
+      0,
+      0,
+      0,
+      0.12
+    );
+}
+
+.se-web-dashboard-profile-menu button {
+  width: 100%;
+
+  min-height: 36px;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #474a50;
+
+  text-align: left;
+
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.se-web-dashboard-profile-menu button:hover {
+  background: #f4f5f6;
+}
+
+/* =========================================================
+   WORKSPACE
+========================================================= */
+
+.se-web-dashboard-workspace {
+  min-width: 0;
+
+  min-height: 100vh;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f6f7f9 0%,
+      #fbfbfc 100%
+    );
+}
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.se-web-dashboard-topbar {
+  min-height: 86px;
+
+  padding:
+    18px
+    30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 25px;
+
+  border-bottom:
+    1px solid
+    #e5e6e9;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    );
+
+  backdrop-filter:
+    blur(14px);
+
+  -webkit-backdrop-filter:
+    blur(14px);
+}
+
+.se-web-dashboard-path {
+  color: #a2a4aa;
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.25px;
+}
+
+.se-web-dashboard-topbar h1 {
+  margin:
+    5px 0 0;
+
+  color: #191b20;
+
+  font-size: 22px;
+
+  line-height: 1.1;
+
+  letter-spacing: -0.5px;
+}
+
+.se-web-dashboard-top-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+}
+
+.se-web-dashboard-search {
+  width: 220px;
+
+  height: 40px;
+
+  padding:
+    0
+    11px
+    0
+    14px;
+
+  border:
+    1px solid
+    #e2e3e6;
+
+  border-radius: 11px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  background: #f9f9fa;
+
+  color: #9a9ca2;
+
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.se-web-dashboard-search kbd {
+  padding:
+    3px
+    6px;
+
+  border:
+    1px solid
+    #dedfe2;
+
+  border-radius: 5px;
+
+  background: #ffffff;
+
+  color: #8d9097;
+
+  font-family: inherit;
+
+  font-size: 8px;
+}
+
+.se-web-dashboard-icon-action,
+.se-web-dashboard-top-avatar {
+  width: 40px;
+  height: 40px;
+
+  border:
+    1px solid
+    #e2e3e6;
+
+  border-radius: 11px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.se-web-dashboard-icon-action:hover {
+  border-color:
+    rgba(
+      227,
+      6,
+      19,
+      0.2
+    );
+
+  background: #fff7f7;
+}
+
+.se-web-dashboard-top-avatar {
+  border: 0;
+
+  background:
+    linear-gradient(
+      145deg,
+      #f01827 0%,
+      #e30613 55%,
+      #c90010 100%
+    );
+
+  color: #ffffff;
+
+  font-weight: 900;
+
+  box-shadow:
+    0 8px 18px
+    rgba(
+      227,
+      6,
+      19,
+      0.18
+    );
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.se-web-dashboard-content {
+  width:
+    min(
+      1400px,
+      100%
+    );
+
+  margin:
+    0 auto;
+
+  padding:
+    28px
+    30px
+    45px;
+}
+
+/* =========================================================
+   RECRUITMENT SHELL HEADER
+========================================================= */
+
+.se-recruitment-shell-head {
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 24px;
+
+  margin-bottom: 18px;
+}
+
+.se-recruitment-shell-head > div:first-child {
+  min-width: 0;
+}
+
+.se-recruitment-shell-eyebrow {
+  color: #e30613;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.35px;
+}
+
+.se-recruitment-shell-head h2 {
+  margin:
+    7px 0 5px;
+
+  color: #191b20;
+
+  font-size: 25px;
+
+  line-height: 1.12;
+
+  letter-spacing: -0.8px;
+}
+
+.se-recruitment-shell-head p {
+  max-width: 650px;
+
+  margin: 0;
+
+  color: #8f9299;
+
+  font-size: 10px;
+
+  line-height: 1.55;
+}
+
+.se-recruitment-shell-state {
+  min-width: 190px;
+
+  padding:
+    11px
+    14px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  border:
+    1px solid
+    #e4e6e9;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 22px
+    rgba(
+      27,
+      30,
+      35,
+      0.03
+    );
+}
+
+.se-recruitment-shell-state-dot {
+  width: 8px;
+  height: 8px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #28a85a;
+
+  box-shadow:
+    0 0 0 5px
+    rgba(
+      40,
+      168,
+      90,
+      0.09
+    );
+}
+
+.se-recruitment-shell-state div {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.se-recruitment-shell-state strong {
+  color: #33363c;
+
+  font-size: 9px;
+}
+
+.se-recruitment-shell-state span:last-child {
+  color: #9a9da4;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   RECRUITMENT WELCOME
+========================================================= */
+
+.se-recruitment-welcome {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height: 205px;
+
+  padding:
+    31px
+    34px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 35px;
+
+  border-radius: 23px;
+
+  background:
+    radial-gradient(
+      circle at 82% 20%,
+      rgba(
+        227,
+        6,
+        19,
+        0.38
+      ),
+      transparent 28%
+    ),
+    linear-gradient(
+      128deg,
+      #191b20 0%,
+      #24272d 58%,
+      #9c0712 100%
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 20px 50px
+    rgba(
+      28,
+      31,
+      37,
+      0.13
+    );
+}
+
+.se-recruitment-welcome::after {
+  content: "";
+
+  position: absolute;
+
+  width: 320px;
+  height: 320px;
+
+  right: -130px;
+  top: -165px;
+
+  border-radius: 50%;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+.se-recruitment-welcome-copy {
+  position: relative;
+
+  z-index: 2;
+
+  max-width: 650px;
+}
+
+.se-recruitment-welcome-copy > span {
+  color: #ffb7bd;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.55px;
+}
+
+.se-recruitment-welcome-copy h3 {
+  max-width: 610px;
+
+  margin:
+    11px
+    0
+    10px;
+
+  font-size: 28px;
+
+  line-height: 1.17;
+
+  letter-spacing: -0.9px;
+}
+
+.se-recruitment-welcome-copy p {
+  max-width: 590px;
+
+  margin: 0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.66
+    );
+
+  font-size: 10px;
+
+  line-height: 1.7;
+}
+
+.se-recruitment-welcome-flow {
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 260px;
+
+  padding:
+    17px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.14
+    );
+
+  border-radius: 15px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.se-recruitment-welcome-flow span {
+  padding:
+    8px
+    9px;
+
+  border-radius: 9px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    );
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.88
+    );
+
+  font-size: 8px;
+
+  font-weight: 750;
+}
+
+.se-recruitment-welcome-flow i {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.43
+    );
+
+  font-size: 11px;
+
+  font-style: normal;
+}
+
+/* =========================================================
+   RECRUITMENT QUICK CARDS
+========================================================= */
+
+.se-recruitment-quick-grid {
+  margin-top: 16px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 12px;
+}
+
+.se-recruitment-quick-card {
+  min-height: 130px;
+
+  padding:
+    17px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  border:
+    1px solid
+    #e5e7ea;
+
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 24px
+    rgba(
+      25,
+      28,
+      33,
+      0.03
+    );
+
+  transition:
+    transform 0.17s ease,
+    border-color 0.17s ease,
+    box-shadow 0.17s ease;
+}
+
+.se-recruitment-quick-card:hover {
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    0 15px 32px
+    rgba(
+      25,
+      28,
+      33,
+      0.07
+    );
+}
+
+.se-recruitment-quick-icon {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  font-size: 10px;
+
+  font-weight: 900;
+}
+
+.se-recruitment-quick-card.blue
+.se-recruitment-quick-icon {
+  background: #edf4ff;
+
+  color: #3472c7;
+}
+
+.se-recruitment-quick-card.amber
+.se-recruitment-quick-icon {
+  background: #fff6e7;
+
+  color: #c67b10;
+}
+
+.se-recruitment-quick-card.green
+.se-recruitment-quick-icon {
+  background: #eaf8ef;
+
+  color: #23894b;
+}
+
+.se-recruitment-quick-card.purple
+.se-recruitment-quick-icon {
+  background: #f4efff;
+
+  color: #7554bd;
+}
+
+.se-recruitment-quick-card > div {
+  margin-top: 13px;
+}
+
+.se-recruitment-quick-card strong {
+  color: #2e3137;
+
+  font-size: 10px;
+}
+
+.se-recruitment-quick-card p {
+  margin:
+    5px 0 0;
+
+  color: #9699a0;
+
+  font-size: 8px;
+
+  line-height: 1.5;
+}
+
+.se-recruitment-quick-arrow {
+  margin-top: auto;
+
+  color: #a1a4aa;
+
+  font-size: 14px;
+}
+
+/* =========================================================
+   NEXT STEP
+========================================================= */
+
+.se-recruitment-next-step {
+  margin-top: 16px;
+
+  padding:
+    18px
+    20px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  border:
+    1px solid
+    #e6e7ea;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      100deg,
+      #ffffff 0%,
+      #fffafa 100%
+    );
+}
+
+.se-recruitment-next-icon {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: #fff0f1;
+
+  color: #e30613;
+
+  font-size: 10px;
+
+  font-weight: 900;
+}
+
+.se-recruitment-next-step > div:last-child > span {
+  color: #e30613;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+}
+
+.se-recruitment-next-step h3 {
+  margin:
+    4px 0;
+
+  color: #303238;
+
+  font-size: 12px;
+}
+
+.se-recruitment-next-step p {
+  margin: 0;
+
+  color: #979aa1;
+
+  font-size: 9px;
+}
+
+/* =========================================================
+   PLACEHOLDER FOR FUTURE RECRUITMENT STEPS
+========================================================= */
+
+.se-recruitment-page-placeholder {
+  min-height: 250px;
+
+  padding:
+    30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 18px;
+
+  border:
+    1px dashed
+    #dfe1e5;
+
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #fafafb 100%
+    );
+
+  text-align: left;
+}
+
+.se-recruitment-page-placeholder-icon {
+  width: 54px;
+  height: 54px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 15px;
+
+  background: #fff0f1;
+
+  color: #e30613;
+
+  font-size: 16px;
+
+  font-weight: 900;
+}
+
+.se-recruitment-page-placeholder > div:last-child {
+  max-width: 520px;
+}
+
+.se-recruitment-page-placeholder span {
+  color: #e30613;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.2px;
+}
+
+.se-recruitment-page-placeholder h3 {
+  margin:
+    6px 0;
+
+  color: #25282e;
+
+  font-size: 18px;
+}
+
+.se-recruitment-page-placeholder p {
+  margin: 0;
+
+  color: #9699a0;
+
+  font-size: 9px;
+
+  line-height: 1.55;
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.se-web-dashboard-hero {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height: 190px;
+
+  padding:
+    32px
+    35px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 30px;
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      125deg,
+      #202228 0%,
+      #292b31 42%,
+      #c60010 78%,
+      #e30613 100%
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 20px 50px
+    rgba(
+      28,
+      31,
+      37,
+      0.13
+    );
+}
+
+.se-web-dashboard-hero::before {
+  content: "";
+
+  position: absolute;
+
+  width: 220px;
+  height: 220px;
+
+  right: 95px;
+  bottom: -145px;
+
+  border-radius: 50%;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+
+  pointer-events: none;
+}
+
+.se-web-dashboard-hero::after {
+  content: "";
+
+  position: absolute;
+
+  width: 340px;
+  height: 340px;
+
+  right: -110px;
+
+  top: -160px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.1
+    );
+
+  pointer-events: none;
+}
+
+.se-web-dashboard-hero-copy {
+  position: relative;
+
+  z-index: 2;
+
+  max-width: 630px;
+}
+
+.se-web-dashboard-hero-eyebrow {
+  color: #ffd5d8;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.5px;
+}
+
+.se-web-dashboard-hero h2 {
+  margin:
+    10px
+    0;
+
+  max-width: 600px;
+
+  font-size: 30px;
+
+  line-height: 1.15;
+
+  letter-spacing: -1px;
+}
+
+.se-web-dashboard-hero p {
+  max-width: 575px;
+
+  margin: 0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.68
+    );
+
+  font-size: 11px;
+
+  line-height: 1.65;
+}
+
+.se-web-dashboard-hero-status {
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 220px;
+
+  padding: 18px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.18
+    );
+
+  border-radius: 15px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.1
+    );
+}
+
+.se-web-dashboard-hero-status > span {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    );
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+}
+
+.se-web-dashboard-hero-status strong {
+  display: block;
+
+  margin:
+    7px 0 13px;
+
+  font-size: 12px;
+}
+
+.se-web-dashboard-hero-status div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.74
+    );
+
+  font-size: 9px;
+}
+
+.se-web-dashboard-live-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #35c96f;
+}
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.se-web-dashboard-stats {
+  margin-top: 20px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 14px;
+}
+
+.se-web-dashboard-stat-card {
+  min-height: 175px;
+
+  padding: 19px;
+
+  border:
+    1px solid
+    #e6e7ea;
+
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 28px
+    rgba(
+      26,
+      28,
+      33,
+      0.035
+    );
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.se-web-dashboard-stat-card:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    #dedfe3;
+
+  box-shadow:
+    0 14px 30px
+    rgba(
+      26,
+      28,
+      33,
+      0.06
+    );
+}
+
+.clickable,
+.live-module {
+  cursor: pointer;
+}
+
+.se-web-dashboard-stat-top {
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+}
+
+.se-web-dashboard-stat-icon {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  font-size: 11px;
+
+  font-weight: 900;
+}
+
+.se-web-dashboard-stat-icon.people {
+  background: #fff1f2;
+
+  color: #e30613;
+}
+
+.se-web-dashboard-stat-icon.structure {
+  background:
+    rgba(
+      44,
+      103,
+      193,
+      0.09
+    );
+
+  color: #3267b7;
+}
+
+.se-web-dashboard-stat-icon.attendance,
+.se-web-dashboard-stat-icon.time {
+  background: #f0f1f3;
+
+  color: #777a81;
+}
+
+.se-web-dashboard-stat-link,
+.se-web-dashboard-live-label {
+  color: #9a9ca2;
+
+  font-size: 9px;
+
+  font-weight: 750;
+}
+
+.se-web-dashboard-stat-card > strong {
+  display: block;
+
+  margin:
+    18px 0 3px;
+
+  color: #191b20;
+
+  font-size: 28px;
+
+  line-height: 1;
+
+  letter-spacing: -1px;
+}
+
+.se-web-dashboard-stat-card h3 {
+  margin:
+    8px 0 5px;
+
+  font-size: 11px;
+
+  color: #303238;
+}
+
+.se-web-dashboard-stat-card p {
+  margin: 0;
+
+  color: #a0a2a8;
+
+  font-size: 9px;
+
+  line-height: 1.5;
+}
+
+/* =========================================================
+   LOWER GRID
+========================================================= */
+
+.se-web-dashboard-grid {
+  margin-top: 20px;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(270px, 0.65fr);
+
+  gap: 17px;
+}
+
+.se-web-dashboard-panel {
+  padding: 22px;
+
+  border:
+    1px solid
+    #e5e6e9;
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 24px
+    rgba(
+      28,
+      31,
+      37,
+      0.025
+    );
+}
+
+.se-web-dashboard-panel-head {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items: flex-start;
+
+  gap: 20px;
+}
+
+.se-web-dashboard-panel-head > div > span {
+  color: #e30613;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+}
+
+.se-web-dashboard-panel-head h3 {
+  margin:
+    6px 0 4px;
+
+  font-size: 17px;
+
+  color: #202228;
+}
+
+.se-web-dashboard-panel-head p {
+  margin: 0;
+
+  color: #999ca3;
+
+  font-size: 9px;
+}
+
+.se-web-dashboard-panel-head > button {
+  min-height: 36px;
+
+  padding:
+    0
+    12px;
+
+  border:
+    1px solid
+    #e4e5e8;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #565961;
+
+  font-size: 9px;
+
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   ACTION CARDS
+========================================================= */
+
+.se-web-dashboard-action-grid {
+  margin-top: 20px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 10px;
+}
+
+.se-web-dashboard-action-card {
+  min-height: 82px;
+
+  padding: 13px;
+
+  border:
+    1px solid
+    #e8e9ec;
+
+  border-radius: 13px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  background: #fafafb;
+
+  color: #31343a;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  transition:
+    transform 0.17s ease,
+    box-shadow 0.17s ease,
+    border-color 0.17s ease,
+    background 0.17s ease;
+}
+
+.se-web-dashboard-action-card:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(
+      227,
+      6,
+      19,
+      0.15
+    );
+
+  background: #ffffff;
+
+  box-shadow:
+    0 12px 25px
+    rgba(
+      30,
+      32,
+      37,
+      0.06
+    );
+}
+
+.se-web-dashboard-action-card.primary {
+  border-color:
+    rgba(
+      227,
+      6,
+      19,
+      0.13
+    );
+
+  background: #fff4f5;
+}
+
+.se-web-dashboard-action-icon {
+  width: 37px;
+  height: 37px;
+
+  flex-shrink: 0;
+
+  border-radius: 10px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+
+  color: #e30613;
+
+  font-size: 12px;
+
+  font-weight: 900;
+
+  box-shadow:
+    0 3px 10px
+    rgba(
+      0,
+      0,
+      0,
+      0.04
+    );
+}
+
+.se-web-dashboard-action-card > div {
+  flex: 1;
+}
+
+.se-web-dashboard-action-card strong {
+  display: block;
+
+  margin-bottom: 4px;
+
+  font-size: 10px;
+}
+
+.se-web-dashboard-action-card p {
+  margin: 0;
+
+  color: #999ca2;
+
+  font-size: 8px;
+
+  line-height: 1.4;
+}
+
+.se-web-dashboard-action-card > span:last-child {
+  color: #a6a8ae;
+
+  font-size: 15px;
+}
+
+/* =========================================================
+   MODULE PROGRESS
+========================================================= */
+
+.se-web-dashboard-module-progress {
+  margin-top: 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.se-web-dashboard-module-progress > div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+}
+
+.se-web-dashboard-module-progress > div > span {
+  width: 30px;
+  height: 30px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #f1f2f4;
+
+  color: #93969c;
+
+  font-size: 9px;
+
+  font-weight: 900;
+}
+
+.se-web-dashboard-module-progress
+> div
+> span.done {
+  background:
+    rgba(
+      38,
+      168,
+      89,
+      0.09
+    );
+
+  color: #22924d;
+}
+
+.se-web-dashboard-module-progress strong {
+  display: block;
+
+  color: #3e4147;
+
+  font-size: 9px;
+}
+
+.se-web-dashboard-module-progress p {
+  margin:
+    2px 0 0;
+
+  color: #a0a2a8;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   GLOBAL RECRUITMENT STATUS LANGUAGE
+
+   We will reuse these classes in upcoming screens.
+========================================================= */
+
+.se-status-shortlisted,
+.se-status-selected,
+.se-status-approved {
+  background: #eaf8ef;
+
+  color: #208248;
+}
+
+.se-status-follow-up,
+.se-status-pending {
+  background: #fff5e4;
+
+  color: #b66d08;
+}
+
+.se-status-screening {
+  background: #f3edff;
+
+  color: #7450b9;
+}
+
+.se-status-interview {
+  background: #eaf4ff;
+
+  color: #2f6fb9;
+}
+
+.se-status-rejected {
+  background: #ffebed;
+
+  color: #c82b38;
+}
+
+.se-status-closed {
+  background: #f0f1f3;
+
+  color: #72757c;
+}
+
+/* =========================================================
+   RESPONSIVE DESKTOP
+========================================================= */
+
+@media (max-width: 1180px) {
+  .se-web-dashboard {
+    grid-template-columns:
+      72px
+      218px
+      minmax(
+        0,
+        1fr
+      );
+  }
+
+  .se-web-dashboard-content {
+    padding:
+      24px
+      22px
+      40px;
+  }
+
+  .se-web-dashboard-stats {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+  .se-recruitment-quick-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+  .se-recruitment-welcome-flow {
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 900px) {
+  .se-web-dashboard-module-panel {
+    display: none;
+  }
+
+  .se-web-dashboard {
+    grid-template-columns:
+      72px
+      minmax(
+        0,
+        1fr
+      );
+  }
+
+  .se-recruitment-welcome {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .se-recruitment-shell-head {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+}
+
+/* =========================================================
+   =========================================================
+   PEOPLE MODULE INTEGRATION
+   =========================================================
+
+   PeopleOverview is rendered INSIDE DashboardWeb.
+
+   People.css already controls the page itself.
+   These overrides make it sit correctly inside the ERP
+   shell without duplicate page padding/background.
+
+   IMPORTANT:
+   Keep these styles at the END of DashboardWeb.css.
+========================================================= */
+
+/* =========================================================
+   PEOPLE PAGE INSIDE DASHBOARD
+========================================================= */
+
+.se-web-dashboard-content
+> .people-page {
+  width: 100%;
+
+  min-height: auto;
+
+  padding: 0;
+
+  background: transparent;
+}
+
+/* =========================================================
+   PEOPLE HERO
+
+   Slightly stronger/larger when inside main ERP shell.
+========================================================= */
+
+.se-web-dashboard-content
+.people-hero {
+  min-height: 255px;
+
+  padding:
+    38px
+    40px;
+
+  border-radius: 24px;
+}
+
+.se-web-dashboard-content
+.people-eyebrow {
+  font-size: 11px;
+
+  letter-spacing: 2px;
+}
+
+.se-web-dashboard-content
+.people-hero h1 {
+  max-width: 720px;
+
+  font-size: 38px;
+
+  line-height: 1.08;
+
+  letter-spacing: -1.2px;
+}
+
+.se-web-dashboard-content
+.people-hero-copy > p {
+  max-width: 700px;
+
+  font-size: 15px;
+
+  line-height: 1.65;
+}
+
+/* =========================================================
+   PEOPLE HERO ACTIONS
+========================================================= */
+
+.se-web-dashboard-content
+.people-button {
+  min-height: 49px;
+
+  padding:
+    0
+    19px;
+
+  font-size: 13px;
+}
+
+.se-web-dashboard-content
+.people-button--primary {
+  box-shadow:
+    0 12px 27px
+    rgba(
+      227,
+      6,
+      19,
+      0.24
+    );
+}
+
+/* =========================================================
+   PEOPLE HERO STATUS
+========================================================= */
+
+.se-web-dashboard-content
+.people-hero-status {
+  width: 280px;
+
+  padding:
+    23px
+    24px;
+}
+
+.se-web-dashboard-content
+.people-hero-status > span {
+  font-size: 10px;
+}
+
+.se-web-dashboard-content
+.people-hero-status > strong {
+  margin-top: 8px;
+
+  font-size: 17px;
+
+  line-height: 1.4;
+}
+
+.se-web-dashboard-content
+.people-status-line {
+  font-size: 12px;
+}
+
+/* =========================================================
+   PEOPLE METRICS
+
+   More visible than the older dashboard cards.
+========================================================= */
+
+.se-web-dashboard-content
+.people-metrics {
+  gap: 14px;
+
+  margin-top: 18px;
+}
+
+.se-web-dashboard-content
+.people-metric-card {
+  min-height: 180px;
+
+  padding: 21px;
+
+  border-radius: 17px;
+}
+
+.se-web-dashboard-content
+.people-metric-card > strong {
+  margin-top: 17px;
+
+  font-size: 35px;
+
+  line-height: 1;
+}
+
+.se-web-dashboard-content
+.people-metric-card h3 {
+  margin-top: 10px;
+
+  font-size: 15px;
+}
+
+.se-web-dashboard-content
+.people-metric-card p {
+  margin-top: 6px;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+.se-web-dashboard-content
+.people-metric-top {
+  font-size: 9px;
+}
+
+.se-web-dashboard-content
+.people-metric-icon {
+  width: 36px;
+  height: 36px;
+
+  border-radius: 10px;
+}
+
+/* =========================================================
+   PEOPLE LOWER WORKSPACE
+========================================================= */
+
+.se-web-dashboard-content
+.people-workspace-grid {
+  gap: 16px;
+
+  margin-top: 18px;
+}
+
+.se-web-dashboard-content
+.people-workspace-main,
+.se-web-dashboard-content
+.people-recent {
+  border-radius: 18px;
+}
+
+/* =========================================================
+   PEOPLE SECTION TITLES
+========================================================= */
+
+.se-web-dashboard-content
+.people-section-heading {
+  padding:
+    22px
+    23px
+    19px;
+}
+
+.se-web-dashboard-content
+.people-section-heading span,
+.se-web-dashboard-content
+.people-recent-heading span {
+  font-size: 9px;
+}
+
+.se-web-dashboard-content
+.people-section-heading h2,
+.se-web-dashboard-content
+.people-recent-heading h2 {
+  font-size: 20px;
+}
+
+.se-web-dashboard-content
+.people-section-heading p {
+  font-size: 11px;
+}
+
+/* =========================================================
+   PEOPLE ACTION CARDS
+========================================================= */
+
+.se-web-dashboard-content
+.people-action-grid {
+  gap: 11px;
+
+  padding:
+    17px
+    20px
+    21px;
+}
+
+.se-web-dashboard-content
+.people-action-card {
+  min-height: 100px;
+
+  border-radius: 14px;
+}
+
+.se-web-dashboard-content
+.people-action-icon {
+  width: 44px;
+  height: 44px;
+
+  border-radius: 13px;
+
+  font-size: 16px;
+}
+
+.se-web-dashboard-content
+.people-action-card strong {
+  font-size: 14px;
+}
+
+.se-web-dashboard-content
+.people-action-card p {
+  font-size: 10px;
+}
+
+/* =========================================================
+   DASHBOARD PEOPLE / ONBOARDING ACTION CARD
+========================================================= */
+
+.se-web-dashboard-action-card.people-onboarding {
+  border-color:
+    rgba(
+      227,
+      6,
+      19,
+      0.18
+    );
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffafa 0%,
+      #fff1f2 100%
+    );
+}
+
+.se-web-dashboard-action-icon.people-onboarding {
+  background: #ffffff;
+
+  color: #e30613;
+
+  box-shadow:
+    0 5px 14px
+    rgba(
+      227,
+      6,
+      19,
+      0.1
+    );
+}
+
+/* =========================================================
+   PEOPLE SECONDARY NAV
+
+   Increase visibility only when People is active by using
+   the common nav itself more strongly.
+
+   Your current nav labels are only 10px.
+========================================================= */
+
+.se-web-dashboard-module-btn {
+  min-height: 46px;
+}
+
+.se-web-dashboard-module-label {
+  font-size: 11px;
+
+  font-weight: 780;
+}
+
+.se-web-dashboard-module-icon {
+  width: 29px;
+  height: 29px;
+
+  font-size: 10px;
+}
+
+.se-web-dashboard-nav-section {
+  font-size: 8px;
+}
+
+/* =========================================================
+   SECONDARY PANEL HEADER VISIBILITY
+========================================================= */
+
+.se-web-dashboard-module-head h2 {
+  font-size: 26px;
+}
+
+.se-web-dashboard-module-head p {
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+/* =========================================================
+   TOP BAR VISIBILITY
+========================================================= */
+
+.se-web-dashboard-path {
+  font-size: 10px;
+}
+
+.se-web-dashboard-topbar h1 {
+  font-size: 23px;
+}
+
+/* =========================================================
+   PEOPLE RECENT EMPLOYEE
+========================================================= */
+
+.se-web-dashboard-content
+.people-person-row {
+  min-height: 66px;
+
+  padding:
+    11px
+    12px;
+}
+
+.se-web-dashboard-content
+.people-person-avatar {
+  width: 42px;
+  height: 42px;
+}
+
+.se-web-dashboard-content
+.people-person-copy strong {
+  font-size: 13px;
+}
+
+.se-web-dashboard-content
+.people-person-copy small {
+  font-size: 10px;
+}
+
+.se-web-dashboard-content
+.people-person-status {
+  font-size: 8px;
+}
+
+/* =========================================================
+   LARGE DESKTOP
+
+   Make good use of wide office monitors.
+========================================================= */
+
+@media (
+  min-width: 1450px
+) {
+  .se-web-dashboard-content {
+    width:
+      min(
+        1500px,
+        100%
+      );
+  }
+
+  .se-web-dashboard-content
+  .people-hero h1 {
+    font-size: 41px;
+  }
+
+  .se-web-dashboard-content
+  .people-metric-card > strong {
+    font-size: 39px;
+  }
+}
+
+/* =========================================================
+   PEOPLE RESPONSIVE
+========================================================= */
+
+@media (
+  max-width: 1180px
+) {
+  .se-web-dashboard-content
+  .people-hero {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .se-web-dashboard-content
+  .people-hero-status {
+    width: auto;
+  }
+}
+
+@media (
+  max-width: 800px
+) {
+  .se-web-dashboard-content
+  > .people-page {
+    padding: 0;
+  }
+
+  .se-web-dashboard-content
+  .people-hero {
+    padding:
+      28px
+      24px;
+  }
+
+  .se-web-dashboard-content
+  .people-hero h1 {
+    font-size: 31px;
+  
+}
+}
+
+/* =========================================================
+   PEOPLE / ATTENDANCE / SHIFT
+   DASHBOARD SHELL INTEGRATION
+
+   ADD THIS AT THE VERY END OF DashboardWeb.css
+========================================================= */
+
+.se-web-dashboard-content--full-module {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================================================
+   ATTENDANCE + SHIFT ROOT
+
+   Both pages now live inside the existing DashboardWeb
+   workspace.
+
+   Do not allow them to create another page width outside
+   the dashboard shell.
+========================================================= */
+
+.se-web-dashboard-content--full-module
+.se-people-att-page,
+.se-web-dashboard-content--full-module
+.se-shift-page {
+  width: 100%;
+  min-width: 0;
+
+  min-height:
+    calc(
+      100vh - 86px
+    );
+}
+
+/* =========================================================
+   INNER MODULE HEADER
+
+   AttendancePage and ShiftPage have their own module header.
+
+   Keep it inside DashboardWeb rather than over the global
+   dashboard top bar.
+========================================================= */
+
+.se-web-dashboard-content--full-module
+.se-people-att-header,
+.se-web-dashboard-content--full-module
+.se-shift-header {
+  top: 0;
+}
+
+/* =========================================================
+   SHIFT CARD
+========================================================= */
+
+.se-web-dashboard-action-card.shift:hover {
+  border-color:
+    rgba(
+      116,
+      80,
+      204,
+      0.28
+    );
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #faf8ff 100%
+    );
+}
+
+.se-web-dashboard-action-icon.shift {
+  background:
+    #f3efff;
+
+  color:
+    #7450cc;
+}
+
+/* =========================================================
+   FULL MODULE CONTENT
+
+   Attendance/register and shift roster contain wide tables.
+
+   This allows those screens to use all available workspace
+   width without changing Employees / Onboarding /
+   Recruitment pages.
+========================================================= */
+
+.se-web-dashboard-content--full-module
+.se-people-att-content {
+  width:
+    min(
+      1600px,
+      calc(
+        100% - 48px
+      )
+    );
+
+  max-width: none;
+}
+
+.se-web-dashboard-content--full-module
+.se-shift-content {
+  width:
+    min(
+      1650px,
+      calc(
+        100% - 48px
+      )
+    );
+
+  max-width: none;
+}
+
+/* =========================================================
+   TABLE / ROSTER SAFETY
+
+   Prevent large attendance register and weekly roster
+   tables from increasing dashboard grid width.
+========================================================= */
+
+.se-web-dashboard-content--full-module
+.se-people-att-table-wrap,
+.se-web-dashboard-content--full-module
+.se-shift-grid-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* =========================================================
+   ATTENDANCE HEADER
+
+   Keep actions wrapping correctly when the DashboardWeb
+   workspace becomes narrower.
+========================================================= */
+
+.se-web-dashboard-content--full-module
+.se-people-att-header-actions,
+.se-web-dashboard-content--full-module
+.se-shift-header-actions {
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   MODULE ROOT BOX MODEL
+========================================================= */
+
+.se-web-dashboard-content--full-module
+.se-people-att-page *,
+.se-web-dashboard-content--full-module
+.se-shift-page * {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   RESPONSIVE — 1300
+========================================================= */
+
+@media (
+  max-width: 1300px
+) {
+  .se-web-dashboard-content--full-module
+  .se-people-att-content,
+  .se-web-dashboard-content--full-module
+  .se-shift-content {
+    width:
+      calc(
+        100% - 32px
+      );
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — 1100
+========================================================= */
+
+@media (
+  max-width: 1100px
+) {
+  .se-web-dashboard-content--full-module {
+    padding: 0;
+  }
+
+  .se-web-dashboard-content--full-module
+  .se-people-att-header,
+  .se-web-dashboard-content--full-module
+  .se-shift-header {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .se-web-dashboard-content--full-module
+  .se-people-att-content,
+  .se-web-dashboard-content--full-module
+  .se-shift-content {
+    width:
+      calc(
+        100% - 28px
+      );
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — 900
+========================================================= */
+
+@media (
+  max-width: 900px
+) {
+  .se-web-dashboard-content--full-module
+  .se-people-att-page,
+  .se-web-dashboard-content--full-module
+  .se-shift-page {
+    min-height:
+      100vh;
+  }
+
+  .se-web-dashboard-content--full-module
+  .se-people-att-header,
+  .se-web-dashboard-content--full-module
+  .se-shift-header {
+    position: relative;
+
+    top: auto;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — 760
+========================================================= */
+
+@media (
+  max-width: 760px
+) {
+  .se-web-dashboard-content--full-module {
+    width: 100%;
+
+    padding: 0;
+  }
+
+  .se-web-dashboard-content--full-module
+  .se-people-att-page,
+  .se-web-dashboard-content--full-module
+  .se-shift-page {
+    width: 100%;
+
+    min-height:
+      100vh;
+  }
+
+  .se-web-dashboard-content--full-module
+  .se-people-att-content,
+  .se-web-dashboard-content--full-module
+  .se-shift-content {
+    width:
+      calc(
+        100% - 22px
+      );
+  }
+
+  .se-web-dashboard-content--full-module
+  .se-people-att-header,
+  .se-web-dashboard-content--full-module
+  .se-shift-header {
+    padding:
+      14px;
+  }
+}
+/* =========================================================
+   LEAVE MANAGEMENT
+   PEOPLE MODULE INTEGRATION
+========================================================= */
+
+.se-web-dashboard-content--full-module {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Leave page should completely fill the People workspace */
+.se-web-dashboard-content--full-module
+.se-people-leave-page {
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100vh - 86px);
+  margin: 0;
+}
+
+/* Keep Leave content sizing predictable */
+.se-people-leave-page,
+.se-people-leave-page * {
+  box-sizing: border-box;
+}
+
+/* Sidebar Leave item uses the same selected state
+   as Attendance / Shift Management */
+.se-web-dashboard-module-btn.active {
+  color: #d60012;
+  background:
+    linear-gradient(
+      90deg,
+      #fff0f1 0%,
+      #fff7f7 100%
+    );
+  box-shadow:
+    inset 3px 0 0 #e30613;
+}
+
+.se-web-dashboard-module-btn.active
+.se-web-dashboard-module-icon {
+  background: #ffffff;
+  color: #e30613;
+  box-shadow:
+    0 3px 10px
+    rgba(227, 6, 19, 0.08);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+  .se-web-dashboard-content--full-module {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .se-web-dashboard-content--full-module
+  .se-people-leave-page {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .se-people-leave-page {
+    min-height: calc(100vh - 72px);
+  }
+}
