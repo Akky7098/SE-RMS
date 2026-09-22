@@ -91,13 +91,9 @@ const passwordResetOtpSchema =
           null,
       },
 
-      requestIp: {
-        type:
-          String,
-
-        default:
-          null,
-      },
+      requestIp:
+  req?.ip ||
+  null,
 
       userAgent: {
         type:

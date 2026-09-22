@@ -81,7 +81,7 @@ const googleClient =
 ========================================================= */
 
 const OTP_EXPIRY_MINUTES =
-  5;
+  15;
 
 const OTP_MAX_ATTEMPTS =
   5;
@@ -191,14 +191,19 @@ const getUserWhatsAppNumber =
   (
     user
   ) => {
-    return (
-      user.whatsappNumber ||
-      user.mobileNumber ||
-      user.phoneNumber ||
-      user.mobile ||
-      user.phone ||
-      null
-    );
+    const value =
+      String(
+        user?.whatsappNumber ||
+        ""
+      )
+        .replace(
+          /\D/g,
+          ""
+        )
+        .trim();
+
+    return value ||
+      null;
   };
 
 /* =========================================================
@@ -897,19 +902,9 @@ const forgotPassword =
     ===================================================== */
 
     const whatsappNumber =
-      String(
-        user.whatsappNumber ||
-        user.mobileNumber ||
-        user.phoneNumber ||
-        user.mobile ||
-        user.phone ||
-        ""
-      )
-        .replace(
-          /\D/g,
-          ""
-        )
-        .trim();
+  getUserWhatsAppNumber(
+    user
+  );
 
     if (
       !whatsappNumber
@@ -1007,11 +1002,13 @@ const forgotPassword =
        8. OTP VALID FOR EXACTLY 15 SECONDS
     ===================================================== */
 
-    const expiresAt =
-      new Date(
-        Date.now() +
-          15 * 1000
-      );
+   const expiresAt =
+  new Date(
+    Date.now() +
+      OTP_EXPIRY_MINUTES *
+        60 *
+        1000
+  );
 
     /* =====================================================
        9. CREATE OTP RECORD
@@ -1062,21 +1059,21 @@ const forgotPassword =
        Baileys client exports a differently named method.
     ===================================================== */
 
-    const message =
-      [
-        "SE-RMS Password Reset",
-        "",
-        `Your verification code is: ${otp}`,
-        "",
-        "This code is valid for 15 seconds.",
-        "Do not share this code with anyone.",
-        "",
-        "If you did not request a password reset, you can ignore this message.",
-        "",
-        "Sandeep Edgetech Pvt. Ltd.",
-      ].join(
-        "\n"
-      );
+   const message =
+  [
+    "Nuvanata Password Reset",
+    "",
+    `Your verification code is: ${otp}`,
+    "",
+    `This code is valid for ${OTP_EXPIRY_MINUTES} minutes.`,
+    "Do not share this code with anyone.",
+    "",
+    "If you did not request a password reset, you can ignore this message.",
+    "",
+    "Sandeep Edgetech Pvt. Ltd.",
+  ].join(
+    "\n"
+  );
 
     try {
       await sendTextToPhone(
@@ -1121,12 +1118,13 @@ const forgotPassword =
     ===================================================== */
 
     return {
-      sent:
-        true,
+  sent:
+    true,
 
-      expiresInSeconds:
-        15,
-    };
+  expiresInSeconds:
+    OTP_EXPIRY_MINUTES *
+      60,
+};
   };
 
 /* =========================================================

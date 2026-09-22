@@ -97,6 +97,43 @@ const userSchema =
           true,
       },
 
+      whatsappNumber: {
+  type:
+    String,
+
+  trim:
+    true,
+
+  default:
+    null,
+
+  validate: {
+    validator:
+      function (
+        value
+      ) {
+        if (
+          value ===
+            null ||
+          value ===
+            undefined ||
+          value ===
+            ""
+        ) {
+          return true;
+        }
+
+        return /^\d{11,15}$/.test(
+          value
+        );
+      },
+
+    message:
+      "WhatsApp number must contain country code and digits only",
+  },
+},
+
+
       passwordHash: {
         type:
           String,
