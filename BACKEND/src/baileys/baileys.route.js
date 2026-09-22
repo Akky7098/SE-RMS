@@ -1,29 +1,46 @@
 const express =
-  require("express");
+  require(
+    "express"
+  );
 
 const {
   getStatus,
   showQrPage,
   logout,
 } =
-  require("./baileys.controller");
+  require(
+    "./baileys.controller"
+  );
 
 const {
   authenticate,
 } =
-  require("../middleware/auth.middleware");
+  require(
+    "../middleware/auth.middleware"
+  );
 
 const router =
   express.Router();
 
-/*
- * All WhatsApp management endpoints
- * require an authenticated SE-RMS user.
- *
- * We can add your exact SUPER_ADMIN permission
- * middleware once we use the existing access
- * middleware from this project.
- */
+/* =========================================================
+   TEMPORARY WHATSAPP QR SETUP
+
+   QR is temporarily public only for the initial production
+   WhatsApp connection.
+
+   IMPORTANT:
+   After WhatsApp is connected successfully, protect this
+   endpoint with authenticate again.
+========================================================= */
+
+router.get(
+  "/qr",
+  showQrPage
+);
+
+/* =========================================================
+   AUTHENTICATED WHATSAPP MANAGEMENT
+========================================================= */
 
 router.use(
   authenticate
@@ -32,11 +49,6 @@ router.use(
 router.get(
   "/status",
   getStatus
-);
-
-router.get(
-  "/qr",
-  showQrPage
 );
 
 router.post(
