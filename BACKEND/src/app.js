@@ -317,6 +317,19 @@ app.use(
 );
 
 /* =========================================================
+   ESSL ADMS BIOMETRIC RECEIVER
+
+   IMPORTANT:
+   Must remain BEFORE express.json() because eSSL sends
+   text/octet-stream ATTLOG/OPERLOG payloads.
+========================================================= */
+
+app.use(
+  "/iclock",
+  esslRoutes
+);
+
+/* =========================================================
    REQUEST PARSING
 ========================================================= */
 
@@ -743,16 +756,7 @@ app.use(
   candidatePortalRoutes
 );
 
-/* =========================================================
-   ESSL DEVICE
 
-   Device uses /iclock directly.
-========================================================= */
-
-app.use(
-  "/iclock",
-  esslRoutes
-);
 
 
 app.use(

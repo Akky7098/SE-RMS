@@ -1,83 +1,83 @@
 const mongoose =
-  require("mongoose");
-
-const os =
-  require("os");
+  require(
+    "mongoose"
+  );
 
 const app =
-  require("./app");
+  require(
+    "./app"
+  );
 
 const connectDB =
-  require("./config/db");
+  require(
+    "./config/db"
+  );
 
 const env =
-  require("./config/env");
+  require(
+    "./config/env"
+  );
 
 const {
   ensureDefaultAccessProfiles,
 } =
-  require("./access/access.service");
+  require(
+    "./access/access.service"
+  );
 
-  const {
+const {
   initBaileysClient,
 } =
   require(
     "./baileys/baileysClient"
   );
 
-let server;
+let server = null;
+
+let isShuttingDown =
+  false;
 
 /* =========================================================
-   SERVER CONFIG
-
-   0.0.0.0 makes the backend reachable from other devices
-   on the same LAN, including the biometric machine.
+   SERVER
 ========================================================= */
 
 const HOST =
   "0.0.0.0";
 
 /* =========================================================
-   RESOLVE LAN IPV4
+   INITIALIZE BAILEYS
 
-   Used only for displaying the correct LAN URL in logs.
+   WhatsApp is an auxiliary service.
 
-   It does NOT control which interface Express listens on.
-   Express continues listening on 0.0.0.0.
+   A WhatsApp connection/QR/session failure must NOT prevent
+   the main SE-RMS API from starting.
 ========================================================= */
 
-const getLanIPv4 =
-  () => {
-    const interfaces =
-      os.networkInterfaces();
+const initializeBaileys =
+  async () => {
+    try {
+      await initBaileysClient();
 
-    for (
-      const addresses of Object.values(
-        interfaces
-      )
+      console.log(
+        "[Baileys] WhatsApp service initialized"
+      );
+    } catch (
+      error
     ) {
-      if (
-        !Array.isArray(
-          addresses
-        )
-      ) {
-        continue;
-      }
+      console.error(
+        "[Baileys] Initialization failed:",
+        error?.message ||
+          error
+      );
 
-      for (
-        const address of addresses
-      ) {
-        if (
-          address.family ===
-            "IPv4" &&
-          !address.internal
-        ) {
-          return address.address;
-        }
-      }
+      /*
+       * Do NOT throw.
+       *
+       * Authentication, attendance, recruitment and the rest
+       * of the ERP must continue running even when WhatsApp
+       * is temporarily unavailable.
+       */
     }
-
-    return null;
   };
 
 /* =========================================================
@@ -93,6 +93,10 @@ const startServer =
 
       await connectDB();
 
+      console.log(
+        "[Startup] MongoDB connected"
+      );
+
       /* =====================================================
          DEFAULT ACCESS PROFILES
       ===================================================== */
@@ -100,89 +104,104 @@ const startServer =
       await ensureDefaultAccessProfiles();
 
       /* =====================================================
-         START HTTP SERVER
+         HTTP SERVER
+
+         Start the API before Baileys.
+
+         This ensures a QR/session problem cannot block
+         production HTTP availability.
       ===================================================== */
 
-      server =
-        app.listen(
-          env.port,
-          HOST,
-          () => {
-            const lanIp =
-              getLanIPv4();
-
-            console.log(
-              "================================="
+      await new Promise(
+        (
+          resolve,
+          reject
+        ) => {
+          server =
+            app.listen(
+              env.port,
+              HOST,
+              () => {
+                resolve();
+              }
             );
 
-            console.log(
-              "SE-RMS BACKEND STARTED"
-            );
+          server.once(
+            "error",
+            reject
+          );
+        }
+      );
 
-            console.log(
-              `Environment: ${env.nodeEnv}`
-            );
+      console.log(
+        "========================================"
+      );
 
-            console.log(
-              `Host: ${HOST}`
-            );
+      console.log(
+        "NUVANATA API STARTED"
+      );
 
-            console.log(
-              `Port: ${env.port}`
-            );
+      console.log(
+        `Environment : ${env.nodeEnv}`
+      );
 
-            console.log(
-              `Local Health: http://localhost:${env.port}/api/health`
-            );
+      console.log(
+        `Port        : ${env.port}`
+      );
 
-            console.log(
-              `Local FKWeb Ping: http://localhost:${env.port}/fkweb/ping`
-            );
+      console.log(
+        "Health      : /api/health"
+      );
 
-            console.log(
-              `Local FKWeb Receiver: http://localhost:${env.port}/fkweb/device`
-            );
+      console.log(
+        "eSSL ADMS   : /iclock"
+      );
 
-            if (
-              lanIp
-            ) {
-              console.log(
-                `LAN IP: ${lanIp}`
-              );
+      console.log(
+        "Baileys API : /api/v1/baileys"
+      );
 
-              console.log(
-                `LAN FKWeb Ping: http://${lanIp}:${env.port}/fkweb/ping`
-              );
+      console.log(
+        "========================================"
+      );
 
-              console.log(
-                `LAN FKWeb Receiver: http://${lanIp}:${env.port}/fkweb/device`
-              );
-            } else {
-              console.log(
-                "LAN IP: NOT DETECTED"
-              );
-            }
+      /* =====================================================
+         BAILEYS
 
-            console.log(
-              "================================="
-            );
-          }
-        );
+         Initialize after HTTP server is already available.
+
+         Do not await this from the main startup path.
+      ===================================================== */
+
+      void initializeBaileys();
     } catch (
       error
     ) {
       console.error(
-        "Failed to start server:",
-        error
+        "[Startup] Failed:",
+        error?.message ||
+          error
       );
+
+      try {
+        await mongoose
+          .connection
+          .close();
+      } catch (
+        closeError
+      ) {
+        console.error(
+          "[Startup] MongoDB cleanup failed:",
+          closeError?.message ||
+            closeError
+        );
+      }
 
       process.exit(
         1
       );
     }
   };
-
-  
 
 /* =========================================================
    GRACEFUL SHUTDOWN
@@ -192,55 +211,66 @@ const gracefulShutdown =
   async (
     signal
   ) => {
-    console.log(
-      `\n${signal} received. Shutting down gracefully...`
-    );
-
     if (
-      server
+      isShuttingDown
     ) {
-      server.close(
-        async () => {
-          try {
-            await mongoose
-              .connection
-              .close();
-
-            console.log(
-              "MongoDB connection closed"
-            );
-
-            process.exit(
-              0
-            );
-          } catch (
-            error
-          ) {
-            console.error(
-              "Shutdown error:",
-              error
-            );
-
-            process.exit(
-              1
-            );
-          }
-        }
-      );
-
       return;
     }
 
+    isShuttingDown =
+      true;
+
+    console.log(
+      `[Shutdown] ${signal} received`
+    );
+
+    /*
+     * Stop accepting new HTTP requests first.
+     */
+    if (
+      server
+    ) {
+      await new Promise(
+        (
+          resolve
+        ) => {
+          server.close(
+            () => {
+              resolve();
+            }
+          );
+        }
+      );
+
+      console.log(
+        "[Shutdown] HTTP server closed"
+      );
+    }
+
+    /*
+     * Close MongoDB cleanly.
+     */
     try {
-      await mongoose
-        .connection
-        .close();
+      if (
+        mongoose.connection
+          .readyState !==
+        0
+      ) {
+        await mongoose
+          .connection
+          .close();
+
+        console.log(
+          "[Shutdown] MongoDB connection closed"
+        );
+      }
     } catch (
       error
     ) {
       console.error(
-        "MongoDB shutdown error:",
-        error
+        "[Shutdown] MongoDB close failed:",
+        error?.message ||
+          error
       );
     }
 
@@ -250,24 +280,35 @@ const gracefulShutdown =
   };
 
 /* =========================================================
-   PROCESS EVENTS
+   PROCESS SIGNALS
 ========================================================= */
 
-process.on(
+process.once(
   "SIGTERM",
-  () =>
-    gracefulShutdown(
+  () => {
+    void gracefulShutdown(
       "SIGTERM"
-    )
+    );
+  }
 );
 
-process.on(
+process.once(
   "SIGINT",
-  () =>
-    gracefulShutdown(
+  () => {
+    void gracefulShutdown(
       "SIGINT"
-    )
+    );
+  }
 );
+
+/* =========================================================
+   PROCESS ERROR REPORTING
+
+   Rejections are logged.
+
+   An uncaught exception is treated as fatal because the
+   process may be in an unknown state. PM2 will restart it.
+========================================================= */
 
 process.on(
   "unhandledRejection",
@@ -275,7 +316,7 @@ process.on(
     error
   ) => {
     console.error(
-      "Unhandled Promise Rejection:",
+      "[Process] Unhandled rejection:",
       error
     );
   }
@@ -287,7 +328,7 @@ process.on(
     error
   ) => {
     console.error(
-      "Uncaught Exception:",
+      "[Process] Uncaught exception:",
       error
     );
 
@@ -301,4 +342,4 @@ process.on(
    BOOT
 ========================================================= */
 
-startServer();
+void startServer();
