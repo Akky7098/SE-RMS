@@ -1,7 +1,5 @@
 const express =
-  require(
-    "express"
-  );
+  require("express");
 
 const controller =
   require(
@@ -11,9 +9,13 @@ const controller =
 const router =
   express.Router();
 
-/*
- * FKWeb can use binary/octet-stream request bodies.
- */
+/* =========================================================
+   PHYSICAL FKWEB DEVICE RECEIVER
+
+   Must remain raw and must be mounted before global
+   express.json() in app.js.
+========================================================= */
+
 router.all(
   "/device",
   express.raw({
@@ -26,9 +28,28 @@ router.all(
   controller.receive
 );
 
+/* =========================================================
+   BACKEND HEALTH
+========================================================= */
+
 router.get(
   "/ping",
   controller.ping
+);
+
+/* =========================================================
+   DEVICE COMMUNICATION STATUS
+
+   Local diagnostic endpoint.
+
+   Before exposing publicly in production, protect this
+   through the normal authenticated attendance/device
+   management API.
+========================================================= */
+
+router.get(
+  "/status/:deviceId",
+  controller.status
 );
 
 module.exports =

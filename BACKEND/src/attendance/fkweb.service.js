@@ -73,7 +73,7 @@ const resolveFkWebDevice =
   };
 
 /* =========================================================
-   PROCESS HEARTBEAT
+   HEARTBEAT
 ========================================================= */
 
 const processHeartbeat =
@@ -99,7 +99,7 @@ const processHeartbeat =
   };
 
 /* =========================================================
-   PROCESS ENROLLMENT
+   ENROLLMENT
 ========================================================= */
 
 const processEnrollment =
@@ -160,7 +160,7 @@ const processEnrollment =
   };
 
 /* =========================================================
-   PROCESS ONE PUNCH
+   ONE PUNCH
 ========================================================= */
 
 const processPunch =
@@ -179,8 +179,13 @@ const processPunch =
         event
       );
 
+    const biometricCode =
+      normalizeBiometricCode(
+        event.employeeCode
+      );
+
     if (
-      !event.employeeCode ||
+      !biometricCode ||
       !event.punchTime
     ) {
       throw new Error(
@@ -188,23 +193,40 @@ const processPunch =
       );
     }
 
+    const punchTime =
+      event.punchTime instanceof
+      Date
+        ? event.punchTime
+        : new Date(
+            event.punchTime
+          );
+
+    if (
+      Number.isNaN(
+        punchTime.getTime()
+      )
+    ) {
+      throw new Error(
+        "FKWeb punchTime is invalid."
+      );
+    }
+
     const result =
       await ingestRawPunch({
         device,
 
-        biometricCode:
-          event.employeeCode,
+        biometricCode,
 
         biometricEmployeeName:
-          event.employeeName ||
-          event.payload
-            ?.user_name ||
-          event.payload
-            ?.name ||
-          "",
+          normalizeText(
+            event.employeeName ||
+            event.payload
+              ?.user_name ||
+            event.payload
+              ?.name
+          ),
 
-        punchTime:
-          event.punchTime,
+        punchTime,
 
         source,
 
@@ -212,19 +234,22 @@ const processPunch =
           "OFFICE",
 
         machineRecordId:
-          event.recordId ||
-          "",
+          normalizeText(
+            event.recordId
+          ),
 
         machineUserId:
-          event.employeeCode,
+          biometricCode,
 
         machineVerifyMode:
-          event.verifyMode ||
-          "",
+          normalizeText(
+            event.verifyMode
+          ),
 
         machineInOutMode:
-          event.ioMode ||
-          "",
+          normalizeText(
+            event.ioMode
+          ),
 
         syncBatchId,
 
@@ -249,38 +274,40 @@ const processPunch =
 
     await markPunchReceived(
       device,
-      new Date(
-        event.punchTime
-      )
+      punchTime
     );
 
     return result;
   };
 
 /* =========================================================
-   PROCESS HISTORY
+   HISTORICAL PUNCHES
 
-   Parser must already have converted vendor records into
-   normalized events.
+   IMPORTANT:
 
-   Example normalizedHistoryEvent:
+   Historical records enter through EXACTLY the same
+   biometric ingestion pipeline as live records.
 
-   {
-     deviceId,
-     employeeCode,
-     employeeName,
-     punchTime,
-     recordId,
-     verifyMode,
-     ioMode,
-     payload
-   }
+   We do not write directly to Attendance.
+
+   ingestRawPunch:
+      ↓
+   RawAttendancePunch
+      ↓
+   employee mapping
+      ↓
+   attendance processor
+      ↓
+   Attendance
 ========================================================= */
 
 const processHistoricalPunches =
   async ({
     deviceId,
-    records = [],
+
+    records =
+      [],
+
     syncBatchId,
   }) => {
     const stats = {
@@ -307,6 +334,17 @@ const processHistoricalPunches =
       const record of records
     ) {
       try {
+        if (
+          !record ||
+          !record.employeeCode ||
+          !record.punchTime
+        ) {
+          stats.errors +=
+            1;
+
+          continue;
+        }
+
         const result =
           await processPunch(
             {
@@ -320,12 +358,14 @@ const processHistoricalPunches =
               source:
                 "HISTORICAL_SYNC",
 
-              syncBatchId,
+              syncBatchId:
+                syncBatchId ||
+                null,
             }
           );
 
         if (
-          result.inserted
+          result?.inserted
         ) {
           stats.inserted +=
             1;
@@ -335,7 +375,7 @@ const processHistoricalPunches =
         }
 
         if (
-          result.mapped
+          result?.mapped
         ) {
           stats.mapped +=
             1;
@@ -350,8 +390,26 @@ const processHistoricalPunches =
           1;
 
         console.error(
-          "FKWeb historical punch failed:",
-          error
+          "[FKWEB] Historical punch processing failed:",
+          {
+            deviceId:
+              record?.deviceId ||
+              deviceId,
+
+            employeeCode:
+              record?.employeeCode ||
+              "",
+
+            punchTime:
+              record?.punchTime ||
+              "",
+
+            message:
+              error?.message ||
+              String(
+                error
+              ),
+          }
         );
       }
     }

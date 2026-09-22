@@ -86,6 +86,11 @@ const employeeMailRoutes =
     "./employee/mail/employeeMail.routes"
   );
 
+  const baileysRoutes =
+  require(
+    "./baileys/baileys.route"
+  );
+
 const employeeActivationRoutes =
   require(
     "./employee/activation/employeeActivation.routes"
@@ -749,6 +754,11 @@ app.use(
   esslRoutes
 );
 
+
+app.use(
+  "/api/v1/baileys",
+  baileysRoutes
+);
 /* =========================================================
    404
 

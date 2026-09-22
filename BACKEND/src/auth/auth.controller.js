@@ -1,229 +1,478 @@
-const asyncHandler = require("../utils/asyncHandler");
-const env = require("../config/env");
+const asyncHandler =
+  require(
+    "../utils/asyncHandler"
+  );
+
+const env =
+  require(
+    "../config/env"
+  );
 
 const {
   setRefreshCookie,
   clearRefreshCookie,
-} = require("../utils/cookies");
+} =
+  require(
+    "../utils/cookies"
+  );
 
-const authService = require("./auth.service");
+const authService =
+  require(
+    "./auth.service"
+  );
 
-const signup = asyncHandler(
-  async (req, res) => {
-    const result =
-      await authService.signup({
-        displayName:
-          req.body.displayName,
+/* =========================================================
+   SIGNUP
+========================================================= */
 
-        email:
-          req.body.email,
+const signup =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      const result =
+        await authService.signup({
+          displayName:
+            req.body
+              ?.displayName,
 
-        password:
-          req.body.password,
+          email:
+            req.body
+              ?.email,
 
-        req,
-      });
+          password:
+            req.body
+              ?.password,
 
-    setRefreshCookie(
-      res,
-      result.refreshToken
-    );
+          req,
+        });
 
-    res.status(201).json({
-      success: true,
+      setRefreshCookie(
+        res,
+        result.refreshToken
+      );
 
-      message:
-        "Account created successfully",
+      return res
+        .status(201)
+        .json({
+          success:
+            true,
 
-      data: {
-        user: result.user,
-        accessToken:
-          result.accessToken,
-      },
-    });
-  }
-);
+          message:
+            "Account created successfully",
 
-const login = asyncHandler(
-  async (req, res) => {
-    const result =
-      await authService.login({
-        email:
-          req.body.email,
+          data: {
+            user:
+              result.user,
 
-        password:
-          req.body.password,
+            accessToken:
+              result.accessToken,
+          },
+        });
+    }
+  );
 
-        req,
-      });
+/* =========================================================
+   LOCAL LOGIN
+========================================================= */
 
-    setRefreshCookie(
-      res,
-      result.refreshToken
-    );
+const login =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      const result =
+        await authService.login({
+          email:
+            req.body
+              ?.email,
 
-    res.status(200).json({
-      success: true,
+          password:
+            req.body
+              ?.password,
 
-      message:
-        "Login successful",
+          req,
+        });
 
-      data: {
-        user: result.user,
-        accessToken:
-          result.accessToken,
-      },
-    });
-  }
-);
+      setRefreshCookie(
+        res,
+        result.refreshToken
+      );
 
-const googleLogin = asyncHandler(
-  async (req, res) => {
-    const result =
-      await authService.googleLogin({
-        credential:
-          req.body.credential,
+      return res
+        .status(200)
+        .json({
+          success:
+            true,
 
-        req,
-      });
+          message:
+            "Login successful",
 
-    setRefreshCookie(
-      res,
-      result.refreshToken
-    );
+          data: {
+            user:
+              result.user,
 
-    res.status(200).json({
-      success: true,
+            accessToken:
+              result.accessToken,
+          },
+        });
+    }
+  );
 
-      message:
-        "Google login successful",
+/* =========================================================
+   GOOGLE LOGIN
+========================================================= */
 
-      data: {
-        user: result.user,
-        accessToken:
-          result.accessToken,
-      },
-    });
-  }
-);
+const googleLogin =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      const result =
+        await authService
+          .googleLogin({
+            credential:
+              req.body
+                ?.credential,
 
-const refreshToken = asyncHandler(
-  async (req, res) => {
-    const token =
-      req.cookies[
-        env.cookieName
-      ];
+            req,
+          });
 
-    const result =
-      await authService.refreshAccessToken({
-        refreshToken: token,
-        req,
-      });
+      setRefreshCookie(
+        res,
+        result.refreshToken
+      );
 
-    setRefreshCookie(
-      res,
-      result.refreshToken
-    );
+      return res
+        .status(200)
+        .json({
+          success:
+            true,
 
-    res.status(200).json({
-      success: true,
+          message:
+            "Google login successful",
 
-      data: {
-        user: result.user,
-        accessToken:
-          result.accessToken,
-      },
-    });
-  }
-);
+          data: {
+            user:
+              result.user,
 
-const logout = asyncHandler(
-  async (req, res) => {
-    const token =
-      req.cookies[
-        env.cookieName
-      ];
+            accessToken:
+              result.accessToken,
+          },
+        });
+    }
+  );
 
-    await authService.logout(
-      token
-    );
+/* =========================================================
+   REFRESH TOKEN
+========================================================= */
 
-    clearRefreshCookie(res);
+const refreshToken =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      const token =
+        req.cookies
+          ?.[
+            env.cookieName
+          ];
 
-    res.status(200).json({
-      success: true,
-      message:
-        "Logged out successfully",
-    });
-  }
-);
+      const result =
+        await authService
+          .refreshAccessToken({
+            refreshToken:
+              token,
 
-const logoutAll = asyncHandler(
-  async (req, res) => {
-    await authService.logoutAll(
-      req.user._id
-    );
+            req,
+          });
 
-    clearRefreshCookie(res);
+      setRefreshCookie(
+        res,
+        result.refreshToken
+      );
 
-    res.status(200).json({
-      success: true,
-      message:
-        "Logged out from all devices",
-    });
-  }
-);
+      return res
+        .status(200)
+        .json({
+          success:
+            true,
 
-const forgotPassword = asyncHandler(
-  async (req, res) => {
-    await authService.forgotPassword({
-      email: req.body.email,
-    });
+          data: {
+            user:
+              result.user,
 
-    /*
-     * Same response whether
-     * email exists or not.
-     */
-    res.status(200).json({
-      success: true,
+            accessToken:
+              result.accessToken,
+          },
+        });
+    }
+  );
 
-      message:
-        "If this email is registered, a password reset link has been sent.",
-    });
-  }
-);
+/* =========================================================
+   LOGOUT CURRENT SESSION
+========================================================= */
 
-const resetPassword = asyncHandler(
-  async (req, res) => {
-    await authService.resetPassword({
-      email:
-        req.body.email,
+const logout =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      const token =
+        req.cookies
+          ?.[
+            env.cookieName
+          ];
 
-      token:
-        req.body.token,
+      await authService
+        .logout(
+          token
+        );
 
-      newPassword:
-        req.body.newPassword,
-    });
+      clearRefreshCookie(
+        res
+      );
 
-    clearRefreshCookie(res);
+      return res
+        .status(200)
+        .json({
+          success:
+            true,
 
-    res.status(200).json({
-      success: true,
+          message:
+            "Logged out successfully",
+        });
+    }
+  );
 
-      message:
-        "Password reset successfully. Please login again.",
-    });
-  }
-);
+/* =========================================================
+   LOGOUT ALL SESSIONS
+========================================================= */
+
+const logoutAll =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      await authService
+        .logoutAll(
+          req.user._id
+        );
+
+      clearRefreshCookie(
+        res
+      );
+
+      return res
+        .status(200)
+        .json({
+          success:
+            true,
+
+          message:
+            "Logged out from all devices",
+        });
+    }
+  );
+
+/* =========================================================
+   FORGOT PASSWORD
+   STEP 1
+
+   Registered email
+          ↓
+   Service resolves user/mobile
+          ↓
+   Generates 6-digit OTP
+          ↓
+   Sends OTP through WhatsApp
+========================================================= */
+
+const forgotPassword =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      const email =
+        req.body
+          ?.email;
+
+      await authService
+        .forgotPassword({
+          email,
+
+          req,
+        });
+
+      /*
+       * SECURITY:
+       *
+       * Do not expose whether:
+       * - email exists
+       * - employee exists
+       * - WhatsApp number exists
+       *
+       * This prevents account enumeration.
+       */
+
+      return res
+        .status(200)
+        .json({
+          success:
+            true,
+
+          message:
+            "If this account is registered and has a WhatsApp number, a verification code has been sent.",
+        });
+    }
+  );
+
+/* =========================================================
+   VERIFY RESET OTP
+   STEP 2
+
+   Expected body:
+
+   {
+     "email": "user@example.com",
+     "otp": "123456"
+   }
+========================================================= */
+
+const verifyResetOtp =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      const email =
+        req.body
+          ?.email;
+
+      const otp =
+        req.body
+          ?.otp;
+
+      const result =
+        await authService
+          .verifyPasswordResetOtp({
+            email,
+            otp,
+          });
+
+      return res
+        .status(200)
+        .json({
+          success:
+            true,
+
+          message:
+            result
+              ?.message ||
+            "OTP verified successfully.",
+
+          data: {
+            verified:
+              result
+                ?.verified ===
+              true,
+          },
+        });
+    }
+  );
+
+/* =========================================================
+   RESET PASSWORD
+   STEP 3
+
+   Expected body:
+
+   {
+     "email": "user@example.com",
+     "otp": "123456",
+     "newPassword": "..."
+   }
+
+   Service must:
+   - verify OTP again / verified state
+   - validate password
+   - hash password
+   - mark OTP used
+   - revoke all sessions
+========================================================= */
+
+const resetPassword =
+  asyncHandler(
+    async (
+      req,
+      res
+    ) => {
+      const email =
+        req.body
+          ?.email;
+
+      const otp =
+        req.body
+          ?.otp;
+
+      const newPassword =
+        req.body
+          ?.newPassword;
+
+      await authService
+        .resetPassword({
+          email,
+          otp,
+          newPassword,
+        });
+
+      /*
+       * Remove current browser refresh
+       * token after password reset.
+       */
+      clearRefreshCookie(
+        res
+      );
+
+      return res
+        .status(200)
+        .json({
+          success:
+            true,
+
+          message:
+            "Password updated successfully. Please sign in with your new password.",
+        });
+    }
+  );
+
+/* =========================================================
+   EXPORTS
+========================================================= */
 
 module.exports = {
   signup,
+
   login,
+
   googleLogin,
+
   refreshToken,
+
   logout,
+
   logoutAll,
+
   forgotPassword,
+
+  verifyResetOtp,
+
   resetPassword,
 };

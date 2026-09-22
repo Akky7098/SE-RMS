@@ -9,6 +9,7 @@ const {
   logoutAll,
   forgotPassword,
   resetPassword,
+  verifyResetOtp,
 } = require("./auth.controller");
 
 const {
@@ -77,6 +78,12 @@ router.post(
   "/forgot-password",
   forgotPasswordLimiter,
   forgotPassword
+);
+
+router.post(
+  "/verify-reset-otp",
+  forgotPasswordLimiter,
+  verifyResetOtp
 );
 
 router.post(

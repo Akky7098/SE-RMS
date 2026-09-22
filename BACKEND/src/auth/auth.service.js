@@ -1,803 +1,1647 @@
-const mongoose = require("mongoose");
-const crypto = require("crypto");
-const { OAuth2Client } = require("google-auth-library");
+const mongoose =
+  require("mongoose");
 
-const { User } = require("../user/user.model");
-const Session = require("./session.model");
+const crypto =
+  require("crypto");
 
-const ApiError = require("../utils/ApiError");
+const {
+  OAuth2Client,
+} =
+  require(
+    "google-auth-library"
+  );
+
+const {
+  User,
+} =
+  require(
+    "../user/user.model"
+  );
+
+const Session =
+  require(
+    "./session.model"
+  );
+
+const PasswordResetOtp =
+  require(
+    "./passwordResetOtp.model"
+  );
+
+const ApiError =
+  require(
+    "../utils/ApiError"
+  );
 
 const {
   hashPassword,
   comparePassword,
   validatePassword,
-} = require("../utils/password");
+} =
+  require(
+    "../utils/password"
+  );
 
 const {
   signAccessToken,
   signRefreshToken,
   verifyRefreshToken,
-} = require("../utils/jwt");
+} =
+  require(
+    "../utils/jwt"
+  );
 
 const {
   hashToken,
-  generateRandomToken,
-} = require("../utils/token");
-
-const sendEmail = require("../utils/sendEmail");
-const env = require("../config/env");
-
-const googleClient = new OAuth2Client(
-  env.googleClientId || undefined
-);
-
-const normalizeEmail = (email) => {
-  return String(email || "")
-    .trim()
-    .toLowerCase();
-};
-
-const isAllowedEmailDomain = (email) => {
-  const normalizedEmail =
-    normalizeEmail(email);
-
-  return normalizedEmail.endsWith(
-    `@${env.allowedEmailDomain}`
-  );
-};
-
-const getSessionExpiry = () => {
-  const expiresAt = new Date();
-
-  expiresAt.setDate(
-    expiresAt.getDate() +
-      env.refreshTokenDays
+} =
+  require(
+    "../utils/token"
   );
 
-  return expiresAt;
-};
+const {
+  sendTextToPhone,
+} =
+  require(
+    "../baileys/baileysClient"
+  );
 
-const createSession = async (
-  user,
-  req
-) => {
-  const sessionId =
-    new mongoose.Types.ObjectId();
+const env =
+  require(
+    "../config/env"
+  );
 
-  const refreshToken =
-    signRefreshToken(
-      user._id,
-      sessionId
-    );
+const googleClient =
+  new OAuth2Client(
+    env.googleClientId ||
+    undefined
+  );
 
-  await Session.create({
-    _id: sessionId,
+/* =========================================================
+   CONSTANTS
+========================================================= */
 
-    user: user._id,
+const OTP_EXPIRY_MINUTES =
+  5;
 
-    tokenHash:
-      hashToken(refreshToken),
+const OTP_MAX_ATTEMPTS =
+  5;
 
-    userAgent:
-      req.get("user-agent") || null,
+const OTP_RESEND_SECONDS =
+  60;
 
-    ipAddress:
-      req.ip || null,
+/* =========================================================
+   HELPERS
+========================================================= */
 
-    expiresAt:
-      getSessionExpiry(),
-  });
-
-  const accessToken =
-    signAccessToken(user);
-
-  return {
-    accessToken,
-    refreshToken,
-  };
-};
-
-const signup = async ({
-  displayName,
-  email,
-  password,
-  req,
-}) => {
-  const normalizedEmail =
-    normalizeEmail(email);
-
-  if (!normalizedEmail) {
-    throw new ApiError(
-      400,
-      "Email is required"
-    );
-  }
-
-  if (
-    !isAllowedEmailDomain(
-      normalizedEmail
+const normalizeEmail =
+  (
+    email
+  ) => {
+    return String(
+      email ||
+      ""
     )
-  ) {
-    throw new ApiError(
-      403,
-      `Only @${env.allowedEmailDomain} email addresses are allowed`
+      .trim()
+      .toLowerCase();
+  };
+
+const isAllowedEmailDomain =
+  (
+    email
+  ) => {
+    const normalizedEmail =
+      normalizeEmail(
+        email
+      );
+
+    return normalizedEmail.endsWith(
+      `@${env.allowedEmailDomain}`
     );
-  }
+  };
 
-  validatePassword(password);
+const getSessionExpiry =
+  () => {
+    const expiresAt =
+      new Date();
 
-  const existingUser =
-    await User.findOne({
-      email: normalizedEmail,
+    expiresAt.setDate(
+      expiresAt.getDate() +
+      env.refreshTokenDays
+    );
+
+    return expiresAt;
+  };
+
+const createSession =
+  async (
+    user,
+    req
+  ) => {
+    const sessionId =
+      new mongoose.Types.ObjectId();
+
+    const refreshToken =
+      signRefreshToken(
+        user._id,
+        sessionId
+      );
+
+    await Session.create({
+      _id:
+        sessionId,
+
+      user:
+        user._id,
+
+      tokenHash:
+        hashToken(
+          refreshToken
+        ),
+
+      userAgent:
+        req.get(
+          "user-agent"
+        ) ||
+        null,
+
+      ipAddress:
+        req.ip ||
+        null,
+
+      expiresAt:
+        getSessionExpiry(),
     });
 
-  if (existingUser) {
-    throw new ApiError(
-      409,
-      "An account with this email already exists"
+    const accessToken =
+      signAccessToken(
+        user
+      );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  };
+
+/* =========================================================
+   WHATSAPP NUMBER
+========================================================= */
+
+const getUserWhatsAppNumber =
+  (
+    user
+  ) => {
+    return (
+      user.whatsappNumber ||
+      user.mobileNumber ||
+      user.phoneNumber ||
+      user.mobile ||
+      user.phone ||
+      null
     );
-  }
+  };
 
-  const totalUsers =
-    await User.countDocuments();
+/* =========================================================
+   OTP
+========================================================= */
 
-  let role = "EMPLOYEE";
+const generateSixDigitOtp =
+  () => {
+    return crypto
+      .randomInt(
+        100000,
+        1000000
+      )
+      .toString();
+  };
 
-  /*
-   * Bootstrap rule:
-   *
-   * First ever account can become
-   * SUPER_ADMIN only when its email
-   * matches INITIAL_SUPERADMIN_EMAIL.
-   */
-  if (totalUsers === 0) {
+const hashOtp =
+  (
+    otp
+  ) => {
+    return crypto
+      .createHash(
+        "sha256"
+      )
+      .update(
+        String(
+          otp
+        )
+      )
+      .digest(
+        "hex"
+      );
+  };
+
+/* =========================================================
+   SIGNUP
+========================================================= */
+
+const signup =
+  async ({
+    displayName,
+    email,
+    password,
+    req,
+  }) => {
+    const normalizedEmail =
+      normalizeEmail(
+        email
+      );
+
     if (
-      !env.initialSuperAdminEmail
+      !normalizedEmail
     ) {
       throw new ApiError(
-        500,
-        "INITIAL_SUPERADMIN_EMAIL is not configured"
+        400,
+        "Email is required"
       );
     }
 
+    /*
+     * Keep your existing controlled signup
+     * domain restriction.
+     *
+     * This restriction does NOT apply to
+     * Google login.
+     */
     if (
-      normalizedEmail !==
-      env.initialSuperAdminEmail
+      !isAllowedEmailDomain(
+        normalizedEmail
+      )
     ) {
       throw new ApiError(
         403,
-        "Only the configured initial Super Admin can create the first account"
+        `Only @${env.allowedEmailDomain} email addresses are allowed`
       );
     }
 
-    role = "SUPER_ADMIN";
-  } else {
-    /*
-     * Once the first account exists,
-     * public signup remains disabled
-     * unless explicitly enabled.
-     */
-    if (!env.allowSelfSignup) {
+    validatePassword(
+      password
+    );
+
+    const existingUser =
+      await User.findOne({
+        email:
+          normalizedEmail,
+      });
+
+    if (
+      existingUser
+    ) {
+      throw new ApiError(
+        409,
+        "An account with this email already exists"
+      );
+    }
+
+    const totalUsers =
+      await User.countDocuments();
+
+    let role =
+      "EMPLOYEE";
+
+    if (
+      totalUsers ===
+      0
+    ) {
+      if (
+        !env.initialSuperAdminEmail
+      ) {
+        throw new ApiError(
+          500,
+          "INITIAL_SUPERADMIN_EMAIL is not configured"
+        );
+      }
+
+      if (
+        normalizedEmail !==
+        env.initialSuperAdminEmail
+      ) {
+        throw new ApiError(
+          403,
+          "Only the configured initial Super Admin can create the first account"
+        );
+      }
+
+      role =
+        "SUPER_ADMIN";
+    } else if (
+      !env.allowSelfSignup
+    ) {
       throw new ApiError(
         403,
         "Self signup is disabled. Contact your administrator."
       );
     }
-  }
 
-  const passwordHash =
-    await hashPassword(password);
+    const passwordHash =
+      await hashPassword(
+        password
+      );
 
-  const user = await User.create({
-    displayName:
-      displayName?.trim() || "",
+    const user =
+      await User.create({
+        displayName:
+          displayName?.trim() ||
+          "",
 
-    email: normalizedEmail,
+        email:
+          normalizedEmail,
 
-    passwordHash,
+        passwordHash,
 
-    role,
+        role,
 
-    status: "ACTIVE",
+        status:
+          "ACTIVE",
 
-    authProviders: ["local"],
+        authProviders: [
+          "local",
+        ],
 
-    emailVerified: false,
-  });
+        emailVerified:
+          false,
+      });
 
-  const tokens =
-    await createSession(
-      user,
-      req
-    );
+    const tokens =
+      await createSession(
+        user,
+        req
+      );
 
-  await User.findByIdAndUpdate(
-    user._id,
-    {
-      lastLoginAt: new Date(),
-    }
-  );
-
-  return {
-    user,
-    ...tokens,
-  };
-};
-
-const login = async ({
-  email,
-  password,
-  req,
-}) => {
-  const normalizedEmail =
-    normalizeEmail(email);
-
-  const user =
-    await User.findOne({
-      email: normalizedEmail,
-    }).select("+passwordHash");
-
-  if (
-    !user ||
-    !user.passwordHash
-  ) {
-    throw new ApiError(
-      401,
-      "Invalid email or password"
-    );
-  }
-
-  const passwordCorrect =
-    await comparePassword(
-      password,
-      user.passwordHash
-    );
-
-  if (!passwordCorrect) {
-    throw new ApiError(
-      401,
-      "Invalid email or password"
-    );
-  }
-
-  if (user.status !== "ACTIVE") {
-    throw new ApiError(
-      403,
-      "Your account is not active"
-    );
-  }
-
-  if (
-    !user.authProviders.includes(
-      "local"
-    )
-  ) {
-    user.authProviders.push(
-      "local"
-    );
+    user.lastLoginAt =
+      new Date();
 
     await user.save();
-  }
 
-  user.lastLoginAt =
-    new Date();
-
-  await user.save();
-
-  const tokens =
-    await createSession(
+    return {
       user,
-      req
-    );
-
-  user.passwordHash = undefined;
-
-  return {
-    user,
-    ...tokens,
+      ...tokens,
+    };
   };
-};
 
-const googleLogin = async ({
-  credential,
-  req,
-}) => {
-  if (!env.googleClientId) {
-    throw new ApiError(
-      500,
-      "Google authentication is not configured"
-    );
-  }
+/* =========================================================
+   LOCAL LOGIN
+========================================================= */
 
-  if (!credential) {
-    throw new ApiError(
-      400,
-      "Google credential is required"
-    );
-  }
+const login =
+  async ({
+    email,
+    password,
+    req,
+  }) => {
+    const normalizedEmail =
+      normalizeEmail(
+        email
+      );
 
-  let ticket;
+    const user =
+      await User
+        .findOne({
+          email:
+            normalizedEmail,
+        })
+        .select(
+          "+passwordHash"
+        );
 
-  try {
-    ticket =
-      await googleClient.verifyIdToken({
-        idToken: credential,
-        audience:
-          env.googleClientId,
-      });
-  } catch (error) {
-    throw new ApiError(
-      401,
-      "Invalid Google credential"
-    );
-  }
-
-  const payload =
-    ticket.getPayload();
-
-  if (!payload) {
-    throw new ApiError(
-      401,
-      "Invalid Google account"
-    );
-  }
-
-  const email =
-    normalizeEmail(payload.email);
-
-  /*
-   * IMPORTANT:
-   * Do not rely only on email suffix.
-   *
-   * Verify Google's hosted domain
-   * claim as well.
-   */
-  if (
-    payload.hd !==
-    env.googleAllowedDomain
-  ) {
-    throw new ApiError(
-      403,
-      `Only ${env.googleAllowedDomain} Google Workspace accounts are allowed`
-    );
-  }
-
-  if (
-    !payload.email_verified
-  ) {
-    throw new ApiError(
-      403,
-      "Google email is not verified"
-    );
-  }
-
-  if (
-    !email.endsWith(
-      `@${env.googleAllowedDomain}`
-    )
-  ) {
-    throw new ApiError(
-      403,
-      "Google account domain is not allowed"
-    );
-  }
-
-  let user =
-    await User.findOne({
-      email,
-    });
-
-  /*
-   * Recommended default:
-   * Domain alone does NOT automatically
-   * grant ERP access.
-   *
-   * User should first be created by ERP
-   * admin.
-   */
-  if (!user) {
     if (
-      !env.googleAutoProvision
+      !user ||
+      !user.passwordHash
+    ) {
+      throw new ApiError(
+        401,
+        "Invalid email or password"
+      );
+    }
+
+    const passwordCorrect =
+      await comparePassword(
+        password,
+        user.passwordHash
+      );
+
+    if (
+      !passwordCorrect
+    ) {
+      throw new ApiError(
+        401,
+        "Invalid email or password"
+      );
+    }
+
+    if (
+      user.status !==
+      "ACTIVE"
     ) {
       throw new ApiError(
         403,
-        "Your SE-RMS account has not been activated. Contact the administrator."
+        "Your account is not active"
       );
     }
 
-    user = await User.create({
-      displayName:
-        payload.name || email,
-
-      email,
-
-      googleId: payload.sub,
-
-      emailVerified: true,
-
-      authProviders: [
-        "google",
-      ],
-
-      role: "EMPLOYEE",
-
-      status: "ACTIVE",
-    });
-  }
-
-  if (user.status !== "ACTIVE") {
-    throw new ApiError(
-      403,
-      "Your account is not active"
-    );
-  }
-
-  user.googleId =
-    payload.sub;
-
-  user.emailVerified = true;
-
-  if (
-    !user.authProviders.includes(
-      "google"
-    )
-  ) {
-    user.authProviders.push(
-      "google"
-    );
-  }
-
-  user.lastLoginAt =
-    new Date();
-
-  await user.save();
-
-  const tokens =
-    await createSession(
-      user,
-      req
-    );
-
-  return {
-    user,
-    ...tokens,
-  };
-};
-
-const refreshAccessToken = async ({
-  refreshToken,
-  req,
-}) => {
-  if (!refreshToken) {
-    throw new ApiError(
-      401,
-      "Refresh token is missing"
-    );
-  }
-
-  let payload;
-
-  try {
-    payload =
-      verifyRefreshToken(
-        refreshToken
+    if (
+      !user.authProviders.includes(
+        "local"
+      )
+    ) {
+      user.authProviders.push(
+        "local"
       );
-  } catch (error) {
-    throw new ApiError(
-      401,
-      "Invalid or expired refresh token"
-    );
-  }
+    }
 
-  if (
-    payload.type !== "refresh"
-  ) {
-    throw new ApiError(
-      401,
-      "Invalid refresh token"
-    );
-  }
-
-  const session =
-    await Session.findById(
-      payload.sessionId
-    );
-
-  if (
-    !session ||
-    session.revokedAt ||
-    session.expiresAt <
-      new Date()
-  ) {
-    throw new ApiError(
-      401,
-      "Session has expired"
-    );
-  }
-
-  if (
-    session.tokenHash !==
-    hashToken(refreshToken)
-  ) {
-    /*
-     * Token mismatch can indicate
-     * refresh token reuse.
-     */
-    session.revokedAt =
+    user.lastLoginAt =
       new Date();
+
+    await user.save();
+
+    const tokens =
+      await createSession(
+        user,
+        req
+      );
+
+    user.passwordHash =
+      undefined;
+
+    return {
+      user,
+      ...tokens,
+    };
+  };
+
+/* =========================================================
+   GOOGLE LOGIN
+
+   Google proves identity.
+
+   MongoDB decides authorization.
+
+   Gmail + Workspace are both accepted,
+   but the exact verified email MUST already
+   exist in SE-RMS.
+========================================================= */
+
+const googleLogin =
+  async ({
+    credential,
+    req,
+  }) => {
+    if (
+      !env.googleClientId
+    ) {
+      throw new ApiError(
+        500,
+        "Google authentication is not configured"
+      );
+    }
+
+    if (
+      !credential
+    ) {
+      throw new ApiError(
+        400,
+        "Google credential is required"
+      );
+    }
+
+    let ticket;
+
+    try {
+      ticket =
+        await googleClient
+          .verifyIdToken({
+            idToken:
+              credential,
+
+            audience:
+              env.googleClientId,
+          });
+    } catch (
+      error
+    ) {
+      throw new ApiError(
+        401,
+        "Invalid Google credential"
+      );
+    }
+
+    const payload =
+      ticket.getPayload();
+
+    if (
+      !payload
+    ) {
+      throw new ApiError(
+        401,
+        "Invalid Google account"
+      );
+    }
+
+    if (
+      !payload.email_verified
+    ) {
+      throw new ApiError(
+        403,
+        "Google email is not verified"
+      );
+    }
+
+    const email =
+      normalizeEmail(
+        payload.email
+      );
+
+    if (
+      !email
+    ) {
+      throw new ApiError(
+        401,
+        "Google account does not contain a valid email"
+      );
+    }
+
+    /*
+     * CRITICAL:
+     *
+     * Never auto-create an ERP account from
+     * a Google login.
+     *
+     * Exact email must already exist.
+     */
+    const user =
+      await User.findOne({
+        email,
+      });
+
+    if (
+      !user
+    ) {
+      throw new ApiError(
+        403,
+        "Your Google account is not registered in SE-RMS. Contact the administrator."
+      );
+    }
+
+    if (
+      user.status !==
+      "ACTIVE"
+    ) {
+      throw new ApiError(
+        403,
+        "Your account is not active"
+      );
+    }
+
+    /*
+     * If this user was previously linked to
+     * another Google subject, do not silently
+     * replace that identity.
+     */
+    if (
+      user.googleId &&
+      String(
+        user.googleId
+      ) !==
+      String(
+        payload.sub
+      )
+    ) {
+      throw new ApiError(
+        403,
+        "This SE-RMS account is already linked to another Google account."
+      );
+    }
+
+    user.googleId =
+      payload.sub;
+
+    user.emailVerified =
+      true;
+
+    if (
+      !user.authProviders.includes(
+        "google"
+      )
+    ) {
+      user.authProviders.push(
+        "google"
+      );
+    }
+
+    user.lastLoginAt =
+      new Date();
+
+    await user.save();
+
+    const tokens =
+      await createSession(
+        user,
+        req
+      );
+
+    return {
+      user,
+      ...tokens,
+    };
+  };
+
+/* =========================================================
+   REFRESH TOKEN
+========================================================= */
+
+const refreshAccessToken =
+  async ({
+    refreshToken,
+    req,
+  }) => {
+    if (
+      !refreshToken
+    ) {
+      throw new ApiError(
+        401,
+        "Refresh token is missing"
+      );
+    }
+
+    let payload;
+
+    try {
+      payload =
+        verifyRefreshToken(
+          refreshToken
+        );
+    } catch (
+      error
+    ) {
+      throw new ApiError(
+        401,
+        "Invalid or expired refresh token"
+      );
+    }
+
+    if (
+      payload.type !==
+      "refresh"
+    ) {
+      throw new ApiError(
+        401,
+        "Invalid refresh token"
+      );
+    }
+
+    const session =
+      await Session.findById(
+        payload.sessionId
+      );
+
+    if (
+      !session ||
+      session.revokedAt ||
+      session.expiresAt <
+        new Date()
+    ) {
+      throw new ApiError(
+        401,
+        "Session has expired"
+      );
+    }
+
+    if (
+      session.tokenHash !==
+      hashToken(
+        refreshToken
+      )
+    ) {
+      session.revokedAt =
+        new Date();
+
+      await session.save();
+
+      throw new ApiError(
+        401,
+        "Invalid session"
+      );
+    }
+
+    const user =
+      await User.findById(
+        payload.sub
+      );
+
+    if (
+      !user ||
+      user.status !==
+        "ACTIVE"
+    ) {
+      throw new ApiError(
+        401,
+        "User account is unavailable"
+      );
+    }
+
+    const newRefreshToken =
+      signRefreshToken(
+        user._id,
+        session._id
+      );
+
+    session.tokenHash =
+      hashToken(
+        newRefreshToken
+      );
+
+    session.lastUsedAt =
+      new Date();
+
+    session.userAgent =
+      req.get(
+        "user-agent"
+      ) ||
+      session.userAgent;
+
+    session.ipAddress =
+      req.ip ||
+      session.ipAddress;
+
+    session.expiresAt =
+      getSessionExpiry();
 
     await session.save();
 
-    throw new ApiError(
-      401,
-      "Invalid session"
-    );
-  }
+    const accessToken =
+      signAccessToken(
+        user
+      );
 
-  const user =
-    await User.findById(
-      payload.sub
-    );
+    return {
+      user,
+      accessToken,
 
-  if (
-    !user ||
-    user.status !== "ACTIVE"
-  ) {
-    throw new ApiError(
-      401,
-      "User account is unavailable"
-    );
-  }
-
-  /*
-   * Rotate the refresh token.
-   */
-  const newRefreshToken =
-    signRefreshToken(
-      user._id,
-      session._id
-    );
-
-  session.tokenHash =
-    hashToken(
-      newRefreshToken
-    );
-
-  session.lastUsedAt =
-    new Date();
-
-  session.userAgent =
-    req.get("user-agent") ||
-    session.userAgent;
-
-  session.ipAddress =
-    req.ip ||
-    session.ipAddress;
-
-  session.expiresAt =
-    getSessionExpiry();
-
-  await session.save();
-
-  const accessToken =
-    signAccessToken(user);
-
-  return {
-    user,
-    accessToken,
-    refreshToken:
-      newRefreshToken,
+      refreshToken:
+        newRefreshToken,
+    };
   };
-};
 
-const logout = async (
-  refreshToken
-) => {
-  if (!refreshToken) {
-    return;
-  }
+/* =========================================================
+   LOGOUT
+========================================================= */
 
-  const tokenHash =
-    hashToken(refreshToken);
-
-  await Session.findOneAndUpdate(
-    {
-      tokenHash,
-      revokedAt: null,
-    },
-    {
-      revokedAt: new Date(),
+const logout =
+  async (
+    refreshToken
+  ) => {
+    if (
+      !refreshToken
+    ) {
+      return;
     }
-  );
-};
 
-const logoutAll = async (
-  userId
-) => {
-  await Session.updateMany(
-    {
-      user: userId,
-      revokedAt: null,
-    },
-    {
-      revokedAt: new Date(),
-    }
-  );
-};
+    const tokenHash =
+      hashToken(
+        refreshToken
+      );
 
-const forgotPassword = async ({
-  email,
-}) => {
-  const normalizedEmail =
-    normalizeEmail(email);
+    await Session.findOneAndUpdate(
+      {
+        tokenHash,
 
-  /*
-   * Never expose whether
-   * an account exists.
-   */
-  const user =
-    await User.findOne({
-      email: normalizedEmail,
-      status: "ACTIVE",
-    });
-
-  if (!user) {
-    return;
-  }
-
-  /*
-   * Google-only accounts without local
-   * password do not need reset.
-   */
-  if (
-    !user.authProviders.includes(
-      "local"
-    )
-  ) {
-    return;
-  }
-
-  const rawToken =
-    generateRandomToken();
-
-  const hashedToken =
-    hashToken(rawToken);
-
-  user.passwordResetToken =
-    hashedToken;
-
-  user.passwordResetExpires =
-    new Date(
-      Date.now() +
-        15 * 60 * 1000
-    );
-
-  await user.save();
-
-  const resetUrl =
-    `${env.frontendUrls[0]}` +
-    `/reset-password` +
-    `?token=${rawToken}` +
-    `&email=${encodeURIComponent(
-      user.email
-    )}`;
-
-  await sendEmail({
-    to: user.email,
-
-    subject:
-      "Reset your SE-RMS password",
-
-    text:
-      `A password reset was requested for your SE-RMS account.\n\n` +
-      `Reset your password here:\n${resetUrl}\n\n` +
-      `This link expires in 15 minutes.\n\n` +
-      `If you did not request this, ignore this email.`,
-
-    html: `
-      <h2>SE-RMS Password Reset</h2>
-
-      <p>
-        A password reset was requested
-        for your SE-RMS account.
-      </p>
-
-      <p>
-        <a href="${resetUrl}">
-          Reset Password
-        </a>
-      </p>
-
-      <p>
-        This link expires in 15 minutes.
-      </p>
-
-      <p>
-        If you did not request this,
-        you can ignore this email.
-      </p>
-    `,
-  });
-};
-
-const resetPassword = async ({
-  email,
-  token,
-  newPassword,
-}) => {
-  validatePassword(
-    newPassword
-  );
-
-  const normalizedEmail =
-    normalizeEmail(email);
-
-  const hashedToken =
-    hashToken(token);
-
-  const user =
-    await User.findOne({
-      email: normalizedEmail,
-
-      passwordResetToken:
-        hashedToken,
-
-      passwordResetExpires: {
-        $gt: new Date(),
+        revokedAt:
+          null,
       },
-    }).select(
-      "+passwordResetToken +passwordResetExpires +passwordHash"
+      {
+        revokedAt:
+          new Date(),
+      }
     );
+  };
 
-  if (!user) {
-    throw new ApiError(
-      400,
-      "Password reset link is invalid or expired"
+const logoutAll =
+  async (
+    userId
+  ) => {
+    await Session.updateMany(
+      {
+        user:
+          userId,
+
+        revokedAt:
+          null,
+      },
+      {
+        revokedAt:
+          new Date(),
+      }
     );
-  }
+  };
 
-  user.passwordHash =
-    await hashPassword(
+/* =========================================================
+   REQUEST PASSWORD RESET OTP
+========================================================= */
+
+const forgotPassword =
+  async ({
+    email,
+    req,
+  }) => {
+    /* =====================================================
+       1. NORMALIZE / VALIDATE EMAIL
+    ===================================================== */
+
+    const normalizedEmail =
+      normalizeEmail(
+        email
+      );
+
+    if (
+      !normalizedEmail
+    ) {
+      throw new ApiError(
+        400,
+        "Email address is required"
+      );
+    }
+
+    /* =====================================================
+       2. FIND ACTIVE SE-RMS USER
+    ===================================================== */
+
+    const user =
+      await User.findOne({
+        email:
+          normalizedEmail,
+
+        status:
+          "ACTIVE",
+      });
+
+    if (
+      !user
+    ) {
+      throw new ApiError(
+        404,
+        "No active SE-RMS account was found with this email address."
+      );
+    }
+
+    /* =====================================================
+       3. GET REGISTERED WHATSAPP NUMBER
+
+       IMPORTANT:
+       Keep ONLY fields that actually exist in your User
+       schema.
+
+       If mobile is stored in Employee instead of User,
+       replace this section with Employee lookup.
+    ===================================================== */
+
+    const whatsappNumber =
+      String(
+        user.whatsappNumber ||
+        user.mobileNumber ||
+        user.phoneNumber ||
+        user.mobile ||
+        user.phone ||
+        ""
+      )
+        .replace(
+          /\D/g,
+          ""
+        )
+        .trim();
+
+    if (
+      !whatsappNumber
+    ) {
+      throw new ApiError(
+        400,
+        "No WhatsApp number is registered with this SE-RMS account. Please contact HR or the system administrator."
+      );
+    }
+
+    /* =====================================================
+       4. NORMALIZE INDIAN MOBILE NUMBER
+
+       9876543210
+          ↓
+       919876543210
+    ===================================================== */
+
+    let whatsappPhone =
+      whatsappNumber;
+
+    if (
+      whatsappPhone.length ===
+      10
+    ) {
+      whatsappPhone =
+        `91${whatsappPhone}`;
+    }
+
+    if (
+      whatsappPhone.length <
+        11 ||
+      whatsappPhone.length >
+        15
+    ) {
+      throw new ApiError(
+        400,
+        "The WhatsApp number registered with this account is invalid. Please contact HR or the system administrator."
+      );
+    }
+
+    /* =====================================================
+       5. INVALIDATE PREVIOUS ACTIVE OTPs
+
+       Only the latest OTP should remain usable.
+    ===================================================== */
+
+    const now =
+      new Date();
+
+    await PasswordResetOtp
+      .updateMany(
+        {
+          user:
+            user._id,
+
+          email:
+            normalizedEmail,
+
+          usedAt:
+            null,
+        },
+        {
+          $set: {
+            usedAt:
+              now,
+          },
+        }
+      );
+
+    /* =====================================================
+       6. GENERATE SECURE 6-DIGIT OTP
+    ===================================================== */
+
+    const otp =
+      crypto
+        .randomInt(
+          100000,
+          1000000
+        )
+        .toString();
+
+    /* =====================================================
+       7. HASH OTP
+
+       Never store plain OTP in MongoDB.
+    ===================================================== */
+
+    const otpHash =
+      hashOtp(
+        otp
+      );
+
+    /* =====================================================
+       8. OTP VALID FOR EXACTLY 15 SECONDS
+    ===================================================== */
+
+    const expiresAt =
+      new Date(
+        Date.now() +
+          15 * 1000
+      );
+
+    /* =====================================================
+       9. CREATE OTP RECORD
+    ===================================================== */
+
+    const resetOtp =
+      await PasswordResetOtp
+        .create({
+          user:
+            user._id,
+
+          email:
+            normalizedEmail,
+
+          otpHash,
+
+          expiresAt,
+
+          attempts:
+            0,
+
+          maxAttempts:
+            5,
+
+          verifiedAt:
+            null,
+
+          usedAt:
+            null,
+
+          requestedIp:
+            req?.ip ||
+            null,
+
+          userAgent:
+            req
+              ?.get?.(
+                "user-agent"
+              ) ||
+            null,
+        });
+
+    /* =====================================================
+       10. SEND OTP THROUGH WHATSAPP
+
+       IMPORTANT:
+       Replace `sendTextToPhone` below only if your actual
+       Baileys client exports a differently named method.
+    ===================================================== */
+
+    const message =
+      [
+        "SE-RMS Password Reset",
+        "",
+        `Your verification code is: ${otp}`,
+        "",
+        "This code is valid for 15 seconds.",
+        "Do not share this code with anyone.",
+        "",
+        "If you did not request a password reset, you can ignore this message.",
+        "",
+        "Sandeep Edgetech Pvt. Ltd.",
+      ].join(
+        "\n"
+      );
+
+    try {
+      await sendTextToPhone(
+        whatsappPhone,
+        message
+      );
+    } catch (
+      error
+    ) {
+      /*
+       * Do not leave a usable OTP in MongoDB when
+       * WhatsApp delivery itself failed.
+       */
+
+      resetOtp.usedAt =
+        new Date();
+
+      await resetOtp.save();
+
+      console.error(
+        "[AUTH] Password reset WhatsApp delivery failed",
+        {
+          userId:
+            String(
+              user._id
+            ),
+
+          error:
+            error?.message ||
+            "Unknown Baileys error",
+        }
+      );
+
+      throw new ApiError(
+        503,
+        "Unable to send the WhatsApp verification code right now. Please try again."
+      );
+    }
+
+    /* =====================================================
+       11. SUCCESS ONLY AFTER WHATSAPP SEND SUCCEEDS
+    ===================================================== */
+
+    return {
+      sent:
+        true,
+
+      expiresInSeconds:
+        15,
+    };
+  };
+
+/* =========================================================
+   VERIFY PASSWORD RESET OTP
+========================================================= */
+
+const verifyPasswordResetOtp =
+  async ({
+    email,
+    otp,
+  }) => {
+    /* =====================================================
+       1. NORMALIZE INPUT
+    ===================================================== */
+
+    const normalizedEmail =
+      normalizeEmail(
+        email
+      );
+
+    const normalizedOtp =
+      String(
+        otp || ""
+      )
+        .replace(
+          /\D/g,
+          ""
+        )
+        .trim();
+
+    /* =====================================================
+       2. VALIDATE EMAIL
+    ===================================================== */
+
+    if (
+      !normalizedEmail
+    ) {
+      throw new ApiError(
+        400,
+        "Email is required"
+      );
+    }
+
+    /* =====================================================
+       3. VALIDATE OTP FORMAT
+       OTP must always be exactly 6 digits
+    ===================================================== */
+
+    if (
+      !/^\d{6}$/.test(
+        normalizedOtp
+      )
+    ) {
+      throw new ApiError(
+        400,
+        "Enter the complete 6-digit OTP"
+      );
+    }
+
+    /* =====================================================
+       4. FIND ACTIVE USER
+    ===================================================== */
+
+    const user =
+      await User.findOne({
+        email:
+          normalizedEmail,
+
+        status:
+          "ACTIVE",
+      });
+
+    /*
+     * Keep this response generic.
+     *
+     * We should not reveal whether an email address exists
+     * in SE-RMS through the password recovery endpoint.
+     */
+    if (
+      !user
+    ) {
+      throw new ApiError(
+        400,
+        "Invalid or expired verification code"
+      );
+    }
+
+    /* =====================================================
+       5. FIND LATEST UNUSED OTP
+       
+       IMPORTANT:
+       Do NOT filter expiresAt here.
+       
+       We need to retrieve the OTP first so that we can
+       distinguish:
+       
+       - wrong OTP
+       - expired OTP
+       - too many attempts
+       
+       Otherwise an expired OTP simply looks "not found".
+    ===================================================== */
+
+    const resetOtp =
+      await PasswordResetOtp
+        .findOne({
+          user:
+            user._id,
+
+          email:
+            normalizedEmail,
+
+          usedAt:
+            null,
+        })
+        .sort({
+          createdAt:
+            -1,
+        })
+        .select(
+          "+otpHash"
+        );
+
+    /* =====================================================
+       6. NO OTP REQUEST EXISTS
+    ===================================================== */
+
+    if (
+      !resetOtp
+    ) {
+      throw new ApiError(
+        400,
+        "No active verification code found. Request a new OTP."
+      );
+    }
+
+    /* =====================================================
+       7. CHECK EXPIRY
+    ===================================================== */
+
+    const now =
+      new Date();
+
+    if (
+      !resetOtp.expiresAt ||
+      resetOtp.expiresAt <=
+        now
+    ) {
+      resetOtp.usedAt =
+        now;
+
+      await resetOtp.save();
+
+      throw new ApiError(
+        400,
+        "OTP has expired. Request a new code."
+      );
+    }
+
+    /* =====================================================
+       8. CHECK ATTEMPT LIMIT
+    ===================================================== */
+
+    const maxAttempts =
+      Number(
+        resetOtp.maxAttempts ||
+          5
+      );
+
+    const currentAttempts =
+      Number(
+        resetOtp.attempts ||
+          0
+      );
+
+    if (
+      currentAttempts >=
+      maxAttempts
+    ) {
+      resetOtp.usedAt =
+        now;
+
+      await resetOtp.save();
+
+      throw new ApiError(
+        429,
+        "Too many incorrect verification attempts. Request a new OTP."
+      );
+    }
+
+    /* =====================================================
+       9. HASH PROVIDED OTP
+    ===================================================== */
+
+    const providedHash =
+      hashOtp(
+        normalizedOtp
+      );
+
+    if (
+      !resetOtp.otpHash ||
+      !providedHash
+    ) {
+      throw new ApiError(
+        400,
+        "Unable to verify OTP. Request a new code."
+      );
+    }
+
+    /* =====================================================
+       10. SAFE HASH COMPARISON
+    ===================================================== */
+
+    let correct =
+      false;
+
+    try {
+      const expectedBuffer =
+        Buffer.from(
+          resetOtp.otpHash,
+          "hex"
+        );
+
+      const providedBuffer =
+        Buffer.from(
+          providedHash,
+          "hex"
+        );
+
+      correct =
+        expectedBuffer.length >
+          0 &&
+        expectedBuffer.length ===
+          providedBuffer.length &&
+        crypto.timingSafeEqual(
+          expectedBuffer,
+          providedBuffer
+        );
+    } catch (
+      error
+    ) {
+      correct =
+        false;
+    }
+
+    /* =====================================================
+       11. WRONG OTP
+    ===================================================== */
+
+    if (
+      !correct
+    ) {
+      resetOtp.attempts =
+        currentAttempts +
+        1;
+
+      const attemptsLeft =
+        Math.max(
+          0,
+          maxAttempts -
+            resetOtp.attempts
+        );
+
+      /*
+       * If this was the final permitted attempt,
+       * consume the OTP.
+       */
+      if (
+        resetOtp.attempts >=
+        maxAttempts
+      ) {
+        resetOtp.usedAt =
+          new Date();
+
+        await resetOtp.save();
+
+        throw new ApiError(
+          429,
+          "OTP does not match. Too many incorrect attempts. Request a new OTP."
+        );
+      }
+
+      await resetOtp.save();
+
+      throw new ApiError(
+        400,
+        attemptsLeft === 1
+          ? "OTP does not match. 1 attempt remaining."
+          : `OTP does not match. ${attemptsLeft} attempts remaining.`
+      );
+    }
+
+    /* =====================================================
+       12. CORRECT OTP
+    ===================================================== */
+
+    resetOtp.verifiedAt =
+      new Date();
+
+    await resetOtp.save();
+
+    /* =====================================================
+       13. SUCCESS
+    ===================================================== */
+
+    return {
+      verified:
+        true,
+
+      message:
+        "OTP verified successfully",
+    };
+  };
+
+/* =========================================================
+   RESET PASSWORD WITH VERIFIED OTP
+========================================================= */
+
+const resetPassword =
+  async ({
+    email,
+    otp,
+    newPassword,
+  }) => {
+    validatePassword(
       newPassword
     );
 
-  user.passwordChangedAt =
-    new Date();
+    const normalizedEmail =
+      normalizeEmail(
+        email
+      );
 
-  user.passwordResetToken =
-    null;
+    if (
+      !normalizedEmail ||
+      !otp
+    ) {
+      throw new ApiError(
+        400,
+        "Email and verification code are required"
+      );
+    }
 
-  user.passwordResetExpires =
-    null;
+    const user =
+      await User
+        .findOne({
+          email:
+            normalizedEmail,
 
-  if (
-    !user.authProviders.includes(
-      "local"
-    )
-  ) {
-    user.authProviders.push(
-      "local"
+          status:
+            "ACTIVE",
+        })
+        .select(
+          "+passwordHash"
+        );
+
+    if (
+      !user
+    ) {
+      throw new ApiError(
+        400,
+        "Invalid or expired verification code"
+      );
+    }
+
+    const resetOtp =
+      await PasswordResetOtp
+        .findOne({
+          user:
+            user._id,
+
+          email:
+            normalizedEmail,
+
+          verifiedAt: {
+            $ne:
+              null,
+          },
+
+          usedAt:
+            null,
+
+          expiresAt: {
+            $gt:
+              new Date(),
+          },
+        })
+        .sort({
+          createdAt:
+            -1,
+        })
+        .select(
+          "+otpHash"
+        );
+
+    if (
+      !resetOtp
+    ) {
+      throw new ApiError(
+        400,
+        "Please verify your OTP before resetting the password"
+      );
+    }
+
+    const providedHash =
+      hashOtp(
+        otp
+      );
+
+    const expectedBuffer =
+      Buffer.from(
+        resetOtp.otpHash,
+        "hex"
+      );
+
+    const providedBuffer =
+      Buffer.from(
+        providedHash,
+        "hex"
+      );
+
+    const correct =
+      expectedBuffer.length ===
+        providedBuffer.length &&
+      crypto.timingSafeEqual(
+        expectedBuffer,
+        providedBuffer
+      );
+
+    if (
+      !correct
+    ) {
+      throw new ApiError(
+        400,
+        "Invalid or expired verification code"
+      );
+    }
+
+    user.passwordHash =
+      await hashPassword(
+        newPassword
+      );
+
+    user.passwordChangedAt =
+      new Date();
+
+    if (
+      !user.authProviders.includes(
+        "local"
+      )
+    ) {
+      user.authProviders.push(
+        "local"
+      );
+    }
+
+    await user.save();
+
+    resetOtp.usedAt =
+      new Date();
+
+    await resetOtp.save();
+
+    /*
+     * Invalidate any other reset OTPs.
+     */
+    await PasswordResetOtp.updateMany(
+      {
+        user:
+          user._id,
+
+        _id: {
+          $ne:
+            resetOtp._id,
+        },
+
+        usedAt:
+          null,
+      },
+      {
+        usedAt:
+          new Date(),
+      }
     );
-  }
 
-  await user.save();
+    /*
+     * Security:
+     * password reset terminates every
+     * existing SE-RMS session.
+     */
+    await logoutAll(
+      user._id
+    );
+  };
 
-  /*
-   * Force logout from every device
-   * after password reset.
-   */
-  await logoutAll(
-    user._id
-  );
-};
+/* =========================================================
+   EXPORT
+========================================================= */
 
 module.exports = {
   signup,
+
   login,
+
   googleLogin,
+
   refreshAccessToken,
+
   logout,
+
   logoutAll,
+
   forgotPassword,
+
+  verifyPasswordResetOtp,
+
   resetPassword,
 };

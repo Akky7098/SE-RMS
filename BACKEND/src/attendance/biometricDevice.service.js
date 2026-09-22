@@ -1,4 +1,6 @@
-const BiometricDevice =
+const {
+  BiometricDevice,
+} =
   require(
     "./biometricDevice.model"
   );
@@ -48,15 +50,6 @@ const normalizeUpper =
 
 /* =========================================================
    FIND DEVICE
-
-   Device identity priority:
-
-   1. Mongo _id
-   2. externalDeviceId
-   3. serialNumber
-   4. configured SE-RMS device code
-
-   We DO NOT identify devices by LAN IP.
 ========================================================= */
 
 const findDevice =
@@ -147,13 +140,6 @@ const findDevice =
 
 /* =========================================================
    REQUIRE DEVICE
-
-   Production behavior:
-
-   Device must already exist in Device Master.
-
-   We DO NOT silently create machines because an unknown
-   internet request hits the attendance endpoint.
 ========================================================= */
 
 const requireDevice =
@@ -198,7 +184,15 @@ const requireDevice =
   };
 
 /* =========================================================
-   MARK HEARTBEAT
+   MARK HEARTBEAT / DEVICE CONTACT
+
+   Any valid request from the registered physical device
+   proves that SE-RMS communicated with it.
+
+   This includes:
+   - heartbeat
+   - command polling
+   - other verified FKWeb requests
 ========================================================= */
 
 const markHeartbeat =
@@ -223,8 +217,7 @@ const markHeartbeat =
     /*
      * IP is informational only.
      *
-     * Do not overwrite configured polling IP from random
-     * forwarded addresses.
+     * Never use IP as device identity.
      */
     if (
       ipAddress &&
@@ -315,8 +308,12 @@ const markSyncSuccess =
     {
       message =
         "Attendance synchronization completed.",
-      cursorAt = null,
-      stats = {},
+
+      cursorAt =
+        null,
+
+      stats =
+        {},
     } = {}
   ) => {
     const now =
@@ -426,6 +423,121 @@ const markSyncFailure =
   };
 
 /* =========================================================
+   DEVICE HEALTH
+
+   "isOnline" stored in Mongo is only the last known state.
+
+   Actual current online status is calculated from
+   lastConnectionAt / lastHeartbeatAt.
+
+   Default:
+   device is considered online when SE-RMS has heard from it
+   during the last 10 minutes.
+========================================================= */
+
+const getDeviceHealth =
+  async ({
+    externalDeviceId = "",
+    serialNumber = "",
+    code = "",
+    provider = "",
+    onlineThresholdMinutes = 10,
+  } = {}) => {
+    const device =
+      await findDevice({
+        externalDeviceId,
+        serialNumber,
+        code,
+        provider,
+      });
+
+    if (
+      !device
+    ) {
+      return {
+        registered:
+          false,
+
+        online:
+          false,
+
+        device:
+          null,
+      };
+    }
+
+    const now =
+      new Date();
+
+    const lastSeenAt =
+      device.lastConnectionAt ||
+      device.lastHeartbeatAt ||
+      device.lastPunchReceivedAt ||
+      null;
+
+    let secondsSinceLastSeen =
+      null;
+
+    if (
+      lastSeenAt
+    ) {
+      secondsSinceLastSeen =
+        Math.max(
+          0,
+          Math.floor(
+            (
+              now.getTime() -
+              new Date(
+                lastSeenAt
+              ).getTime()
+            ) /
+              1000
+          )
+        );
+    }
+
+    const thresholdSeconds =
+      Math.max(
+        1,
+        Number(
+          onlineThresholdMinutes ||
+            10
+        )
+      ) *
+      60;
+
+    const online =
+      secondsSinceLastSeen !==
+        null &&
+      secondsSinceLastSeen <=
+        thresholdSeconds;
+
+    /*
+     * Correct stale runtime flag when necessary.
+     */
+    if (
+      device.isOnline !==
+      online
+    ) {
+      device.isOnline =
+        online;
+
+      await device.save();
+    }
+
+    return {
+      registered:
+        true,
+
+      online,
+
+      secondsSinceLastSeen,
+
+      device,
+    };
+  };
+
+/* =========================================================
    EXPORT
 ========================================================= */
 
@@ -443,4 +555,6 @@ module.exports = {
   markSyncSuccess,
 
   markSyncFailure,
+
+  getDeviceHealth,
 };

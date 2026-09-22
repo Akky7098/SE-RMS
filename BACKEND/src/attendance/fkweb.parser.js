@@ -1,3 +1,11 @@
+const {
+  extractDecodedM50Records,
+  decodeEbknBinary,
+} =
+  require(
+    "./fkwebEbkn.parser"
+  );
+
 /* =========================================================
    NORMALIZE
 ========================================================= */
@@ -44,7 +52,7 @@ const normalizeBiometricCode =
   };
 
 /* =========================================================
-   PARSE MACHINE DATE
+   MACHINE DATE
 ========================================================= */
 
 const parseMachineDate =
@@ -57,14 +65,22 @@ const parseMachineDate =
       return null;
     }
 
+    if (
+      value instanceof
+      Date
+    ) {
+      return Number.isNaN(
+        value.getTime()
+      )
+        ? null
+        : value;
+    }
+
     const text =
       normalizeText(
         value
       );
 
-    /*
-     * YYYYMMDDHHmmss
-     */
     let match =
       text.match(
         /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/
@@ -85,9 +101,6 @@ const parseMachineDate =
         : date;
     }
 
-    /*
-     * YYYY-MM-DD HH:mm:ss
-     */
     match =
       text.match(
         /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/
@@ -121,7 +134,7 @@ const parseMachineDate =
   };
 
 /* =========================================================
-   REQUEST DEVICE ID
+   DEVICE ID
 ========================================================= */
 
 const getDeviceId =
@@ -150,7 +163,41 @@ const getDeviceId =
   };
 
 /* =========================================================
-   PARSE JSON PAYLOAD
+   HEADERS
+========================================================= */
+
+const getRequestCode =
+  (
+    req
+  ) =>
+    normalizeText(
+      req.headers[
+        "request_code"
+      ]
+    );
+
+const getCommandCode =
+  (
+    req
+  ) =>
+    normalizeText(
+      req.headers[
+        "cmd_code"
+      ]
+    );
+
+const getTransactionId =
+  (
+    req
+  ) =>
+    normalizeText(
+      req.headers[
+        "trans_id"
+      ]
+    );
+
+/* =========================================================
+   JSON BODY
 ========================================================= */
 
 const parseJsonBody =
@@ -216,31 +263,40 @@ const parseJsonBody =
   };
 
 /* =========================================================
-   NORMALIZE PUNCH PAYLOAD
+   NORMALIZE PUNCH
 ========================================================= */
 
 const normalizePunchPayload =
   (
     payload,
-    deviceId
+    deviceId,
+    protocol =
+      "FKWEB"
   ) => {
+    if (
+      !payload
+    ) {
+      return null;
+    }
+
     const employeeCode =
       normalizeBiometricCode(
-        payload?.employeeCode ||
-        payload?.employee_code ||
-        payload?.user_id ||
-        payload?.userId ||
-        payload?.pin ||
-        payload?.enroll_id
+        payload.employeeCode ||
+        payload.employee_code ||
+        payload.user_id ||
+        payload.userId ||
+        payload.pin ||
+        payload.enroll_id
       );
 
     const punchTime =
       parseMachineDate(
-        payload?.punchTime ||
-        payload?.punch_time ||
-        payload?.record_time ||
-        payload?.time ||
-        payload?.timestamp
+        payload.punchTime ||
+        payload.punch_time ||
+        payload.record_time ||
+        payload.io_time ||
+        payload.time ||
+        payload.timestamp
       );
 
     if (
@@ -254,8 +310,7 @@ const normalizePunchPayload =
       eventType:
         "PUNCH",
 
-      protocol:
-        "FKWEB",
+      protocol,
 
       deviceId,
 
@@ -263,33 +318,33 @@ const normalizePunchPayload =
 
       employeeName:
         normalizeText(
-          payload?.employeeName ||
-          payload?.employee_name ||
-          payload?.user_name ||
-          payload?.name
+          payload.employeeName ||
+          payload.employee_name ||
+          payload.user_name ||
+          payload.name
         ),
 
       punchTime,
 
       recordId:
         normalizeText(
-          payload?.recordId ||
-          payload?.record_id ||
-          payload?.log_id ||
-          payload?.id
+          payload.recordId ||
+          payload.record_id ||
+          payload.log_id ||
+          payload.id
         ),
 
       verifyMode:
         normalizeText(
-          payload?.verifyMode ||
-          payload?.verify_mode
+          payload.verifyMode ??
+          payload.verify_mode
         ),
 
       ioMode:
         normalizeText(
-          payload?.ioMode ||
-          payload?.io_mode ||
-          payload?.in_out_mode
+          payload.ioMode ??
+          payload.io_mode ??
+          payload.in_out_mode
         ),
 
       payload,
@@ -297,13 +352,66 @@ const normalizePunchPayload =
   };
 
 /* =========================================================
-   PARSE FKWEB REQUEST
+   M50 RECORD
+========================================================= */
 
-   This handles standard normalized JSON/header cases.
+const normalizeM50Record =
+  (
+    record,
+    deviceId
+  ) => {
+    return normalizePunchPayload(
+      record,
+      deviceId,
+      "FKWEB_EBKN"
+    );
+  };
 
-   Any vendor-specific binary EBKN decoding should feed its
-   decoded result into normalizePunchPayload instead of
-   writing directly to MongoDB.
+/* =========================================================
+   REQUEST TYPE HELPERS
+========================================================= */
+
+const isCommandResultRequest =
+  (
+    req
+  ) => {
+    return Boolean(
+      getCommandCode(
+        req
+      ) ||
+      req.headers[
+        "cmd_return_code"
+      ] !==
+        undefined ||
+      getRequestCode(
+        req
+      )
+        .toLowerCase() ===
+        "send_cmd_result"
+    );
+  };
+
+const isCommandPollRequest =
+  (
+    req
+  ) => {
+    const requestCode =
+      getRequestCode(
+        req
+      )
+        .toLowerCase();
+
+    return [
+      "receive_cmd",
+      "get_cmd",
+      "get_command",
+    ].includes(
+      requestCode
+    );
+  };
+
+/* =========================================================
+   PARSE FKWEB EVENT
 ========================================================= */
 
 const parseFkWebEvent =
@@ -315,51 +423,47 @@ const parseFkWebEvent =
         req
       );
 
+    const requestCode =
+      getRequestCode(
+        req
+      );
+
+    const commandCode =
+      getCommandCode(
+        req
+      );
+
+    const transactionId =
+      getTransactionId(
+        req
+      );
+
     const payload =
       parseJsonBody(
         req
       );
 
-    const commandCode =
-      normalizeText(
-        req.headers[
-          "cmd_code"
-        ]
-      );
+    /* =====================================================
+       DEVICE ASKING FOR COMMAND
+    ===================================================== */
 
-    const requestCode =
-      normalizeText(
-        req.headers[
-          "request_code"
-        ]
-      );
-
-    /*
-     * Command result.
-     */
     if (
-      commandCode ||
-      req.headers[
-        "cmd_return_code"
-      ]
+      isCommandPollRequest(
+        req
+      )
     ) {
       return {
         eventType:
-          "COMMAND_RESULT",
+          "COMMAND_POLL",
 
         protocol:
-          "FKWEB",
+          "FKWEB_EBKN",
 
         deviceId,
 
         requestCode,
 
-        transactionId:
-          normalizeText(
-            req.headers[
-              "trans_id"
-            ]
-          ),
+        transactionId,
 
         payload:
           payload ||
@@ -367,9 +471,132 @@ const parseFkWebEvent =
       };
     }
 
-    /*
-     * Enrollment/user event.
-     */
+    /* =====================================================
+       COMMAND RESULT
+    ===================================================== */
+
+    if (
+      isCommandResultRequest(
+        req
+      )
+    ) {
+      let decodedRecords =
+        [];
+
+      if (
+        payload
+      ) {
+        const m50 =
+          extractDecodedM50Records(
+            payload
+          );
+
+        if (
+          m50.length
+        ) {
+          decodedRecords =
+            m50
+              .map(
+                (
+                  record
+                ) =>
+                  normalizeM50Record(
+                    record,
+                    deviceId
+                  )
+              )
+              .filter(
+                Boolean
+              );
+        } else {
+          const candidates =
+            Array.isArray(
+              payload.records
+            )
+              ? payload.records
+              : Array.isArray(
+                    payload.log_array
+                  )
+                ? payload.log_array
+                : [];
+
+          decodedRecords =
+            candidates
+              .map(
+                (
+                  record
+                ) =>
+                  normalizePunchPayload(
+                    record,
+                    deviceId
+                  )
+              )
+              .filter(
+                Boolean
+              );
+        }
+      } else if (
+        Buffer.isBuffer(
+          req.body
+        ) &&
+        req.body.length
+      ) {
+        const binaryRecords =
+          decodeEbknBinary(
+            req.body
+          );
+
+        decodedRecords =
+          binaryRecords
+            .map(
+              (
+                record
+              ) =>
+                normalizeM50Record(
+                  record,
+                  deviceId
+                )
+            )
+            .filter(
+              Boolean
+            );
+      }
+
+      return {
+        eventType:
+          "COMMAND_RESULT",
+
+        protocol:
+          "FKWEB_EBKN",
+
+        deviceId,
+
+        requestCode,
+
+        commandCode,
+
+        transactionId,
+
+        commandReturnCode:
+          normalizeText(
+            req.headers[
+              "cmd_return_code"
+            ]
+          ),
+
+        records:
+          decodedRecords,
+
+        payload:
+          payload ||
+          null,
+      };
+    }
+
+    /* =====================================================
+       ENROLLMENT
+    ===================================================== */
+
     const userId =
       payload?.user_id ||
       payload?.employeeCode ||
@@ -416,20 +643,16 @@ const parseFkWebEvent =
 
         requestCode,
 
-        transactionId:
-          normalizeText(
-            req.headers[
-              "trans_id"
-            ]
-          ),
+        transactionId,
 
         payload,
       };
     }
 
-    /*
-     * Punch.
-     */
+    /* =====================================================
+       LIVE PUNCH
+    ===================================================== */
+
     const punch =
       normalizePunchPayload(
         payload,
@@ -444,18 +667,14 @@ const parseFkWebEvent =
 
         requestCode,
 
-        transactionId:
-          normalizeText(
-            req.headers[
-              "trans_id"
-            ]
-          ),
+        transactionId,
       };
     }
 
-    /*
-     * Heartbeat.
-     */
+    /* =====================================================
+       HEARTBEAT
+    ===================================================== */
+
     if (
       deviceId
     ) {
@@ -469,6 +688,8 @@ const parseFkWebEvent =
         deviceId,
 
         requestCode,
+
+        transactionId,
 
         payload:
           payload ||
@@ -487,6 +708,8 @@ const parseFkWebEvent =
 
       requestCode,
 
+      transactionId,
+
       payload:
         payload ||
         {},
@@ -495,8 +718,6 @@ const parseFkWebEvent =
 
 /* =========================================================
    NORMALIZE HISTORY RECORD
-
-   Called after JSON or binary history has been decoded.
 ========================================================= */
 
 const normalizeHistoryRecord =
@@ -504,6 +725,34 @@ const normalizeHistoryRecord =
     record,
     deviceId
   ) => {
+    if (
+      record?.eventType ===
+        "PUNCH" &&
+      record?.punchTime &&
+      record?.employeeCode
+    ) {
+      return {
+        ...record,
+
+        deviceId:
+          record.deviceId ||
+          deviceId,
+      };
+    }
+
+    if (
+      normalizeText(
+        record
+          ?.fk_bin_data_lib
+      ).toUpperCase() ===
+      "M50"
+    ) {
+      return normalizeM50Record(
+        record,
+        deviceId
+      );
+    }
+
     return normalizePunchPayload(
       record,
       deviceId
@@ -521,9 +770,21 @@ module.exports = {
 
   getDeviceId,
 
+  getRequestCode,
+
+  getCommandCode,
+
+  getTransactionId,
+
   parseJsonBody,
 
   normalizePunchPayload,
+
+  normalizeM50Record,
+
+  isCommandPollRequest,
+
+  isCommandResultRequest,
 
   parseFkWebEvent,
 

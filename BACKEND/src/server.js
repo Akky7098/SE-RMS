@@ -1,6 +1,9 @@
 const mongoose =
   require("mongoose");
 
+const os =
+  require("os");
+
 const app =
   require("./app");
 
@@ -15,6 +18,13 @@ const {
 } =
   require("./access/access.service");
 
+  const {
+  initBaileysClient,
+} =
+  require(
+    "./baileys/baileysClient"
+  );
+
 let server;
 
 /* =========================================================
@@ -26,6 +36,53 @@ let server;
 
 const HOST =
   "0.0.0.0";
+
+/* =========================================================
+   RESOLVE LAN IPV4
+
+   Used only for displaying the correct LAN URL in logs.
+
+   It does NOT control which interface Express listens on.
+   Express continues listening on 0.0.0.0.
+========================================================= */
+
+const getLanIPv4 =
+  () => {
+    const interfaces =
+      os.networkInterfaces();
+
+    for (
+      const addresses of Object.values(
+        interfaces
+      )
+    ) {
+      if (
+        !Array.isArray(
+          addresses
+        )
+      ) {
+        continue;
+      }
+
+      for (
+        const address of addresses
+      ) {
+        if (
+          address.family ===
+            "IPv4" &&
+          !address.internal
+        ) {
+          return address.address;
+        }
+      }
+    }
+
+    return null;
+  };
+
+/* =========================================================
+   START SERVER
+========================================================= */
 
 const startServer =
   async () => {
@@ -51,6 +108,9 @@ const startServer =
           env.port,
           HOST,
           () => {
+            const lanIp =
+              getLanIPv4();
+
             console.log(
               "================================="
             );
@@ -76,12 +136,32 @@ const startServer =
             );
 
             console.log(
-              `Local FKWeb: http://localhost:${env.port}/fkweb`
+              `Local FKWeb Ping: http://localhost:${env.port}/fkweb/ping`
             );
 
             console.log(
-              `LAN FKWeb: http://192.168.1.103:${env.port}/fkweb`
+              `Local FKWeb Receiver: http://localhost:${env.port}/fkweb/device`
             );
+
+            if (
+              lanIp
+            ) {
+              console.log(
+                `LAN IP: ${lanIp}`
+              );
+
+              console.log(
+                `LAN FKWeb Ping: http://${lanIp}:${env.port}/fkweb/ping`
+              );
+
+              console.log(
+                `LAN FKWeb Receiver: http://${lanIp}:${env.port}/fkweb/device`
+              );
+            } else {
+              console.log(
+                "LAN IP: NOT DETECTED"
+              );
+            }
 
             console.log(
               "================================="
@@ -96,9 +176,13 @@ const startServer =
         error
       );
 
-      process.exit(1);
+      process.exit(
+        1
+      );
     }
   };
+
+  
 
 /* =========================================================
    GRACEFUL SHUTDOWN
@@ -126,7 +210,9 @@ const gracefulShutdown =
               "MongoDB connection closed"
             );
 
-            process.exit(0);
+            process.exit(
+              0
+            );
           } catch (
             error
           ) {
@@ -135,7 +221,9 @@ const gracefulShutdown =
               error
             );
 
-            process.exit(1);
+            process.exit(
+              1
+            );
           }
         }
       );
@@ -156,7 +244,9 @@ const gracefulShutdown =
       );
     }
 
-    process.exit(0);
+    process.exit(
+      0
+    );
   };
 
 /* =========================================================
@@ -201,7 +291,9 @@ process.on(
       error
     );
 
-    process.exit(1);
+    process.exit(
+      1
+    );
   }
 );
 
