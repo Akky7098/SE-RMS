@@ -1,4 +1,6 @@
 const {
+  ESSL_HISTORICAL_SYNC_ENABLED,
+
   getBodyText,
   getDeviceSerial,
   getRequestIp,
@@ -46,7 +48,16 @@ const sendOk =
 /* =========================================================
    GET OPTIONS
 
-   eSSL ADMS typically calls this when connecting.
+   eSSL ADMS calls this when connecting.
+
+   Historical synchronization is controlled by
+   buildOptionsResponse() in essl.service.js.
+
+   When historical sync is enabled:
+   ATTLOGStamp=None
+
+   When normal live mode is enabled:
+   ATTLOGStamp=9999
 ========================================================= */
 
 exports.getOptions =
@@ -92,7 +103,11 @@ exports.getOptions =
       );
 
       /*
-       * Device protocol should receive a simple response.
+       * Keep ADMS protocol alive.
+       *
+       * Do not expose internal errors to the biometric
+       * terminal because some firmware will continuously
+       * reconnect/retry on unexpected HTTP responses.
        */
       return res
         .status(
@@ -100,6 +115,10 @@ exports.getOptions =
         )
         .type(
           "text/plain"
+        )
+        .set(
+          "Cache-Control",
+          "no-store"
         )
         .send(
           "OK"
@@ -109,6 +128,13 @@ exports.getOptions =
 
 /* =========================================================
    DEVICE REQUEST / HEARTBEAT
+
+   The terminal polls:
+
+   /iclock/getrequest
+   /iclock/getrequest.aspx
+
+   Both routes point here.
 ========================================================= */
 
 exports.getRequest =
@@ -132,6 +158,10 @@ exports.getRequest =
         error
       );
 
+      /*
+       * Preserve ADMS communication even if heartbeat
+       * persistence temporarily fails.
+       */
       return sendOk(
         res
       );
@@ -140,6 +170,19 @@ exports.getRequest =
 
 /* =========================================================
    RECEIVE DEVICE DATA
+
+   Supported device payloads:
+
+   OPERLOG
+   OPLOG
+   ATTLOG
+
+   Both:
+
+   POST /iclock/cdata
+   POST /iclock/cdata.aspx
+
+   point to this controller.
 ========================================================= */
 
 exports.receiveData =
@@ -166,9 +209,25 @@ exports.receiveData =
           .trim()
           .toUpperCase();
 
-      /*
-       * Device directory.
-       */
+      const serial =
+        getDeviceSerial(
+          req
+        );
+
+      const ip =
+        getRequestIp(
+          req
+        );
+
+      /* =====================================================
+         DEVICE USER DIRECTORY
+
+         Machine users are NOT automatically ERP Employees.
+
+         The biometric ingestion layer keeps them separately
+         and maps them only when Employee.biometricCode exists.
+      ===================================================== */
+
       if (
         table ===
           "OPERLOG" ||
@@ -181,38 +240,119 @@ exports.receiveData =
             body
           );
 
+        console.log(
+          "eSSL OPERLOG received:",
+          {
+            serial,
+
+            ip,
+
+            received:
+              result.received,
+
+            saved:
+              result.saved,
+          }
+        );
+
         return sendOk(
           res,
           result.received
         );
       }
 
-      /*
-       * Attendance logs.
+      /* =====================================================
+         ATTENDANCE LOGS
 
-       * For device-initiated operation this is LIVE.
-       *
-       * Historical import can call the same service separately
-       * with source HISTORICAL_SYNC.
-       */
+         During the explicit historical import window every
+         ATTLOG batch is labelled HISTORICAL_SYNC.
+
+         This does NOT bypass the normal ingestion pipeline.
+
+         It still goes through:
+
+         ingestRawPunch()
+             ↓
+         Employee.biometricCode mapping
+             ↓
+         mapped / UNMAPPED
+             ↓
+         RawAttendancePunch
+             ↓
+         Attendance processor
+
+         Once the historical import has completed,
+         ESSL_HISTORICAL_SYNC_ENABLED must be switched back
+         to false and subsequent punches are LIVE.
+      ===================================================== */
+
       if (
         table ===
         "ATTLOG"
       ) {
+        const source =
+          ESSL_HISTORICAL_SYNC_ENABLED
+            ? "HISTORICAL_SYNC"
+            : "LIVE";
+
         const result =
           await processAttendanceLog(
             device,
             body,
             {
-              source:
-                "LIVE",
+              source,
             }
           );
 
-        /*
-         * ACK rows received, including duplicates.
+        console.log(
+          "eSSL ATTLOG received:",
+          {
+            serial,
 
-         * Otherwise device can retransmit them.
+            ip,
+
+            source,
+
+            received:
+              result.received,
+
+            valid:
+              result.valid,
+
+            inserted:
+              result.inserted,
+
+            duplicates:
+              result.duplicates,
+
+            mapped:
+              result.mapped,
+
+            unmapped:
+              result.unmapped,
+
+            ignoredBeforeCutoff:
+              result
+                .ignoredBeforeCutoff,
+
+            errors:
+              result.errors,
+          }
+        );
+
+        /*
+         * ACK every row the terminal transmitted.
+         *
+         * IMPORTANT:
+         *
+         * This is result.received, NOT result.inserted.
+         *
+         * Duplicate rows and rows older than our retention
+         * requirement were still successfully handled by
+         * the server and therefore must be acknowledged.
+         *
+         * Otherwise the terminal can continuously resend
+         * those rows.
          */
         return sendOk(
           res,
@@ -220,6 +360,11 @@ exports.receiveData =
         );
       }
 
+      /*
+       * Unknown/non-attendance ADMS table.
+       *
+       * ACK it rather than causing a retry loop.
+       */
       return sendOk(
         res
       );
@@ -233,9 +378,9 @@ exports.receiveData =
 
       /*
        * Preserve ADMS communication.
-
-       * Production logging/alerting should record failures,
-       * but protocol endpoint should not enter a resend storm.
+       *
+       * Production logging/alerting records the failure,
+       * while the protocol endpoint continues responding.
        */
       return sendOk(
         res
@@ -262,6 +407,9 @@ exports.ping =
 
         service:
           "ESSL_ADMS",
+
+        historicalSync:
+          ESSL_HISTORICAL_SYNC_ENABLED,
 
         time:
           new Date(),

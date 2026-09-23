@@ -25,6 +25,55 @@ const ESSL_PROVIDER =
 const ESSL_INTEGRATION_TYPE =
   "ESSL_ADMS";
 
+/*
+ * Historical attendance requirement:
+ *
+ * approximately six months.
+ *
+ * 183 days is used so the historical synchronization
+ * covers the requested period without depending on
+ * calendar-month length.
+ */
+const ESSL_HISTORICAL_SYNC_DAYS =
+  183;
+
+/*
+ * =========================================================
+ * TEMPORARY HISTORICAL SYNCHRONIZATION MODE
+ * =========================================================
+ *
+ * TRUE:
+ *
+ *   The options handshake requests stored ATTLOG history.
+ *
+ *   Incoming ATTLOG records are marked:
+ *
+ *   HISTORICAL_SYNC
+ *
+ *   Records older than ESSL_HISTORICAL_SYNC_DAYS are
+ *   acknowledged but NOT persisted.
+ *
+ *
+ * FALSE:
+ *
+ *   Normal production live mode.
+ *
+ *   Incoming ATTLOG records are marked:
+ *
+ *   LIVE
+ *
+ *
+ * IMPORTANT:
+ *
+ * This should be TRUE only while performing the initial
+ * six-month migration.
+ *
+ * After the historical records have been received,
+ * change this to false.
+ */
+const ESSL_HISTORICAL_SYNC_ENABLED =
+  true;
+
 /* =========================================================
    NORMALIZE
 ========================================================= */
@@ -121,10 +170,13 @@ const getDeviceSerial =
    PARSE ESSL DATE
 
    Machine format:
+
    YYYY-MM-DD HH:mm:ss
 
    Current deployment timezone:
-   Asia/Kolkata / UTC+05:30
+
+   Asia/Kolkata
+   UTC +05:30
 ========================================================= */
 
 const parseEsslTime =
@@ -165,6 +217,17 @@ const parseEsslTime =
 
 /* =========================================================
    RESOLVE REGISTERED DEVICE
+
+   Device identity is based on:
+
+   provider
+   serialNumber / externalDeviceId
+
+   NOT IP address.
+
+   Current physical Sonipat device:
+
+   TBS2261000805
 ========================================================= */
 
 const resolveEsslDevice =
@@ -199,24 +262,45 @@ const resolveEsslDevice =
 /* =========================================================
    OPTIONS RESPONSE
 
-   Production live mode.
+   NORMAL PRODUCTION:
 
-   Historical retrieval is handled as a separate explicit
-   synchronization operation, not automatically on every
-   device connection.
+   ATTLOGStamp=9999
+
+   INITIAL HISTORICAL IMPORT:
+
+   ATTLOGStamp=None
+
+   IMPORTANT:
+
+   Historical mode is temporary.
+
+   We do NOT permanently request historical attendance
+   every time the terminal reconnects.
 ========================================================= */
 
 const buildOptionsResponse =
   (
     serial
   ) => {
+    const attendanceStamp =
+      ESSL_HISTORICAL_SYNC_ENABLED
+        ? "None"
+        : "9999";
+
     return [
       `GET OPTION FROM: ${serial}`,
 
-      "ATTLOGStamp=9999",
+      `ATTLOGStamp=${attendanceStamp}`,
 
+      /*
+       * Keep machine-user/name directory synchronization.
+       */
       "OPERLOGStamp=0",
 
+      /*
+       * Attendance photographs are not required by the
+       * current attendance architecture.
+       */
       "ATTPHOTOStamp=9999",
 
       "ErrorDelay=30",
@@ -227,10 +311,22 @@ const buildOptionsResponse =
 
       "TransInterval=1",
 
+      /*
+       * Keep attendance and user directory data enabled.
+       */
       "TransFlag=TransData AttLog OpLog EnrollUser ChgUser",
 
+      /*
+       * India timezone offset:
+       *
+       * UTC +05:30 = 330 minutes
+       */
       "TimeZone=330",
 
+      /*
+       * Live punches remain enabled while historical
+       * synchronization is taking place.
+       */
       "Realtime=1",
 
       "Encrypt=None",
@@ -303,6 +399,16 @@ const parseUserRecord =
 
 /* =========================================================
    PROCESS USER DIRECTORY
+
+   IMPORTANT:
+
+   Device users are NOT automatically ERP Employees.
+
+   upsertMachineUser() maintains the machine directory.
+
+   If Employee.biometricCode exists, it can map the user.
+
+   Otherwise the machine user remains biometric-only.
 ========================================================= */
 
 const processUserDirectory =
@@ -384,6 +490,14 @@ const processUserDirectory =
    Typical:
 
    SE1338<TAB>2026-09-13 09:02:01<TAB>255<TAB>15<TAB>0
+
+   Fields:
+
+   0 biometric code
+   1 machine punch time
+   2 machine in/out mode
+   3 verification mode
+   4 work code
 ========================================================= */
 
 const parseAttendanceRow =
@@ -466,6 +580,28 @@ const parseAttendanceRow =
   };
 
 /* =========================================================
+   HISTORICAL CUTOFF
+
+   We calculate this at processing time instead of keeping
+   a Date constant created when Node started.
+
+   This keeps long-running PM2 processes correct.
+========================================================= */
+
+const getHistoricalCutoff =
+  () => {
+    const cutoff =
+      new Date();
+
+    cutoff.setUTCDate(
+      cutoff.getUTCDate() -
+      ESSL_HISTORICAL_SYNC_DAYS
+    );
+
+    return cutoff;
+  };
+
+/* =========================================================
    INGEST ATTLOG
 
    source can be:
@@ -473,7 +609,17 @@ const parseAttendanceRow =
    LIVE
    HISTORICAL_SYNC
 
-   NO "today only" restriction.
+   IMPORTANT:
+
+   There is NO "today only" restriction.
+
+   Historical punches use the exact same central ingestion
+   service as live punches.
+
+   The only additional rule for HISTORICAL_SYNC is:
+
+   records older than the required retention window are
+   acknowledged but not persisted.
 ========================================================= */
 
 const processAttendanceLog =
@@ -506,6 +652,9 @@ const processAttendanceLog =
           Boolean
         );
 
+    const historicalCutoff =
+      getHistoricalCutoff();
+
     const stats = {
       received:
         rows.length,
@@ -523,6 +672,9 @@ const processAttendanceLog =
         0,
 
       unmapped:
+        0,
+
+      ignoredBeforeCutoff:
         0,
 
       errors:
@@ -549,7 +701,58 @@ const processAttendanceLog =
       stats.valid +=
         1;
 
+      /* =====================================================
+         SIX-MONTH HISTORICAL BOUNDARY
+
+         The terminal may contain records older than the
+         requested migration window.
+
+         Those rows are acknowledged so the device can
+         continue advancing through its stored records,
+         but they are NOT written to RawAttendancePunch.
+      ===================================================== */
+
+      if (
+        source ===
+          "HISTORICAL_SYNC" &&
+        parsed.punchTime <
+          historicalCutoff
+      ) {
+        stats
+          .ignoredBeforeCutoff +=
+          1;
+
+        continue;
+      }
+
       try {
+        /*
+         * ===================================================
+         * CENTRAL BIOMETRIC INGESTION
+         * ===================================================
+         *
+         * DO NOT create Employee/User records here.
+         *
+         * ingestRawPunch() remains responsible for:
+         *
+         * - deduplication
+         * - Employee.biometricCode matching
+         * - employeeId assignment
+         * - UNMAPPED biometric operators
+         * - RawAttendancePunch persistence
+         * - processing status
+         *
+         * Example:
+         *
+         * SE1451 + Employee exists
+         *
+         *      employeeId = Employee._id
+         *
+         * SE1451 + no Employee
+         *
+         *      employeeId = null
+         *      processingStatus = UNMAPPED
+         */
         const result =
           await ingestRawPunch({
             device,
@@ -585,6 +788,10 @@ const processAttendanceLog =
 
               raw:
                 parsed.raw,
+
+              historical:
+                source ===
+                "HISTORICAL_SYNC",
             },
           });
 
@@ -620,10 +827,47 @@ const processAttendanceLog =
 
         console.error(
           "eSSL punch ingestion failed:",
-          error
+          {
+            device:
+              device?.code ||
+              device?.serialNumber ||
+              device?._id,
+
+            biometricCode:
+              parsed.biometricCode,
+
+            punchTime:
+              parsed.punchTime,
+
+            source,
+
+            error:
+              error?.message ||
+              error,
+          }
         );
       }
     }
+
+    console.log(
+      "eSSL ATTLOG processed:",
+      {
+        device:
+          device?.code ||
+          device?.serialNumber ||
+          device?._id,
+
+        source,
+
+        historicalCutoff:
+          source ===
+            "HISTORICAL_SYNC"
+            ? historicalCutoff
+            : null,
+
+        ...stats,
+      }
+    );
 
     return stats;
   };
@@ -662,6 +906,10 @@ module.exports = {
   ESSL_PROVIDER,
 
   ESSL_INTEGRATION_TYPE,
+
+  ESSL_HISTORICAL_SYNC_ENABLED,
+
+  ESSL_HISTORICAL_SYNC_DAYS,
 
   getBodyText,
 
