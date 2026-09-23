@@ -2547,6 +2547,539 @@ const buildScopedEmployeeQuery =
    GET ATTENDANCE
 ========================================================= */
 
+/* =========================================================
+   GET UNMAPPED BIOMETRIC ATTENDANCE
+
+   PURPOSE
+
+   Physical biometric machines can contain workers/operators
+   who do not use Nuvanata and therefore do not yet have an
+   Employee Master record.
+
+   Their biometric punches must still be visible to
+   authorized HR / Admin / Head users.
+
+   IMPORTANT
+
+   We DO NOT create fake Employee ObjectIds.
+
+   biometricCode remains the permanent machine identity.
+
+   When an Employee is created later with the same
+   biometricCode, existing RawAttendancePunch records can be
+   mapped and processed into normal Attendance records.
+
+   SELF / TEAM users must never see globally unmapped
+   biometric workers because there is no Employee hierarchy
+   available to authorize those records.
+========================================================= */
+
+const getUnmappedBiometricAttendance =
+  async ({
+    access,
+
+    from = null,
+
+    to = null,
+
+    officeId = null,
+
+    provider = null,
+
+    limit = 5000,
+  } = {}) => {
+    const accessType =
+      String(
+        access?.type ||
+        ""
+      )
+        .trim()
+        .toUpperCase();
+
+    /*
+     * Unmapped machine workers have no Employee hierarchy.
+     *
+     * Therefore only broad authorized attendance scopes can
+     * see these records.
+     */
+    if (
+      ![
+        "ALL",
+        "DEPARTMENT",
+      ].includes(
+        accessType
+      )
+    ) {
+      return {
+        items:
+          [],
+
+        rawPunchCount:
+          0,
+
+        workerDayCount:
+          0,
+      };
+    }
+
+    const query = {
+      employeeId:
+        null,
+
+      processingStatus:
+        "UNMAPPED",
+    };
+
+    /* =====================================================
+       DATE RANGE
+
+       Raw punches store actual UTC Date values.
+
+       API dates are organization-local India dates.
+    ===================================================== */
+
+    if (
+      from ||
+      to
+    ) {
+      query.punchTime =
+        {};
+
+      if (
+        from
+      ) {
+        query.punchTime.$gte =
+          new Date(
+            `${String(
+              from
+            )}T00:00:00.000+05:30`
+          );
+      }
+
+      if (
+        to
+      ) {
+        query.punchTime.$lte =
+          new Date(
+            `${String(
+              to
+            )}T23:59:59.999+05:30`
+          );
+      }
+    }
+
+    /* =====================================================
+       LOCATION
+    ===================================================== */
+
+    if (
+      officeId &&
+      validObjectId(
+        officeId
+      )
+    ) {
+      query.officeId =
+        officeId;
+    }
+
+    /* =====================================================
+       PROVIDER
+
+       Sonipat:
+       ESSL
+
+       Delhi:
+       REALTIME
+    ===================================================== */
+
+    if (
+      provider
+    ) {
+      const normalizedProvider =
+        String(
+          provider
+        )
+          .trim()
+          .toUpperCase();
+
+      if (
+        ![
+          "ESSL",
+          "REALTIME",
+          "ZKTECO",
+          "OTHER",
+        ].includes(
+          normalizedProvider
+        )
+      ) {
+        throw createError(
+          "Invalid biometric provider."
+        );
+      }
+
+      query.provider =
+        normalizedProvider;
+    }
+
+    const safeLimit =
+      Math.min(
+        Math.max(
+          Number(
+            limit
+          ) ||
+            5000,
+          1
+        ),
+        20000
+      );
+
+    const [
+      punches,
+      rawPunchCount,
+    ] =
+      await Promise.all([
+        RawAttendancePunch
+          .find(
+            query
+          )
+          .sort({
+            punchTime:
+              1,
+          })
+          .limit(
+            safeLimit
+          )
+          .lean(),
+
+        RawAttendancePunch
+          .countDocuments(
+            query
+          ),
+      ]);
+
+    /*
+     * One register row =
+     *
+     * device + biometric employee + local calendar date
+     *
+     * We intentionally don't generate Attendance documents
+     * here because no Employee mapping exists yet.
+     */
+    const registerMap =
+      new Map();
+
+    for (
+      const punch
+      of punches
+    ) {
+      const localDate =
+        getCalendarDateKey(
+          punch.punchTime,
+          330
+        );
+
+      const key =
+        [
+          String(
+            punch
+              .attendanceDeviceId ||
+              punch.deviceCode ||
+              ""
+          ),
+
+          String(
+            punch.biometricCode ||
+              ""
+          ),
+
+          localDate,
+        ].join(
+          "|"
+        );
+
+      if (
+        !registerMap.has(
+          key
+        )
+      ) {
+        registerMap.set(
+          key,
+          {
+            recordType:
+              "UNMAPPED_BIOMETRIC",
+
+            mapped:
+              false,
+
+            employeeId:
+              null,
+
+            /*
+             * Temporary employee-facing identity.
+             *
+             * This is NOT Mongo employeeId.
+             */
+            employeeCode:
+              punch.biometricCode ||
+              "",
+
+            biometricCode:
+              punch.biometricCode ||
+              "",
+
+            employeeName:
+              punch
+                .biometricEmployeeName ||
+              "",
+
+            businessDate:
+              localDate,
+
+            provider:
+              punch.provider ||
+              "",
+
+            attendanceDeviceId:
+              punch
+                .attendanceDeviceId ||
+              null,
+
+            deviceCode:
+              punch.deviceCode ||
+              "",
+
+            deviceSerialNumber:
+              punch
+                .deviceSerialNumber ||
+              "",
+
+            officeId:
+              punch.officeId ||
+              null,
+
+            departmentId:
+              null,
+
+            departmentName:
+              "",
+
+            workMode:
+              "OFFICE",
+
+            /*
+             * We cannot calculate shift/policy status before
+             * Employee Master mapping exists.
+             */
+            presenceStatus:
+              "BIOMETRIC_ONLY",
+
+            processingStatus:
+              "UNMAPPED",
+
+            firstIn: {
+              time:
+                null,
+
+              source:
+                "BIOMETRIC",
+
+              punchId:
+                null,
+            },
+
+            lastOut: {
+              time:
+                null,
+
+              source:
+                null,
+
+              punchId:
+                null,
+            },
+
+            punchCount:
+              0,
+
+            punches:
+              [],
+          }
+        );
+      }
+
+      const register =
+        registerMap.get(
+          key
+        );
+
+      /*
+       * Prefer a machine name whenever one is available.
+       */
+      if (
+        !register.employeeName &&
+        punch.biometricEmployeeName
+      ) {
+        register.employeeName =
+          punch.biometricEmployeeName;
+      }
+
+      register.punches.push({
+        _id:
+          punch._id,
+
+        punchTime:
+          punch.punchTime,
+
+        source:
+          punch.source,
+
+        machineRecordId:
+          punch.machineRecordId ||
+          "",
+
+        machineUserId:
+          punch.machineUserId ||
+          "",
+
+        machineVerifyMode:
+          punch
+            .machineVerifyMode ||
+          "",
+
+        machineInOutMode:
+          punch
+            .machineInOutMode ||
+          "",
+      });
+    }
+
+    const items =
+      Array.from(
+        registerMap.values()
+      );
+
+    for (
+      const item
+      of items
+    ) {
+      item.punches.sort(
+        (
+          left,
+          right
+        ) =>
+          new Date(
+            left.punchTime
+          ).getTime() -
+          new Date(
+            right.punchTime
+          ).getTime()
+      );
+
+      item.punchCount =
+        item.punches.length;
+
+      const firstPunch =
+        item.punches[0] ||
+        null;
+
+      const lastPunch =
+        item.punches[
+          item.punches.length -
+            1
+        ] ||
+        null;
+
+      item.firstIn = {
+        time:
+          firstPunch
+            ?.punchTime ||
+          null,
+
+        source:
+          "BIOMETRIC",
+
+        punchId:
+          firstPunch?._id ||
+          null,
+      };
+
+      /*
+       * A single punch is not both IN and OUT.
+       */
+      if (
+        item.punches.length >
+        1
+      ) {
+        item.lastOut = {
+          time:
+            lastPunch
+              ?.punchTime ||
+            null,
+
+          source:
+            "BIOMETRIC",
+
+          punchId:
+            lastPunch?._id ||
+            null,
+        };
+      }
+    }
+
+    /*
+     * Latest business date first, then worker.
+     */
+    items.sort(
+      (
+        left,
+        right
+      ) => {
+        const dateCompare =
+          String(
+            right.businessDate
+          ).localeCompare(
+            String(
+              left.businessDate
+            )
+          );
+
+        if (
+          dateCompare !==
+          0
+        ) {
+          return dateCompare;
+        }
+
+        return String(
+          left.employeeName ||
+          left.biometricCode ||
+          ""
+        ).localeCompare(
+          String(
+            right.employeeName ||
+            right.biometricCode ||
+            ""
+          )
+        );
+      }
+    );
+
+    return {
+      items,
+
+      rawPunchCount,
+
+      workerDayCount:
+        items.length,
+
+      truncated:
+        punches.length <
+        rawPunchCount,
+    };
+  };
+
+
+
 const getAttendance =
   async ({
     actorUserId,
@@ -2558,6 +3091,18 @@ const getAttendance =
     officeId,
     presenceStatus,
     workMode,
+
+    /*
+     * Optional biometric register controls.
+     *
+     * Existing callers remain unchanged.
+     */
+    includeUnmapped =
+      false,
+
+    provider =
+      null,
+
     page = 1,
     limit = 100,
   }) => {
@@ -2721,25 +3266,93 @@ const getAttendance =
           ),
       ]);
 
-    return {
-      items,
+    /* =====================================================
+   OPTIONAL UNMAPPED BIOMETRIC REGISTER
 
-      pagination: {
-        page:
-          safePage,
+   Existing Attendance response remains intact.
 
-        limit:
-          safeLimit,
+   We add biometric information separately so current
+   frontend/API consumers are not broken.
+===================================================== */
 
-        total,
+const normalizedIncludeUnmapped =
+  String(
+    includeUnmapped
+  )
+    .trim()
+    .toLowerCase();
 
-        pages:
-          Math.ceil(
-            total /
-              safeLimit
-          ),
-      },
-    };
+const shouldIncludeUnmapped =
+  includeUnmapped ===
+    true ||
+  normalizedIncludeUnmapped ===
+    "true" ||
+  normalizedIncludeUnmapped ===
+    "1";
+
+let biometric = {
+  unmapped:
+    [],
+
+  rawPunchCount:
+    0,
+
+  workerDayCount:
+    0,
+
+  truncated:
+    false,
+};
+
+if (
+  shouldIncludeUnmapped
+) {
+  biometric =
+    await getUnmappedBiometricAttendance({
+      access,
+
+      from,
+
+      to,
+
+      officeId,
+
+      provider,
+
+      limit:
+        20000,
+    });
+}
+
+return {
+  /*
+   * Existing mapped Attendance.
+   */
+  items,
+
+  /*
+   * New biometric-only workers.
+   *
+   * Existing clients can safely ignore this property.
+   */
+  biometric,
+
+  pagination: {
+    page:
+      safePage,
+
+    limit:
+      safeLimit,
+
+    total,
+
+    pages:
+      Math.ceil(
+        total /
+          safeLimit
+      ),
+  },
+};
   };
 
 /* =========================================================
@@ -5931,6 +6544,9 @@ module.exports = {
   getEmployeeByUser,
 
   getReportingTreeIds,
+
+  getUnmappedBiometricAttendance,
+
 
   getAttendance,
 

@@ -415,18 +415,24 @@ const biometricDeviceSchema =
        * from/to dates.
        */
       defaultHistoricalSyncDays: {
-        type:
-          Number,
+  type:
+    Number,
 
-        default:
-          90,
+  /*
+   * Approximately six months.
+   *
+   * Used as the default historical biometric
+   * synchronization window.
+   */
+  default:
+    183,
 
-        min:
-          1,
+  min:
+    1,
 
-        max:
-          366,
-      },
+  max:
+    366,
+},
 
       /* =====================================================
          SYNC STATE

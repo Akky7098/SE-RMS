@@ -326,7 +326,48 @@ exports.getMyAttendance =
                 "SELF",
             },
 
-            ...req.query,
+            from:
+              req.query.from,
+
+            to:
+              req.query.to,
+
+            employeeId:
+              req.query.employeeId,
+
+            departmentId:
+              req.query.departmentId,
+
+            officeId:
+              req.query.officeId,
+
+            presenceStatus:
+              req.query
+                .presenceStatus,
+
+            workMode:
+              req.query.workMode,
+
+            provider:
+              req.query.provider,
+
+            /*
+             * IMPORTANT:
+             *
+             * My Attendance is SELF scope.
+             *
+             * Unmapped biometric operators do not have an
+             * Employee/User identity in ERP, so they must
+             * never be exposed through this endpoint.
+             */
+            includeUnmapped:
+              false,
+
+            page:
+              req.query.page,
+
+            limit:
+              req.query.limit,
           });
 
       return res.json({
