@@ -492,61 +492,78 @@ const getCommandReturnCode =
    JSON BODY
 ========================================================= */
 
-const parseJsonBody =
-  (
-    req
-  ) => {
-    if (
-      req.body &&
-      typeof req.body ===
-        "object" &&
-      !Buffer.isBuffer(
-        req.body
-      )
-    ) {
-      return req.body;
-    }
+const parseJsonBody = (req) => {
+  if (
+    req.body &&
+    typeof req.body === "object" &&
+    !Buffer.isBuffer(req.body)
+  ) {
+    return req.body;
+  }
 
-    let text =
-      "";
+  let text = "";
 
-    if (
-      Buffer.isBuffer(
-        req.body
-      )
-    ) {
-      text =
-        req.body
-          .toString(
-            "utf8"
-          )
-          .trim();
-    } else if (
-      typeof req.body ===
-      "string"
-    ) {
-      text =
-        req.body.trim();
-    }
+  if (Buffer.isBuffer(req.body)) {
+    text = req.body.toString("utf8");
+  } else if (typeof req.body === "string") {
+    text = req.body;
+  }
 
-    if (
-      !text
-    ) {
-      return null;
-    }
+  if (!text) {
+    return null;
+  }
 
-    try {
-      return JSON.parse(
-        text
-      );
-    } catch (
-      error
-    ) {
-      return null;
-    }
-  };
+  /*
+   * Standard JSON request.
+   */
+  const trimmed = text.trim();
 
-  const getRawBodyText = (req) => {
+  try {
+    return JSON.parse(trimmed);
+  } catch (error) {
+    // Continue to FKWeb framed JSON extraction.
+  }
+
+  /*
+   * RealTime S362 / FKWeb packets may contain binary framing
+   * bytes before the JSON object.
+   *
+   * Example observed from the physical Delhi terminal:
+   *
+   *   <binary prefix>{"fk_name":"S362", ...}
+   *
+   * We do NOT interpret or guess the binary prefix here.
+   * We only extract an embedded JSON object when a complete
+   * JSON object is visibly present.
+   */
+  const jsonStart =
+    text.indexOf("{");
+
+  const jsonEnd =
+    text.lastIndexOf("}");
+
+  if (
+    jsonStart === -1 ||
+    jsonEnd === -1 ||
+    jsonEnd <= jsonStart
+  ) {
+    return null;
+  }
+
+  const jsonText =
+    text.slice(
+      jsonStart,
+      jsonEnd + 1
+    );
+
+  try {
+    return JSON.parse(jsonText);
+  } catch (error) {
+    return null;
+  }
+};
+
+const getRawBodyText = (req) => {
   if (Buffer.isBuffer(req.body)) {
     return req.body
       .toString("utf8")
@@ -559,6 +576,9 @@ const parseJsonBody =
 
   return "";
 };
+
+
+
 
 const parseFormBody = (req) => {
   const text =
