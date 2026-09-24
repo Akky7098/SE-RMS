@@ -516,19 +516,91 @@ exports.receive = async (
        loop. Do not create fake attendance data.
     ----------------------------------------------------- */
 
-    console.warn(
-      "[FKWEB] Unsupported device message",
-      {
-        deviceId:
-          event?.deviceId ||
-          getRequestDeviceId(req) ||
-          "UNKNOWN",
+    const rawBody =
+  Buffer.isBuffer(req.body)
+    ? req.body
+        .toString("utf8")
+        .slice(0, 2000)
+    : typeof req.body === "string"
+      ? req.body.slice(0, 2000)
+      : req.body &&
+          typeof req.body === "object"
+        ? JSON.stringify(req.body)
+            .slice(0, 2000)
+        : "";
 
-        eventType:
-          event?.eventType ||
-          "UNKNOWN",
-      }
-    );
+console.warn(
+  "[FKWEB] Unsupported device message",
+  {
+    deviceId:
+      event?.deviceId ||
+      getRequestDeviceId(req) ||
+      "UNKNOWN",
+
+    eventType:
+      event?.eventType ||
+      "UNKNOWN",
+
+    method:
+      req.method,
+
+    path:
+      req.originalUrl,
+
+    ip:
+      getRequestIp(req),
+
+    contentType:
+      req.headers[
+        "content-type"
+      ] || "",
+
+    userAgent:
+      req.headers[
+        "user-agent"
+      ] || "",
+
+    query:
+      req.query || {},
+
+    protocolHeaders: {
+      device_id:
+        req.headers["device_id"] || "",
+
+      terminal_id:
+        req.headers["terminal_id"] || "",
+
+      sn:
+        req.headers["sn"] || "",
+
+      serial_number:
+        req.headers["serial_number"] || "",
+
+      cloud_id:
+        req.headers["cloud_id"] || "",
+
+      request_code:
+        req.headers["request_code"] || "",
+
+      cmd_code:
+        req.headers["cmd_code"] || "",
+
+      trans_id:
+        req.headers["trans_id"] || "",
+    },
+
+    bodyLength:
+      Buffer.isBuffer(req.body)
+        ? req.body.length
+        : Buffer.byteLength(
+            rawBody,
+            "utf8"
+          ),
+
+    bodyPreview:
+      rawBody,
+  }
+);
 
     return acknowledge(
       res,

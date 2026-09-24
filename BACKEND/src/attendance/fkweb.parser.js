@@ -293,65 +293,73 @@ const getDeviceId =
   (
     req
   ) => {
+    const payload =
+  getRequestPayload(req);
+
     return firstText(
-      req.headers[
-        "device_id"
-      ],
+      // Standard FKWeb / terminal headers
+      req.headers?.["device_id"],
+      req.headers?.["device-id"],
+      req.headers?.["deviceid"],
+      req.headers?.["terminal_id"],
+      req.headers?.["terminal-id"],
+      req.headers?.["terminalid"],
+      req.headers?.["sn"],
+      req.headers?.["serial_number"],
+      req.headers?.["serial-number"],
+      req.headers?.["serialnumber"],
+      req.headers?.["cloud_id"],
+      req.headers?.["cloud-id"],
+      req.headers?.["cloudid"],
+      req.headers?.["dev_id"],
+      req.headers?.["dev-id"],
+      req.headers?.["devid"],
 
-      req.headers[
-        "device-id"
-      ],
+      // Query-string variants
+      req.query?.device_id,
+      req.query?.deviceId,
+      req.query?.deviceid,
+      req.query?.DeviceId,
+      req.query?.DeviceID,
 
-      req.headers[
-        "deviceid"
-      ],
+      req.query?.terminal_id,
+      req.query?.terminalId,
+      req.query?.terminalid,
+      req.query?.TerminalId,
 
-      req.headers[
-        "terminal_id"
-      ],
+      req.query?.SN,
+      req.query?.sn,
 
-      req.headers[
-        "terminal-id"
-      ],
+      req.query?.serialNumber,
+      req.query?.serial_number,
+      req.query?.serialnumber,
 
-      req.headers[
-        "sn"
-      ],
+      req.query?.cloud_id,
+      req.query?.cloudId,
+      req.query?.cloudid,
+      req.query?.CloudId,
 
-      req.headers[
-        "serial_number"
-      ],
+      req.query?.dev_id,
+      req.query?.devId,
+      req.query?.devid,
 
-      req.headers[
-        "serial-number"
-      ],
-
-      req.query
-        ?.device_id,
-
-      req.query
-        ?.deviceId,
-
-      req.query
-        ?.deviceid,
-
-      req.query
-        ?.terminal_id,
-
-      req.query
-        ?.terminalId,
-
-      req.query
-        ?.SN,
-
-      req.query
-        ?.sn,
-
-      req.query
-        ?.serialNumber,
-
-      req.query
-        ?.serial_number
+      // Some FKWeb firmware puts terminal identity in JSON
+      payload?.device_id,
+      payload?.deviceId,
+      payload?.deviceid,
+      payload?.terminal_id,
+      payload?.terminalId,
+      payload?.terminalid,
+      payload?.SN,
+      payload?.sn,
+      payload?.serialNumber,
+      payload?.serial_number,
+      payload?.cloud_id,
+      payload?.cloudId,
+      payload?.cloudid,
+      payload?.dev_id,
+      payload?.devId,
+      payload?.devid
     );
   };
 
@@ -363,24 +371,24 @@ const getRequestCode =
   (
     req
   ) => {
+    const payload =
+  getRequestPayload(req);
+
     return firstText(
-      req.headers[
-        "request_code"
-      ],
+      req.headers?.["request_code"],
+      req.headers?.["request-code"],
+      req.headers?.["requestcode"],
+      req.headers?.["request_code_type"],
+      req.headers?.["request-code-type"],
 
-      req.headers[
-        "request-code"
-      ],
+      req.query?.request_code,
+      req.query?.requestCode,
+      req.query?.requestcode,
+      req.query?.RequestCode,
 
-      req.headers[
-        "requestcode"
-      ],
-
-      req.query
-        ?.request_code,
-
-      req.query
-        ?.requestCode
+      payload?.request_code,
+      payload?.requestCode,
+      payload?.requestcode
     );
   };
 
@@ -537,6 +545,65 @@ const parseJsonBody =
       return null;
     }
   };
+
+  const getRawBodyText = (req) => {
+  if (Buffer.isBuffer(req.body)) {
+    return req.body
+      .toString("utf8")
+      .trim();
+  }
+
+  if (typeof req.body === "string") {
+    return req.body.trim();
+  }
+
+  return "";
+};
+
+const parseFormBody = (req) => {
+  const text =
+    getRawBodyText(req);
+
+  if (!text) {
+    return null;
+  }
+
+  // JSON is handled separately.
+  if (
+    text.startsWith("{") ||
+    text.startsWith("[")
+  ) {
+    return null;
+  }
+
+  try {
+    const params =
+      new URLSearchParams(text);
+
+    const result = {};
+
+    for (
+      const [key, value]
+      of params.entries()
+    ) {
+      result[key] = value;
+    }
+
+    return Object.keys(result).length
+      ? result
+      : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+const getRequestPayload = (req) => {
+  return (
+    parseJsonBody(req) ||
+    parseFormBody(req) ||
+    null
+  );
+};
 
 /* =========================================================
    NORMALIZE PUNCH
@@ -846,10 +913,10 @@ const parseFkWebEvent =
         req
       );
 
-    const payload =
-      parseJsonBody(
-        req
-      );
+   const payload =
+  getRequestPayload(
+    req
+  );
 
     /* =====================================================
        DEVICE ASKING FOR COMMAND
@@ -1143,7 +1210,11 @@ module.exports = {
 
   parseJsonBody,
 
-  normalizePunchPayload,
+parseFormBody,
+
+getRequestPayload,
+
+normalizePunchPayload,
 
   normalizeM50Record,
 
