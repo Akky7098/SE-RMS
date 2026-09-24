@@ -20,6 +20,29 @@ const normalizeText =
     ).trim();
   };
 
+const firstText =
+  (
+    ...values
+  ) => {
+    for (
+      const value of
+      values
+    ) {
+      const text =
+        normalizeText(
+          value
+        );
+
+      if (
+        text
+      ) {
+        return text;
+      }
+    }
+
+    return "";
+  };
+
 const normalizeBiometricCode =
   (
     value
@@ -35,15 +58,47 @@ const normalizeBiometricCode =
       return "";
     }
 
+    /*
+     * Pure numeric machine IDs are normalized so:
+     *
+     *   000123
+     *   00123
+     *   123
+     *
+     * resolve consistently as 123.
+     *
+     * Alphanumeric employee codes such as SE1277 remain
+     * alphanumeric and are upper-cased.
+     */
+
     if (
       /^\d+$/.test(
         text
       )
     ) {
-      return String(
+      const numeric =
         Number(
           text
+        );
+
+      if (
+        Number.isSafeInteger(
+          numeric
         )
+      ) {
+        return String(
+          numeric
+        );
+      }
+
+      /*
+       * Avoid precision loss for unexpectedly large numeric
+       * identifiers.
+       */
+
+      return text.replace(
+        /^0+(?=\d)/,
+        ""
       );
     }
 
@@ -53,6 +108,12 @@ const normalizeBiometricCode =
 
 /* =========================================================
    MACHINE DATE
+
+   FKWeb machine timestamps without timezone information are
+   interpreted as India local time.
+
+   MongoDB then stores the resulting Date as the equivalent
+   UTC instant.
 ========================================================= */
 
 const parseMachineDate =
@@ -76,10 +137,46 @@ const parseMachineDate =
         : value;
     }
 
+    if (
+      typeof value ===
+        "number" &&
+      Number.isFinite(
+        value
+      )
+    ) {
+      const milliseconds =
+        value <
+        100000000000
+          ? value *
+            1000
+          : value;
+
+      const numericDate =
+        new Date(
+          milliseconds
+        );
+
+      return Number.isNaN(
+        numericDate.getTime()
+      )
+        ? null
+        : numericDate;
+    }
+
     const text =
       normalizeText(
         value
       );
+
+    if (
+      !text
+    ) {
+      return null;
+    }
+
+    /*
+     * YYYYMMDDHHmmss
+     */
 
     let match =
       text.match(
@@ -101,6 +198,11 @@ const parseMachineDate =
         : date;
     }
 
+    /*
+     * YYYY-MM-DD HH:mm:ss
+     * YYYY-MM-DDTHH:mm:ss
+     */
+
     match =
       text.match(
         /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/
@@ -121,80 +223,262 @@ const parseMachineDate =
         : date;
     }
 
-    const date =
-      new Date(
+    /*
+     * YYYY/MM/DD HH:mm:ss
+     */
+
+    match =
+      text.match(
+        /^(\d{4})\/(\d{2})\/(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/
+      );
+
+    if (
+      match
+    ) {
+      const date =
+        new Date(
+          `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}+05:30`
+        );
+
+      return Number.isNaN(
+        date.getTime()
+      )
+        ? null
+        : date;
+    }
+
+    /*
+     * ISO strings containing an explicit timezone/offset may
+     * safely be delegated to Date.
+     */
+
+    const hasExplicitTimezone =
+      /(?:Z|[+-]\d{2}:?\d{2})$/i.test(
         text
       );
 
-    return Number.isNaN(
-      date.getTime()
-    )
-      ? null
-      : date;
+    if (
+      hasExplicitTimezone
+    ) {
+      const date =
+        new Date(
+          text
+        );
+
+      return Number.isNaN(
+        date.getTime()
+      )
+        ? null
+        : date;
+    }
+
+    /*
+     * Unknown timezone-less formats are intentionally rejected
+     * rather than interpreted using the VPS timezone.
+     */
+
+    return null;
   };
 
 /* =========================================================
    DEVICE ID
+
+   Different FKWeb firmware versions can expose the terminal
+   identifier under slightly different names.
+
+   We preserve the exact identifier sent by the machine.
 ========================================================= */
 
 const getDeviceId =
   (
     req
   ) => {
-    return normalizeText(
+    return firstText(
       req.headers[
         "device_id"
-      ] ||
+      ],
+
       req.headers[
         "device-id"
-      ] ||
+      ],
+
+      req.headers[
+        "deviceid"
+      ],
+
+      req.headers[
+        "terminal_id"
+      ],
+
+      req.headers[
+        "terminal-id"
+      ],
+
       req.headers[
         "sn"
-      ] ||
+      ],
+
+      req.headers[
+        "serial_number"
+      ],
+
+      req.headers[
+        "serial-number"
+      ],
+
       req.query
-        ?.device_id ||
+        ?.device_id,
+
       req.query
-        ?.deviceId ||
+        ?.deviceId,
+
       req.query
-        ?.SN ||
+        ?.deviceid,
+
       req.query
-        ?.sn
+        ?.terminal_id,
+
+      req.query
+        ?.terminalId,
+
+      req.query
+        ?.SN,
+
+      req.query
+        ?.sn,
+
+      req.query
+        ?.serialNumber,
+
+      req.query
+        ?.serial_number
     );
   };
 
 /* =========================================================
-   HEADERS
+   PROTOCOL HEADERS
 ========================================================= */
 
 const getRequestCode =
   (
     req
-  ) =>
-    normalizeText(
+  ) => {
+    return firstText(
       req.headers[
         "request_code"
-      ]
+      ],
+
+      req.headers[
+        "request-code"
+      ],
+
+      req.headers[
+        "requestcode"
+      ],
+
+      req.query
+        ?.request_code,
+
+      req.query
+        ?.requestCode
     );
+  };
 
 const getCommandCode =
   (
     req
-  ) =>
-    normalizeText(
+  ) => {
+    return firstText(
       req.headers[
         "cmd_code"
-      ]
+      ],
+
+      req.headers[
+        "cmd-code"
+      ],
+
+      req.headers[
+        "command_code"
+      ],
+
+      req.headers[
+        "command-code"
+      ],
+
+      req.query
+        ?.cmd_code,
+
+      req.query
+        ?.cmdCode,
+
+      req.query
+        ?.command_code
     );
+  };
 
 const getTransactionId =
   (
     req
-  ) =>
-    normalizeText(
+  ) => {
+    return firstText(
       req.headers[
         "trans_id"
-      ]
+      ],
+
+      req.headers[
+        "trans-id"
+      ],
+
+      req.headers[
+        "transaction_id"
+      ],
+
+      req.headers[
+        "transaction-id"
+      ],
+
+      req.query
+        ?.trans_id,
+
+      req.query
+        ?.transId,
+
+      req.query
+        ?.transaction_id,
+
+      req.query
+        ?.transactionId
     );
+  };
+
+const getCommandReturnCode =
+  (
+    req
+  ) => {
+    return firstText(
+      req.headers[
+        "cmd_return_code"
+      ],
+
+      req.headers[
+        "cmd-return-code"
+      ],
+
+      req.headers[
+        "command_return_code"
+      ],
+
+      req.headers[
+        "command-return-code"
+      ],
+
+      req.query
+        ?.cmd_return_code,
+
+      req.query
+        ?.commandReturnCode
+    );
+  };
 
 /* =========================================================
    JSON BODY
@@ -215,51 +499,43 @@ const parseJsonBody =
       return req.body;
     }
 
+    let text =
+      "";
+
     if (
       Buffer.isBuffer(
         req.body
       )
     ) {
-      const text =
+      text =
         req.body
           .toString(
             "utf8"
           )
           .trim();
-
-      if (
-        !text
-      ) {
-        return null;
-      }
-
-      try {
-        return JSON.parse(
-          text
-        );
-      } catch (
-        error
-      ) {
-        return null;
-      }
-    }
-
-    if (
+    } else if (
       typeof req.body ===
       "string"
     ) {
-      try {
-        return JSON.parse(
-          req.body
-        );
-      } catch (
-        error
-      ) {
-        return null;
-      }
+      text =
+        req.body.trim();
     }
 
-    return null;
+    if (
+      !text
+    ) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(
+        text
+      );
+    } catch (
+      error
+    ) {
+      return null;
+    }
   };
 
 /* =========================================================
@@ -274,7 +550,9 @@ const normalizePunchPayload =
       "FKWEB"
   ) => {
     if (
-      !payload
+      !payload ||
+      typeof payload !==
+        "object"
     ) {
       return null;
     }
@@ -285,8 +563,11 @@ const normalizePunchPayload =
         payload.employee_code ||
         payload.user_id ||
         payload.userId ||
+        payload.userid ||
         payload.pin ||
-        payload.enroll_id
+        payload.PIN ||
+        payload.enroll_id ||
+        payload.enrollId
       );
 
     const punchTime =
@@ -294,7 +575,11 @@ const normalizePunchPayload =
         payload.punchTime ||
         payload.punch_time ||
         payload.record_time ||
+        payload.recordTime ||
         payload.io_time ||
+        payload.ioTime ||
+        payload.datetime ||
+        payload.date_time ||
         payload.time ||
         payload.timestamp
       );
@@ -312,39 +597,47 @@ const normalizePunchPayload =
 
       protocol,
 
-      deviceId,
+      deviceId:
+        normalizeText(
+          deviceId
+        ),
 
       employeeCode,
 
       employeeName:
-        normalizeText(
-          payload.employeeName ||
-          payload.employee_name ||
-          payload.user_name ||
+        firstText(
+          payload.employeeName,
+          payload.employee_name,
+          payload.user_name,
+          payload.userName,
           payload.name
         ),
 
       punchTime,
 
       recordId:
-        normalizeText(
-          payload.recordId ||
-          payload.record_id ||
-          payload.log_id ||
+        firstText(
+          payload.recordId,
+          payload.record_id,
+          payload.log_id,
+          payload.logId,
           payload.id
         ),
 
       verifyMode:
-        normalizeText(
-          payload.verifyMode ??
-          payload.verify_mode
+        firstText(
+          payload.verifyMode,
+          payload.verify_mode,
+          payload.verify
         ),
 
       ioMode:
-        normalizeText(
-          payload.ioMode ??
-          payload.io_mode ??
-          payload.in_out_mode
+        firstText(
+          payload.ioMode,
+          payload.io_mode,
+          payload.in_out_mode,
+          payload.inOutMode,
+          payload.status
         ),
 
       payload,
@@ -371,26 +664,6 @@ const normalizeM50Record =
    REQUEST TYPE HELPERS
 ========================================================= */
 
-const isCommandResultRequest =
-  (
-    req
-  ) => {
-    return Boolean(
-      getCommandCode(
-        req
-      ) ||
-      req.headers[
-        "cmd_return_code"
-      ] !==
-        undefined ||
-      getRequestCode(
-        req
-      )
-        .toLowerCase() ===
-        "send_cmd_result"
-    );
-  };
-
 const isCommandPollRequest =
   (
     req
@@ -398,8 +671,7 @@ const isCommandPollRequest =
     const requestCode =
       getRequestCode(
         req
-      )
-        .toLowerCase();
+      ).toLowerCase();
 
     return [
       "receive_cmd",
@@ -408,6 +680,137 @@ const isCommandPollRequest =
     ].includes(
       requestCode
     );
+  };
+
+const isCommandResultRequest =
+  (
+    req
+  ) => {
+    const requestCode =
+      getRequestCode(
+        req
+      ).toLowerCase();
+
+    return Boolean(
+      getCommandCode(
+        req
+      ) ||
+      getCommandReturnCode(
+        req
+      ) ||
+      requestCode ===
+        "send_cmd_result"
+    );
+  };
+
+/* =========================================================
+   PARSE COMMAND RESULT RECORDS
+========================================================= */
+
+const extractCommandResultRecords =
+  (
+    req,
+    payload,
+    deviceId
+  ) => {
+    if (
+      payload
+    ) {
+      const m50 =
+        extractDecodedM50Records(
+          payload
+        );
+
+      if (
+        Array.isArray(
+          m50
+        ) &&
+        m50.length
+      ) {
+        return m50
+          .map(
+            (
+              record
+            ) =>
+              normalizeM50Record(
+                record,
+                deviceId
+              )
+          )
+          .filter(
+            Boolean
+          );
+      }
+
+      const candidates =
+        Array.isArray(
+          payload.records
+        )
+          ? payload.records
+          : Array.isArray(
+                payload.log_array
+              )
+            ? payload.log_array
+            : Array.isArray(
+                  payload.logs
+                )
+              ? payload.logs
+              : Array.isArray(
+                    payload.data
+                  )
+                ? payload.data
+                : [];
+
+      return candidates
+        .map(
+          (
+            record
+          ) =>
+            normalizePunchPayload(
+              record,
+              deviceId
+            )
+        )
+        .filter(
+          Boolean
+        );
+    }
+
+    if (
+      Buffer.isBuffer(
+        req.body
+      ) &&
+      req.body.length
+    ) {
+      const binaryRecords =
+        decodeEbknBinary(
+          req.body
+        );
+
+      if (
+        !Array.isArray(
+          binaryRecords
+        )
+      ) {
+        return [];
+      }
+
+      return binaryRecords
+        .map(
+          (
+            record
+          ) =>
+            normalizeM50Record(
+              record,
+              deviceId
+            )
+        )
+        .filter(
+          Boolean
+        );
+    }
+
+    return [];
   };
 
 /* =========================================================
@@ -435,6 +838,11 @@ const parseFkWebEvent =
 
     const transactionId =
       getTransactionId(
+        req
+      );
+
+    const commandReturnCode =
+      getCommandReturnCode(
         req
       );
 
@@ -480,87 +888,12 @@ const parseFkWebEvent =
         req
       )
     ) {
-      let decodedRecords =
-        [];
-
-      if (
-        payload
-      ) {
-        const m50 =
-          extractDecodedM50Records(
-            payload
-          );
-
-        if (
-          m50.length
-        ) {
-          decodedRecords =
-            m50
-              .map(
-                (
-                  record
-                ) =>
-                  normalizeM50Record(
-                    record,
-                    deviceId
-                  )
-              )
-              .filter(
-                Boolean
-              );
-        } else {
-          const candidates =
-            Array.isArray(
-              payload.records
-            )
-              ? payload.records
-              : Array.isArray(
-                    payload.log_array
-                  )
-                ? payload.log_array
-                : [];
-
-          decodedRecords =
-            candidates
-              .map(
-                (
-                  record
-                ) =>
-                  normalizePunchPayload(
-                    record,
-                    deviceId
-                  )
-              )
-              .filter(
-                Boolean
-              );
-        }
-      } else if (
-        Buffer.isBuffer(
-          req.body
-        ) &&
-        req.body.length
-      ) {
-        const binaryRecords =
-          decodeEbknBinary(
-            req.body
-          );
-
-        decodedRecords =
-          binaryRecords
-            .map(
-              (
-                record
-              ) =>
-                normalizeM50Record(
-                  record,
-                  deviceId
-                )
-            )
-            .filter(
-              Boolean
-            );
-      }
+      const decodedRecords =
+        extractCommandResultRecords(
+          req,
+          payload,
+          deviceId
+        );
 
       return {
         eventType:
@@ -577,12 +910,7 @@ const parseFkWebEvent =
 
         transactionId,
 
-        commandReturnCode:
-          normalizeText(
-            req.headers[
-              "cmd_return_code"
-            ]
-          ),
+        commandReturnCode,
 
         records:
           decodedRecords,
@@ -598,15 +926,28 @@ const parseFkWebEvent =
     ===================================================== */
 
     const userId =
-      payload?.user_id ||
-      payload?.employeeCode ||
-      payload?.pin ||
-      payload?.enroll_id;
+      payload
+        ?.user_id ||
+      payload
+        ?.userId ||
+      payload
+        ?.employeeCode ||
+      payload
+        ?.employee_code ||
+      payload
+        ?.pin ||
+      payload
+        ?.PIN ||
+      payload
+        ?.enroll_id ||
+      payload
+        ?.enrollId;
 
     const eventName =
-      normalizeText(
-        payload?.event ||
-        payload?.event_type ||
+      firstText(
+        payload?.event,
+        payload?.event_type,
+        payload?.eventType,
         payload?.type
       ).toUpperCase();
 
@@ -616,6 +957,8 @@ const parseFkWebEvent =
         "ENROLLMENT",
         "ENROLL",
         "USER_UPDATE",
+        "USER ADD",
+        "USER_ADD",
       ].includes(
         eventName
       ) &&
@@ -636,9 +979,17 @@ const parseFkWebEvent =
           ),
 
         employeeName:
-          normalizeText(
-            payload?.user_name ||
-            payload?.name
+          firstText(
+            payload
+              ?.user_name,
+            payload
+              ?.userName,
+            payload
+              ?.employee_name,
+            payload
+              ?.employeeName,
+            payload
+              ?.name
           ),
 
         requestCode,
@@ -673,6 +1024,10 @@ const parseFkWebEvent =
 
     /* =====================================================
        HEARTBEAT
+
+       A request containing a recognized physical device ID
+       but no punch/enrollment/command payload is treated as
+       communication from that device.
     ===================================================== */
 
     if (
@@ -696,6 +1051,10 @@ const parseFkWebEvent =
           {},
       };
     }
+
+    /* =====================================================
+       UNKNOWN
+    ===================================================== */
 
     return {
       eventType:
@@ -735,8 +1094,12 @@ const normalizeHistoryRecord =
         ...record,
 
         deviceId:
-          record.deviceId ||
-          deviceId,
+          normalizeText(
+            record.deviceId
+          ) ||
+          normalizeText(
+            deviceId
+          ),
       };
     }
 
@@ -775,6 +1138,8 @@ module.exports = {
   getCommandCode,
 
   getTransactionId,
+
+  getCommandReturnCode,
 
   parseJsonBody,
 

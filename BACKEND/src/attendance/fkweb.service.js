@@ -41,7 +41,67 @@ const normalizeText =
   };
 
 /* =========================================================
+   VALID DATE
+========================================================= */
+
+const normalizePunchTime =
+  (
+    value
+  ) => {
+    if (
+      value instanceof
+      Date
+    ) {
+      if (
+        Number.isNaN(
+          value.getTime()
+        )
+      ) {
+        return null;
+      }
+
+      return value;
+    }
+
+    if (
+      value ===
+        undefined ||
+      value ===
+        null ||
+      normalizeText(
+        value
+      ) ===
+        ""
+    ) {
+      return null;
+    }
+
+    const date =
+      new Date(
+        value
+      );
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return null;
+    }
+
+    return date;
+  };
+
+/* =========================================================
    RESOLVE DEVICE
+
+   Device Master remains authoritative.
+
+   We DO NOT automatically create unknown physical devices.
+
+   A request from an unregistered FKWeb machine must fail
+   device resolution rather than silently creating an
+   untrusted production device.
 ========================================================= */
 
 const resolveFkWebDevice =
@@ -90,8 +150,10 @@ const processHeartbeat =
       device,
       {
         ipAddress:
-          requestMeta.ipAddress ||
-          "",
+          normalizeText(
+            requestMeta
+              ?.ipAddress
+          ),
       }
     );
 
@@ -99,7 +161,15 @@ const processHeartbeat =
   };
 
 /* =========================================================
-   ENROLLMENT
+   ENROLLMENT / MACHINE USER DIRECTORY
+
+   Machine users remain independent of ERP Employee records.
+
+   An operator may exist on the biometric machine without
+   having an ERP login or Employee record.
+
+   Later mapping can connect the same biometric code to an
+   Employee without losing historical raw punches.
 ========================================================= */
 
 const processEnrollment =
@@ -113,7 +183,7 @@ const processEnrollment =
 
     const biometricCode =
       normalizeBiometricCode(
-        event.employeeCode
+        event?.employeeCode
       );
 
     if (
@@ -132,28 +202,34 @@ const processEnrollment =
 
       employeeName:
         normalizeText(
-          event.employeeName ||
-          event.payload
+          event?.employeeName ||
+          event?.payload
             ?.user_name ||
-          event.payload
+          event?.payload
+            ?.employee_name ||
+          event?.payload
             ?.name
         ),
 
       rawPayload: {
         protocol:
-          event.protocol ||
+          normalizeText(
+            event?.protocol
+          ) ||
           "FKWEB",
 
         requestCode:
-          event.requestCode ||
-          "",
+          normalizeText(
+            event?.requestCode
+          ),
 
         transactionId:
-          event.transactionId ||
-          "",
+          normalizeText(
+            event?.transactionId
+          ),
 
         payload:
-          event.payload ||
+          event?.payload ??
           null,
       },
     });
@@ -161,6 +237,21 @@ const processEnrollment =
 
 /* =========================================================
    ONE PUNCH
+
+   This is the single canonical entry point for both:
+
+      LIVE
+      HISTORICAL_SYNC
+
+   Nothing in FKWeb writes directly to Attendance.
+
+   FKWeb
+      ↓
+   RawAttendancePunch
+      ↓
+   mapping / processor
+      ↓
+   Attendance
 ========================================================= */
 
 const processPunch =
@@ -181,35 +272,35 @@ const processPunch =
 
     const biometricCode =
       normalizeBiometricCode(
-        event.employeeCode
+        event?.employeeCode
       );
 
     if (
-      !biometricCode ||
-      !event.punchTime
+      !biometricCode
     ) {
       throw new Error(
-        "FKWeb punch requires employeeCode and punchTime."
+        "FKWeb punch requires employeeCode."
       );
     }
 
     const punchTime =
-      event.punchTime instanceof
-      Date
-        ? event.punchTime
-        : new Date(
-            event.punchTime
-          );
+      normalizePunchTime(
+        event?.punchTime
+      );
 
     if (
-      Number.isNaN(
-        punchTime.getTime()
-      )
+      !punchTime
     ) {
       throw new Error(
-        "FKWeb punchTime is invalid."
+        "FKWeb punch requires a valid punchTime."
       );
     }
+
+    const normalizedSource =
+      normalizeText(
+        source
+      ).toUpperCase() ||
+      "LIVE";
 
     const result =
       await ingestRawPunch({
@@ -219,23 +310,26 @@ const processPunch =
 
         biometricEmployeeName:
           normalizeText(
-            event.employeeName ||
-            event.payload
+            event?.employeeName ||
+            event?.payload
               ?.user_name ||
-            event.payload
+            event?.payload
+              ?.employee_name ||
+            event?.payload
               ?.name
           ),
 
         punchTime,
 
-        source,
+        source:
+          normalizedSource,
 
         workMode:
           "OFFICE",
 
         machineRecordId:
           normalizeText(
-            event.recordId
+            event?.recordId
           ),
 
         machineUserId:
@@ -243,34 +337,47 @@ const processPunch =
 
         machineVerifyMode:
           normalizeText(
-            event.verifyMode
+            event?.verifyMode
           ),
 
         machineInOutMode:
           normalizeText(
-            event.ioMode
+            event?.ioMode
           ),
 
-        syncBatchId,
+        syncBatchId:
+          syncBatchId ||
+          null,
 
         rawPayload: {
           protocol:
-            event.protocol ||
+            normalizeText(
+              event?.protocol
+            ) ||
             "FKWEB",
 
           requestCode:
-            event.requestCode ||
-            "",
+            normalizeText(
+              event?.requestCode
+            ),
 
           transactionId:
-            event.transactionId ||
-            "",
+            normalizeText(
+              event?.transactionId
+            ),
 
           payload:
-            event.payload ||
+            event?.payload ??
             null,
         },
       });
+
+    /*
+     * lastPunchReceivedAt represents actual device punch
+     * activity. It is updated even when ingestRawPunch detects
+     * a duplicate because the device really communicated the
+     * punch to SE-RMS.
+     */
 
     await markPunchReceived(
       device,
@@ -283,22 +390,16 @@ const processPunch =
 /* =========================================================
    HISTORICAL PUNCHES
 
-   IMPORTANT:
+   Historical records use EXACTLY the same ingestion pipeline
+   as live punches.
 
-   Historical records enter through EXACTLY the same
-   biometric ingestion pipeline as live records.
+   This gives us:
 
-   We do not write directly to Attendance.
-
-   ingestRawPunch:
-      ↓
-   RawAttendancePunch
-      ↓
-   employee mapping
-      ↓
-   attendance processor
-      ↓
-   Attendance
+   - one RawAttendancePunch model
+   - one duplicate strategy
+   - one Employee mapping strategy
+   - one attendance processor
+   - one audit trail
 ========================================================= */
 
 const processHistoricalPunches =
@@ -308,11 +409,24 @@ const processHistoricalPunches =
     records =
       [],
 
-    syncBatchId,
+    syncBatchId =
+      null,
   }) => {
+    const safeRecords =
+      Array.isArray(
+        records
+      )
+        ? records
+        : [];
+
+    const normalizedDeviceId =
+      normalizeText(
+        deviceId
+      );
+
     const stats = {
       received:
-        records.length,
+        safeRecords.length,
 
       inserted:
         0,
@@ -331,16 +445,54 @@ const processHistoricalPunches =
     };
 
     for (
-      const record of records
+      const record of
+      safeRecords
     ) {
       try {
         if (
-          !record ||
-          !record.employeeCode ||
-          !record.punchTime
+          !record
         ) {
           stats.errors +=
             1;
+
+          continue;
+        }
+
+        const employeeCode =
+          normalizeBiometricCode(
+            record.employeeCode
+          );
+
+        const punchTime =
+          normalizePunchTime(
+            record.punchTime
+          );
+
+        if (
+          !employeeCode ||
+          !punchTime
+        ) {
+          stats.errors +=
+            1;
+
+          console.warn(
+            "[FKWEB] Historical record skipped because required punch data is missing.",
+            {
+              deviceId:
+                normalizeText(
+                  record.deviceId
+                ) ||
+                normalizedDeviceId,
+
+              employeeCode:
+                employeeCode ||
+                "",
+
+              punchTime:
+                record.punchTime ||
+                null,
+            }
+          );
 
           continue;
         }
@@ -351,8 +503,14 @@ const processHistoricalPunches =
               ...record,
 
               deviceId:
-                record.deviceId ||
-                deviceId,
+                normalizeText(
+                  record.deviceId
+                ) ||
+                normalizedDeviceId,
+
+              employeeCode,
+
+              punchTime,
             },
             {
               source:
@@ -393,16 +551,26 @@ const processHistoricalPunches =
           "[FKWEB] Historical punch processing failed:",
           {
             deviceId:
-              record?.deviceId ||
-              deviceId,
+              normalizeText(
+                record
+                  ?.deviceId
+              ) ||
+              normalizedDeviceId,
 
             employeeCode:
-              record?.employeeCode ||
-              "",
+              normalizeText(
+                record
+                  ?.employeeCode
+              ),
 
             punchTime:
-              record?.punchTime ||
-              "",
+              record
+                ?.punchTime ||
+              null,
+
+            syncBatchId:
+              syncBatchId ||
+              null,
 
             message:
               error?.message ||

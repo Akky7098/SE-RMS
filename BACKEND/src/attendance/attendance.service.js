@@ -2577,100 +2577,54 @@ const buildScopedEmployeeQuery =
 const getUnmappedBiometricAttendance =
   async ({
     access,
-
     from = null,
-
     to = null,
-
     officeId = null,
-
     provider = null,
-
     limit = 5000,
   } = {}) => {
-    const accessType =
-      String(
-        access?.type ||
-        ""
-      )
-        .trim()
-        .toUpperCase();
+const accessType =
+  String(
+    access?.type || ""
+  )
+    .trim()
+    .toUpperCase();
 
-    /*
-     * Unmapped machine workers have no Employee hierarchy.
-     *
-     * Therefore only broad authorized attendance scopes can
-     * see these records.
-     */
-    if (
-      ![
-        "ALL",
-        "DEPARTMENT",
-      ].includes(
-        accessType
-      )
-    ) {
-      return {
-        items:
-          [],
+/*
+ * Unmapped biometric workers do not have an Employee
+ * hierarchy yet.
+ *
+ * Management attendance scopes may view these worker/day
+ * register rows.
+ *
+ * SELF remains blocked so personal attendance can never
+ * expose other biometric workers.
+ */
+if (
+  ![
+    "ALL",
+    "DEPARTMENT",
+    "TEAM",
+  ].includes(
+    accessType
+  )
+) {
+  return {
+    items: [],
+    rawPunchCount: 0,
+    workerDayCount: 0,
+    truncated: false,
+  };
+}
 
-        rawPunchCount:
-          0,
+    /* =====================================================
+       RAW FILTER
+    ===================================================== */
 
-        workerDayCount:
-          0,
-      };
-    }
-
-    const query = {
-      employeeId:
-        null,
-
-      processingStatus:
-        "UNMAPPED",
+    const match = {
+      employeeId: null,
+      processingStatus: "UNMAPPED",
     };
-
-    /* =====================================================
-       DATE RANGE
-
-       Raw punches store actual UTC Date values.
-
-       API dates are organization-local India dates.
-    ===================================================== */
-
-    if (
-      from ||
-      to
-    ) {
-      query.punchTime =
-        {};
-
-      if (
-        from
-      ) {
-        query.punchTime.$gte =
-          new Date(
-            `${String(
-              from
-            )}T00:00:00.000+05:30`
-          );
-      }
-
-      if (
-        to
-      ) {
-        query.punchTime.$lte =
-          new Date(
-            `${String(
-              to
-            )}T23:59:59.999+05:30`
-          );
-      }
-    }
-
-    /* =====================================================
-       LOCATION
-    ===================================================== */
 
     if (
       officeId &&
@@ -2678,23 +2632,13 @@ const getUnmappedBiometricAttendance =
         officeId
       )
     ) {
-      query.officeId =
-        officeId;
+      match.officeId =
+        new mongoose.Types.ObjectId(
+          officeId
+        );
     }
 
-    /* =====================================================
-       PROVIDER
-
-       Sonipat:
-       ESSL
-
-       Delhi:
-       REALTIME
-    ===================================================== */
-
-    if (
-      provider
-    ) {
+    if (provider) {
       const normalizedProvider =
         String(
           provider
@@ -2717,364 +2661,740 @@ const getUnmappedBiometricAttendance =
         );
       }
 
-      query.provider =
+      match.provider =
         normalizedProvider;
     }
+
+    /*
+     * API dates are India calendar dates.
+     *
+     * Mongo Date values remain UTC instants.
+     */
+
+    if (
+      from ||
+      to
+    ) {
+      match.punchTime = {};
+
+      if (from) {
+        match.punchTime.$gte =
+          new Date(
+            `${String(
+              from
+            )}T00:00:00.000+05:30`
+          );
+      }
+
+      if (to) {
+        match.punchTime.$lte =
+          new Date(
+            `${String(
+              to
+            )}T23:59:59.999+05:30`
+          );
+      }
+    }
+
+    /* =====================================================
+       RAW COUNT
+
+       Audit count only.
+       This is NOT register record count.
+    ===================================================== */
+
+    const rawPunchCount =
+      await RawAttendancePunch
+        .countDocuments(
+          match
+        );
+
+    /* =====================================================
+       DAILY REGISTER AGGREGATION
+
+       IMPORTANT STANDARD RULE:
+
+       1. First punch of calendar day = check-in.
+       2. Punches less than 120 minutes after check-in are
+          treated as additional/duplicate biometric scans.
+       3. Latest punch >= 120 minutes after check-in becomes
+          checkout.
+       4. If no such punch exists -> missing checkout.
+       5. Tomorrow always starts a new attendance day.
+       6. Night shift crossing is NOT applied here. It will
+          be handled by assigned shift rules later.
+    ===================================================== */
 
     const safeLimit =
       Math.min(
         Math.max(
           Number(
             limit
-          ) ||
-            5000,
+          ) || 5000,
           1
         ),
         20000
       );
 
-    const [
-      punches,
-      rawPunchCount,
-    ] =
-      await Promise.all([
-        RawAttendancePunch
-          .find(
-            query
-          )
-          .sort({
-            punchTime:
-              1,
-          })
-          .limit(
-            safeLimit
-          )
-          .lean(),
-
-        RawAttendancePunch
-          .countDocuments(
-            query
-          ),
-      ]);
-
-    /*
-     * One register row =
-     *
-     * device + biometric employee + local calendar date
-     *
-     * We intentionally don't generate Attendance documents
-     * here because no Employee mapping exists yet.
-     */
-    const registerMap =
-      new Map();
-
-    for (
-      const punch
-      of punches
-    ) {
-      const localDate =
-        getCalendarDateKey(
-          punch.punchTime,
-          330
-        );
-
-      const key =
-        [
-          String(
-            punch
-              .attendanceDeviceId ||
-              punch.deviceCode ||
-              ""
-          ),
-
-          String(
-            punch.biometricCode ||
-              ""
-          ),
-
-          localDate,
-        ].join(
-          "|"
-        );
-
-      if (
-        !registerMap.has(
-          key
-        )
-      ) {
-        registerMap.set(
-          key,
+    const rows =
+      await RawAttendancePunch
+        .aggregate([
           {
-            recordType:
-              "UNMAPPED_BIOMETRIC",
+            $match:
+              match,
+          },
 
-            mapped:
-              false,
+          /*
+           * Convert actual UTC instant into Indian
+           * calendar date.
+           */
+          {
+            $set: {
+              localBusinessDate: {
+                $dateToString: {
+                  date:
+                    "$punchTime",
 
-            employeeId:
-              null,
+                  format:
+                    "%Y-%m-%d",
 
-            /*
-             * Temporary employee-facing identity.
-             *
-             * This is NOT Mongo employeeId.
-             */
-            employeeCode:
-              punch.biometricCode ||
-              "",
+                  timezone:
+                    "Asia/Kolkata",
+                },
+              },
+            },
+          },
 
-            biometricCode:
-              punch.biometricCode ||
-              "",
+          /*
+           * Sort before grouping so punches remain
+           * chronological.
+           */
+          {
+            $sort: {
+              attendanceDeviceId:
+                1,
 
-            employeeName:
-              punch
-                .biometricEmployeeName ||
-              "",
+              biometricCode:
+                1,
 
-            businessDate:
-              localDate,
+              localBusinessDate:
+                1,
 
-            provider:
-              punch.provider ||
-              "",
+              punchTime:
+                1,
+            },
+          },
 
-            attendanceDeviceId:
-              punch
-                .attendanceDeviceId ||
-              null,
+          /*
+           * One group =
+           *
+           * device
+           * +
+           * biometric worker
+           * +
+           * India calendar date
+           */
+          {
+            $group: {
+              _id: {
+                attendanceDeviceId:
+                  "$attendanceDeviceId",
 
-            deviceCode:
-              punch.deviceCode ||
-              "",
+                biometricCode:
+                  "$biometricCode",
 
-            deviceSerialNumber:
-              punch
-                .deviceSerialNumber ||
-              "",
+                businessDate:
+                  "$localBusinessDate",
+              },
 
-            officeId:
-              punch.officeId ||
-              null,
+              officeId: {
+                $first:
+                  "$officeId",
+              },
 
-            departmentId:
-              null,
+              provider: {
+                $first:
+                  "$provider",
+              },
 
-            departmentName:
-              "",
+              deviceCode: {
+                $first:
+                  "$deviceCode",
+              },
 
-            workMode:
-              "OFFICE",
+              deviceSerialNumber: {
+                $first:
+                  "$deviceSerialNumber",
+              },
 
-            /*
-             * We cannot calculate shift/policy status before
-             * Employee Master mapping exists.
-             */
-            presenceStatus:
-              "BIOMETRIC_ONLY",
+              biometricEmployeeName: {
+                $first:
+                  "$biometricEmployeeName",
+              },
 
-            processingStatus:
-              "UNMAPPED",
+              punches: {
+                $push:
+                  "$punchTime",
+              },
 
-            firstIn: {
-              time:
+              punchCount: {
+                $sum:
+                  1,
+              },
+            },
+          },
+
+          /*
+           * First physical punch is always today's
+           * provisional check-in.
+           */
+          {
+            $set: {
+              firstPunchAt: {
+                $arrayElemAt: [
+                  "$punches",
+                  0,
+                ],
+              },
+            },
+          },
+
+          /*
+           * Checkout threshold:
+           *
+           * check-in + 120 minutes
+           */
+          {
+            $set: {
+              checkoutThresholdAt: {
+                $dateAdd: {
+                  startDate:
+                    "$firstPunchAt",
+
+                  unit:
+                    "minute",
+
+                  amount:
+                    120,
+                },
+              },
+            },
+          },
+
+          /*
+           * Keep punches occurring at least two hours
+           * after first punch.
+           */
+          {
+            $set: {
+              checkoutCandidates: {
+                $filter: {
+                  input:
+                    "$punches",
+
+                  as:
+                    "punch",
+
+                  cond: {
+                    $gte: [
+                      "$$punch",
+                      "$checkoutThresholdAt",
+                    ],
+                  },
+                },
+              },
+            },
+          },
+
+          /*
+           * Because punches were sorted ascending,
+           * final qualifying punch is checkout.
+           */
+          {
+            $set: {
+              lastPunchAt: {
+                $cond: [
+                  {
+                    $gt: [
+                      {
+                        $size:
+                          "$checkoutCandidates",
+                      },
+                      0,
+                    ],
+                  },
+
+                  {
+                    $arrayElemAt: [
+                      "$checkoutCandidates",
+                      -1,
+                    ],
+                  },
+
+                  null,
+                ],
+              },
+            },
+          },
+
+          /* =================================================
+             MACHINE USER DIRECTORY
+
+             Raw punch name may be blank.
+             Use biometricmachineusers as fallback.
+          ================================================= */
+
+          {
+            $lookup: {
+              from:
+                "biometricmachineusers",
+
+              let: {
+                deviceId:
+                  "$_id.attendanceDeviceId",
+
+                code:
+                  "$_id.biometricCode",
+              },
+
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        {
+                          $eq: [
+                            "$attendanceDeviceId",
+                            "$$deviceId",
+                          ],
+                        },
+
+                        {
+                          $eq: [
+                            "$biometricCode",
+                            "$$code",
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+
+                {
+                  $sort: {
+                    updatedAt:
+                      -1,
+                  },
+                },
+
+                {
+                  $limit:
+                    1,
+                },
+
+                {
+                  $project: {
+                    machineEmployeeName:
+                      1,
+                  },
+                },
+              ],
+
+              as:
+                "machineUser",
+            },
+          },
+
+          /* =================================================
+             OFFICE MASTER
+          ================================================= */
+
+          {
+            $lookup: {
+              from:
+                "offices",
+
+              localField:
+                "officeId",
+
+              foreignField:
+                "_id",
+
+              as:
+                "office",
+            },
+          },
+
+          {
+            $set: {
+              machineUser: {
+                $arrayElemAt: [
+                  "$machineUser",
+                  0,
+                ],
+              },
+
+              office: {
+                $arrayElemAt: [
+                  "$office",
+                  0,
+                ],
+              },
+            },
+          },
+
+          /* =================================================
+             REGISTER RESPONSE
+          ================================================= */
+
+          {
+            $project: {
+              _id:
+                0,
+
+              id: {
+                $concat: [
+                  {
+                    $toString:
+                      "$_id.attendanceDeviceId",
+                  },
+
+                  ":",
+
+                  "$_id.biometricCode",
+
+                  ":",
+
+                  "$_id.businessDate",
+                ],
+              },
+
+              attendanceId:
                 null,
+
+              employeeId:
+                null,
+
+              employeeCode:
+                "$_id.biometricCode",
+
+              biometricCode:
+                "$_id.biometricCode",
+
+              employeeName: {
+                $let: {
+                  vars: {
+                    rawName: {
+                      $trim: {
+                        input: {
+                          $ifNull: [
+                            "$biometricEmployeeName",
+                            "",
+                          ],
+                        },
+                      },
+                    },
+
+                    machineName: {
+                      $trim: {
+                        input: {
+                          $ifNull: [
+                            "$machineUser.machineEmployeeName",
+                            "",
+                          ],
+                        },
+                      },
+                    },
+                  },
+
+                  in: {
+                    $cond: [
+                      {
+                        $ne: [
+                          "$$rawName",
+                          "",
+                        ],
+                      },
+
+                      "$$rawName",
+
+                      {
+                        $cond: [
+                          {
+                            $ne: [
+                              "$$machineName",
+                              "",
+                            ],
+                          },
+
+                          "$$machineName",
+
+                          "$_id.biometricCode",
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+
+              businessDate:
+                "$_id.businessDate",
+
+              attendanceDate:
+                "$_id.businessDate",
+
+              firstInAt:
+                "$firstPunchAt",
+
+              lastOutAt:
+                "$lastPunchAt",
+
+              firstIn: {
+                time:
+                  "$firstPunchAt",
+
+                source:
+                  "$provider",
+              },
+
+              lastOut: {
+                $cond: [
+                  {
+                    $ne: [
+                      "$lastPunchAt",
+                      null,
+                    ],
+                  },
+
+                  {
+                    time:
+                      "$lastPunchAt",
+
+                    source:
+                      "$provider",
+                  },
+
+                  null,
+                ],
+              },
+
+              punchCount:
+                "$punchCount",
+
+              rawPunches:
+                "$punches",
+
+              checkoutThresholdAt:
+                "$checkoutThresholdAt",
+
+              hasCheckIn: {
+                $literal:
+                  true,
+              },
+
+              hasCheckOut: {
+                $ne: [
+                  "$lastPunchAt",
+                  null,
+                ],
+              },
+
+              missingCheckIn: {
+                $literal:
+                  false,
+              },
+
+              missingCheckOut: {
+                $eq: [
+                  "$lastPunchAt",
+                  null,
+                ],
+              },
+
+              /*
+ * IMPORTANT:
+ *
+ * A biometric register row exists only because at least
+ * one physical punch was received.
+ *
+ * Therefore:
+ *
+ * first punch only
+ * -> PRESENT + MISSING_CHECKOUT
+ *
+ * first punch + qualifying final punch
+ * -> PRESENT + COMPLETE
+ *
+ * NOT_MARKED is reserved for workers for whom no punch
+ * exists for that business date.
+ */
+
+presenceStatus: {
+  $literal:
+    "PRESENT",
+},
+
+status: {
+  $literal:
+    "PRESENT",
+},
+
+attendanceState: {
+  $cond: [
+    {
+      $ne: [
+        "$lastPunchAt",
+        null,
+      ],
+    },
+
+    "COMPLETE",
+
+    "MISSING_CHECKOUT",
+  ],
+},
+
+              workMode: {
+                $literal:
+                  "OFFICE",
+              },
 
               source:
-                "BIOMETRIC",
+                "$provider",
 
-              punchId:
+              primarySource:
+                "$provider",
+
+              provider:
+                "$provider",
+
+              attendanceDeviceId:
+                "$_id.attendanceDeviceId",
+
+              deviceCode:
+                "$deviceCode",
+
+              deviceSerialNumber:
+                "$deviceSerialNumber",
+
+              officeId:
+                "$officeId",
+
+              officeName: {
+                $ifNull: [
+                  "$office.name",
+                  "",
+                ],
+              },
+
+              workLocation: {
+                $ifNull: [
+                  "$office.shortLocation",
+                  "",
+                ],
+              },
+
+              locationName: {
+                $ifNull: [
+                  "$office.shortLocation",
+                  "",
+                ],
+              },
+
+              timezone: {
+                $ifNull: [
+                  "$office.timezone",
+                  "Asia/Kolkata",
+                ],
+              },
+
+              biometricOnly: {
+                $literal:
+                  true,
+              },
+
+              mapped: {
+                $literal:
+                  false,
+              },
+
+              processingStatus: {
+                $literal:
+                  "UNMAPPED",
+              },
+
+              departmentId:
                 null,
+
+              departmentName: {
+                $literal:
+                  "Unassigned",
+              },
+
+              designation: {
+                $literal:
+                  "",
+              },
+
+              totalWorkingMinutes: {
+                $cond: [
+                  {
+                    $ne: [
+                      "$lastPunchAt",
+                      null,
+                    ],
+                  },
+
+                  {
+                    $dateDiff: {
+                      startDate:
+                        "$firstPunchAt",
+
+                      endDate:
+                        "$lastPunchAt",
+
+                      unit:
+                        "minute",
+                    },
+                  },
+
+                  0,
+                ],
+              },
             },
+          },
 
-            lastOut: {
-              time:
-                null,
+          {
+            $sort: {
+              businessDate:
+                -1,
 
-              source:
-                null,
-
-              punchId:
-                null,
+              employeeName:
+                1,
             },
+          },
 
-            punchCount:
-              0,
-
-            punches:
-              [],
-          }
+          {
+            $limit:
+              safeLimit,
+          },
+        ])
+        .allowDiskUse(
+          true
         );
-      }
-
-      const register =
-        registerMap.get(
-          key
-        );
-
-      /*
-       * Prefer a machine name whenever one is available.
-       */
-      if (
-        !register.employeeName &&
-        punch.biometricEmployeeName
-      ) {
-        register.employeeName =
-          punch.biometricEmployeeName;
-      }
-
-      register.punches.push({
-        _id:
-          punch._id,
-
-        punchTime:
-          punch.punchTime,
-
-        source:
-          punch.source,
-
-        machineRecordId:
-          punch.machineRecordId ||
-          "",
-
-        machineUserId:
-          punch.machineUserId ||
-          "",
-
-        machineVerifyMode:
-          punch
-            .machineVerifyMode ||
-          "",
-
-        machineInOutMode:
-          punch
-            .machineInOutMode ||
-          "",
-      });
-    }
-
-    const items =
-      Array.from(
-        registerMap.values()
-      );
-
-    for (
-      const item
-      of items
-    ) {
-      item.punches.sort(
-        (
-          left,
-          right
-        ) =>
-          new Date(
-            left.punchTime
-          ).getTime() -
-          new Date(
-            right.punchTime
-          ).getTime()
-      );
-
-      item.punchCount =
-        item.punches.length;
-
-      const firstPunch =
-        item.punches[0] ||
-        null;
-
-      const lastPunch =
-        item.punches[
-          item.punches.length -
-            1
-        ] ||
-        null;
-
-      item.firstIn = {
-        time:
-          firstPunch
-            ?.punchTime ||
-          null,
-
-        source:
-          "BIOMETRIC",
-
-        punchId:
-          firstPunch?._id ||
-          null,
-      };
-
-      /*
-       * A single punch is not both IN and OUT.
-       */
-      if (
-        item.punches.length >
-        1
-      ) {
-        item.lastOut = {
-          time:
-            lastPunch
-              ?.punchTime ||
-            null,
-
-          source:
-            "BIOMETRIC",
-
-          punchId:
-            lastPunch?._id ||
-            null,
-        };
-      }
-    }
-
-    /*
-     * Latest business date first, then worker.
-     */
-    items.sort(
-      (
-        left,
-        right
-      ) => {
-        const dateCompare =
-          String(
-            right.businessDate
-          ).localeCompare(
-            String(
-              left.businessDate
-            )
-          );
-
-        if (
-          dateCompare !==
-          0
-        ) {
-          return dateCompare;
-        }
-
-        return String(
-          left.employeeName ||
-          left.biometricCode ||
-          ""
-        ).localeCompare(
-          String(
-            right.employeeName ||
-            right.biometricCode ||
-            ""
-          )
-        );
-      }
-    );
 
     return {
-      items,
+      items:
+        rows,
 
       rawPunchCount,
 
       workerDayCount:
-        items.length,
+        rows.length,
 
       truncated:
-        punches.length <
-        rawPunchCount,
+        rows.length >=
+        safeLimit,
     };
   };
 
@@ -3291,17 +3611,10 @@ const shouldIncludeUnmapped =
     "1";
 
 let biometric = {
-  unmapped:
-    [],
-
-  rawPunchCount:
-    0,
-
-  workerDayCount:
-    0,
-
-  truncated:
-    false,
+  items: [],
+  rawPunchCount: 0,
+  workerDayCount: 0,
+  truncated: false,
 };
 
 if (
@@ -3319,8 +3632,7 @@ if (
 
       provider,
 
-      limit:
-        20000,
+      limit: 20000,
     });
 }
 

@@ -3,6 +3,11 @@ const attendanceService =
     "./attendance.service"
   );
 
+const accessService =
+  require(
+    "../access/access.service"
+  );
+
 /* =========================================================
    RESPONSE HELPERS
 ========================================================= */
@@ -91,92 +96,224 @@ const getPermissions =
 
 /* =========================================================
    ATTENDANCE ACCESS SCOPE
+
+   IMPORTANT:
+
+   AccessProfile + DepartmentMembership are authoritative.
+
+   SUPER_ADMIN
+   -> ALL
+
+   ATTENDANCE VIEW ALL
+   -> ALL
+
+   ATTENDANCE VIEW DEPARTMENT
+   -> DEPARTMENT
+
+   ATTENDANCE VIEW TEAM
+   -> TEAM
+
+   Otherwise
+   -> SELF
 ========================================================= */
 
 const getAttendanceScope =
-  (
+  async (
     req
   ) => {
     const systemRole =
       String(
         req.user
           ?.systemRole ||
-          ""
+        ""
       )
         .trim()
         .toUpperCase();
-
-    if (
-      systemRole ===
-      "SUPER_ADMIN"
-    ) {
-      return {
-        type:
-          "ALL",
-      };
-    }
-
-    if (
-      req.attendanceScope
-    ) {
-      return req
-        .attendanceScope;
-    }
-
-    const permissions =
-      getPermissions(
-        req
-      );
-
-    if (
-      permissions.has(
-        "ATTENDANCE_VIEW_ALL"
-      )
-    ) {
-      return {
-        type:
-          "ALL",
-      };
-    }
-
-    if (
-      permissions.has(
-        "ATTENDANCE_VIEW_DEPARTMENT"
-      )
-    ) {
-      return {
-        type:
-          "DEPARTMENT",
-      };
-    }
-
-    if (
-      permissions.has(
-        "ATTENDANCE_VIEW_TEAM"
-      )
-    ) {
-      return {
-        type:
-          "TEAM",
-      };
-    }
-
-    /*
-     * Legacy compatibility only.
-     */
 
     const legacyRole =
       String(
         req.user
           ?.role ||
-          ""
+        ""
       )
         .trim()
         .toUpperCase();
 
+    /* =====================================================
+       GLOBAL SUPER ADMIN
+    ===================================================== */
+
+    if (
+      systemRole ===
+        "SUPER_ADMIN" ||
+      legacyRole ===
+        "SUPER_ADMIN"
+    ) {
+      return {
+        type:
+          "ALL",
+      };
+    }
+
+    /* =====================================================
+       PRE-RESOLVED ATTENDANCE SCOPE
+
+       Keep compatibility with middleware that may already
+       resolve a trusted attendance scope.
+    ===================================================== */
+
+    if (
+      req.attendanceScope &&
+      req.attendanceScope.type
+    ) {
+      return req
+        .attendanceScope;
+    }
+
+    /* =====================================================
+       AUTHORITATIVE ACCESS SERVICE
+
+       Loads:
+       - AccessProfile
+       - DepartmentMembership
+       - Dynamic department permissions
+       - Highest merged permission scope
+    ===================================================== */
+
+    const userAccess =
+      await accessService
+        .getMyAccess(
+          req.user
+        );
+
+    /* =====================================================
+       GLOBAL ACCESS RETURNED BY ACCESS SERVICE
+    ===================================================== */
+
+    if (
+      userAccess
+        ?.globalSuperAdmin ||
+      userAccess
+        ?.superAdmin ||
+      userAccess
+        ?.fullAccess
+    ) {
+      return {
+        type:
+          "ALL",
+      };
+    }
+
+    /* =====================================================
+       ATTENDANCE VIEW SCOPE
+
+       Preferred structure:
+
+       accessMap.ATTENDANCE.VIEW
+    ===================================================== */
+
+    let scope =
+      String(
+        userAccess
+          ?.accessMap
+          ?.ATTENDANCE
+          ?.VIEW ||
+        ""
+      )
+        .trim()
+        .toUpperCase();
+
+    /* =====================================================
+       FALLBACK TO MERGED PERMISSIONS
+
+       Keeps compatibility if accessMap is unavailable but
+       getMyAccess() returned the merged permissions array.
+    ===================================================== */
+
+    if (
+      !scope
+    ) {
+      const attendanceViewPermission =
+        (
+          Array.isArray(
+            userAccess
+              ?.permissions
+          )
+            ? userAccess
+                .permissions
+            : []
+        ).find(
+          (
+            permission
+          ) =>
+            String(
+              permission
+                ?.module ||
+              ""
+            )
+              .trim()
+              .toUpperCase() ===
+              "ATTENDANCE" &&
+            String(
+              permission
+                ?.action ||
+              ""
+            )
+              .trim()
+              .toUpperCase() ===
+              "VIEW"
+        );
+
+      scope =
+        String(
+          attendanceViewPermission
+            ?.scope ||
+          ""
+        )
+          .trim()
+          .toUpperCase();
+    }
+
+    /* =====================================================
+       VALID ATTENDANCE SCOPES
+    ===================================================== */
+
+    if (
+      [
+        "ALL",
+        "DEPARTMENT",
+        "TEAM",
+        "SELF",
+      ].includes(
+        scope
+      )
+    ) {
+      return {
+        type:
+          scope,
+      };
+    }
+
+    /* =====================================================
+       SAFE LEGACY FALLBACK
+
+       Do not expand access if authoritative access resolution
+       did not return an Attendance VIEW permission.
+    ===================================================== */
+
     if (
       legacyRole ===
-      "HEAD"
+        "ADMIN"
+    ) {
+      return {
+        type:
+          "ALL",
+      };
+    }
+
+    if (
+      legacyRole ===
+        "HEAD"
     ) {
       return {
         type:
@@ -186,7 +323,7 @@ const getAttendanceScope =
 
     if (
       legacyRole ===
-      "MANAGER"
+        "MANAGER"
     ) {
       return {
         type:
@@ -212,7 +349,7 @@ const canApproveRegularization =
       String(
         req.user
           ?.systemRole ||
-          ""
+        ""
       )
         .trim()
         .toUpperCase();
@@ -243,7 +380,7 @@ const canViewFieldLocation =
       String(
         req.user
           ?.systemRole ||
-          ""
+        ""
       )
         .trim()
         .toUpperCase();
@@ -305,6 +442,11 @@ const getRequestMeta =
 
 /* =========================================================
    MY ATTENDANCE
+
+   IMPORTANT:
+   This endpoint remains SELF only.
+
+   It must NEVER expose unmapped biometric operators.
 ========================================================= */
 
 exports.getMyAttendance =
@@ -351,15 +493,6 @@ exports.getMyAttendance =
             provider:
               req.query.provider,
 
-            /*
-             * IMPORTANT:
-             *
-             * My Attendance is SELF scope.
-             *
-             * Unmapped biometric operators do not have an
-             * Employee/User identity in ERP, so they must
-             * never be exposed through this endpoint.
-             */
             includeUnmapped:
               false,
 
@@ -633,7 +766,7 @@ exports.getEmployeeLocationHistory =
               ),
 
             access:
-              getAttendanceScope(
+              await getAttendanceScope(
                 req
               ),
 
@@ -679,6 +812,23 @@ exports.getEmployeeLocationHistory =
 
 /* =========================================================
    SCOPED ATTENDANCE
+
+   MANAGEMENT ATTENDANCE REGISTER
+
+   IMPORTANT:
+
+   result.items
+   -> normal mapped ERP Attendance documents
+
+   result.biometric.items
+   -> unmapped biometric worker/day records generated from
+      RawAttendancePunch
+
+   Management register ALWAYS asks for unmapped biometric
+   records.
+
+   attendance.service.js remains responsible for enforcing
+   the resolved access scope.
 ========================================================= */
 
 exports.getAttendance =
@@ -687,6 +837,26 @@ exports.getAttendance =
     res
   ) => {
     try {
+      /*
+       * IMPORTANT FIX:
+       *
+       * getAttendanceScope() is asynchronous because it now
+       * uses accessService.getMyAccess().
+       */
+      const access =
+        await getAttendanceScope(
+          req
+        );
+
+      /*
+       * Management register always requests biometric-only
+       * workers.
+       *
+       * Do not rely on frontend query serialization.
+       */
+      const includeUnmapped =
+        true;
+
       const result =
         await attendanceService
           .getAttendance({
@@ -695,12 +865,47 @@ exports.getAttendance =
                 req
               ),
 
-            access:
-              getAttendanceScope(
-                req
-              ),
+            access,
 
-            ...req.query,
+            from:
+              req.query.from,
+
+            to:
+              req.query.to,
+
+            employeeId:
+              req.query
+                .employeeId,
+
+            departmentId:
+              req.query
+                .departmentId,
+
+            officeId:
+              req.query
+                .officeId,
+
+            presenceStatus:
+              req.query
+                .presenceStatus,
+
+            workMode:
+              req.query
+                .workMode,
+
+            provider:
+              req.query
+                .provider ||
+              req.query
+                .source,
+
+            includeUnmapped,
+
+            page:
+              req.query.page,
+
+            limit:
+              req.query.limit,
           });
 
       return res.json({
@@ -826,7 +1031,7 @@ exports.getMonthlySummary =
               ),
 
             access:
-              getAttendanceScope(
+              await getAttendanceScope(
                 req
               ),
 
@@ -971,7 +1176,7 @@ exports.exportMonthlyAttendance =
               ),
 
             access:
-              getAttendanceScope(
+              await getAttendanceScope(
                 req
               ),
 

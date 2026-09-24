@@ -539,10 +539,7 @@ const markCommandReceiving =
             ),
         },
 
-        $setOnInsert: {
-          firstResultAt:
-            new Date(),
-        },
+        
 
         $inc: {
           resultBlocks:
