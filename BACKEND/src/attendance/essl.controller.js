@@ -1,18 +1,18 @@
 const {
-  ESSL_HISTORICAL_SYNC_ENABLED,
-
   getBodyText,
   getDeviceSerial,
   getRequestIp,
   resolveEsslDevice,
   buildOptionsResponse,
+  getPendingDeviceCommand,
+  processDeviceCommandResult,
+  resolveAttendanceSource,
   processUserDirectory,
   processAttendanceLog,
   handleHeartbeat,
-} =
-  require(
-    "./essl.service"
-  );
+} = require(
+  "./essl.service"
+);
 
 /* =========================================================
    SEND ESSL OK
@@ -47,17 +47,6 @@ const sendOk =
 
 /* =========================================================
    GET OPTIONS
-
-   eSSL ADMS calls this when connecting.
-
-   Historical synchronization is controlled by
-   buildOptionsResponse() in essl.service.js.
-
-   When historical sync is enabled:
-   ATTLOGStamp=None
-
-   When normal live mode is enabled:
-   ATTLOGStamp=9999
 ========================================================= */
 
 exports.getOptions =
@@ -75,6 +64,18 @@ exports.getOptions =
         getDeviceSerial(
           req
         );
+
+      console.log(
+        "eSSL options request:",
+        {
+          serial,
+
+          ip:
+            getRequestIp(
+              req
+            ),
+        }
+      );
 
       return res
         .status(
@@ -102,39 +103,16 @@ exports.getOptions =
         error
       );
 
-      /*
-       * Keep ADMS protocol alive.
-       *
-       * Do not expose internal errors to the biometric
-       * terminal because some firmware will continuously
-       * reconnect/retry on unexpected HTTP responses.
-       */
-      return res
-        .status(
-          200
-        )
-        .type(
-          "text/plain"
-        )
-        .set(
-          "Cache-Control",
-          "no-store"
-        )
-        .send(
-          "OK"
-        );
+      return sendOk(
+        res
+      );
     }
   };
 
 /* =========================================================
-   DEVICE REQUEST / HEARTBEAT
+   GETREQUEST
 
-   The terminal polls:
-
-   /iclock/getrequest
-   /iclock/getrequest.aspx
-
-   Both routes point here.
+   Device polls here for server commands.
 ========================================================= */
 
 exports.getRequest =
@@ -147,6 +125,49 @@ exports.getRequest =
         req
       );
 
+      const serial =
+        getDeviceSerial(
+          req
+        );
+
+      const command =
+        getPendingDeviceCommand(
+          serial
+        );
+
+      if (
+        command
+      ) {
+        console.log(
+          "eSSL command sent:",
+          {
+            serial,
+
+            ip:
+              getRequestIp(
+                req
+              ),
+
+            command,
+          }
+        );
+
+        return res
+          .status(
+            200
+          )
+          .type(
+            "text/plain"
+          )
+          .set(
+            "Cache-Control",
+            "no-store"
+          )
+          .send(
+            command
+          );
+      }
+
       return sendOk(
         res
       );
@@ -154,14 +175,10 @@ exports.getRequest =
       error
     ) {
       console.error(
-        "eSSL heartbeat error:",
+        "eSSL getrequest error:",
         error
       );
 
-      /*
-       * Preserve ADMS communication even if heartbeat
-       * persistence temporarily fails.
-       */
       return sendOk(
         res
       );
@@ -169,20 +186,7 @@ exports.getRequest =
   };
 
 /* =========================================================
-   RECEIVE DEVICE DATA
-
-   Supported device payloads:
-
-   OPERLOG
-   OPLOG
-   ATTLOG
-
-   Both:
-
-   POST /iclock/cdata
-   POST /iclock/cdata.aspx
-
-   point to this controller.
+   RECEIVE DATA
 ========================================================= */
 
 exports.receiveData =
@@ -219,15 +223,6 @@ exports.receiveData =
           req
         );
 
-      /* =====================================================
-         DEVICE USER DIRECTORY
-
-         Machine users are NOT automatically ERP Employees.
-
-         The biometric ingestion layer keeps them separately
-         and maps them only when Employee.biometricCode exists.
-      ===================================================== */
-
       if (
         table ===
           "OPERLOG" ||
@@ -261,39 +256,14 @@ exports.receiveData =
         );
       }
 
-      /* =====================================================
-         ATTENDANCE LOGS
-
-         During the explicit historical import window every
-         ATTLOG batch is labelled HISTORICAL_SYNC.
-
-         This does NOT bypass the normal ingestion pipeline.
-
-         It still goes through:
-
-         ingestRawPunch()
-             ↓
-         Employee.biometricCode mapping
-             ↓
-         mapped / UNMAPPED
-             ↓
-         RawAttendancePunch
-             ↓
-         Attendance processor
-
-         Once the historical import has completed,
-         ESSL_HISTORICAL_SYNC_ENABLED must be switched back
-         to false and subsequent punches are LIVE.
-      ===================================================== */
-
       if (
         table ===
         "ATTLOG"
       ) {
         const source =
-          ESSL_HISTORICAL_SYNC_ENABLED
-            ? "HISTORICAL_SYNC"
-            : "LIVE";
+          resolveAttendanceSource(
+            body
+          );
 
         const result =
           await processAttendanceLog(
@@ -340,31 +310,26 @@ exports.receiveData =
           }
         );
 
-        /*
-         * ACK every row the terminal transmitted.
-         *
-         * IMPORTANT:
-         *
-         * This is result.received, NOT result.inserted.
-         *
-         * Duplicate rows and rows older than our retention
-         * requirement were still successfully handled by
-         * the server and therefore must be acknowledged.
-         *
-         * Otherwise the terminal can continuously resend
-         * those rows.
-         */
         return sendOk(
           res,
           result.received
         );
       }
 
-      /*
-       * Unknown/non-attendance ADMS table.
-       *
-       * ACK it rather than causing a retry loop.
-       */
+      console.log(
+        "eSSL unknown table received:",
+        {
+          serial,
+
+          table,
+
+          ip,
+
+          bodyLength:
+            body.length,
+        }
+      );
+
       return sendOk(
         res
       );
@@ -376,12 +341,56 @@ exports.receiveData =
         error
       );
 
-      /*
-       * Preserve ADMS communication.
-       *
-       * Production logging/alerting records the failure,
-       * while the protocol endpoint continues responding.
-       */
+      return sendOk(
+        res
+      );
+    }
+  };
+
+/* =========================================================
+   DEVICE COMMAND RESULT
+
+   Terminal posts execution result here after receiving
+   command through /getrequest.
+========================================================= */
+
+exports.deviceCommand =
+  async (
+    req,
+    res
+  ) => {
+    try {
+      await handleHeartbeat(
+        req
+      );
+
+      const body =
+        getBodyText(
+          req
+        );
+
+      const result =
+        processDeviceCommandResult(
+          req,
+          body
+        );
+
+      console.log(
+        "eSSL devicecmd received:",
+        result
+      );
+
+      return sendOk(
+        res
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "eSSL devicecmd error:",
+        error
+      );
+
       return sendOk(
         res
       );
@@ -409,7 +418,7 @@ exports.ping =
           "ESSL_ADMS",
 
         historicalSync:
-          ESSL_HISTORICAL_SYNC_ENABLED,
+          "REMOTE_DATA_QUERY",
 
         time:
           new Date(),
