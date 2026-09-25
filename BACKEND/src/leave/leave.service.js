@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
 
+const crypto =
+  require("crypto");
+
+const {
+  User,
+} =
+  require("../user/user.model");
+
 const {
   LeaveType,
 } = require("./leaveType.model");
@@ -3293,6 +3301,859 @@ const adjustBalance =
       .lean();
   };
 
+
+
+
+
+  /* =========================================================
+   WHATSAPP APPROVAL CONFIG
+========================================================= */
+
+const getLeaveApprovalTokenHours =
+  () => {
+    const value =
+      Number(
+        process.env
+          .LEAVE_APPROVAL_TOKEN_HOURS ||
+        72
+      );
+
+    return (
+      Number.isFinite(
+        value
+      ) &&
+      value > 0
+        ? value
+        : 72
+    );
+  };
+
+/* =========================================================
+   APPROVAL TOKEN
+========================================================= */
+
+const createLeaveApprovalToken =
+  () =>
+    crypto
+      .randomBytes(
+        32
+      )
+      .toString(
+        "hex"
+      );
+
+const hashLeaveApprovalToken =
+  (
+    token
+  ) =>
+    crypto
+      .createHash(
+        "sha256"
+      )
+      .update(
+        String(
+          token ||
+          ""
+        )
+      )
+      .digest(
+        "hex"
+      );
+
+/* =========================================================
+   PREPARE WHATSAPP APPROVAL
+
+   IMPORTANT:
+
+   Called ONLY after leave creation succeeded.
+
+   Existing leave policy/balance validation has therefore
+   already passed before manager gets a message.
+========================================================= */
+
+const prepareWhatsAppApproval =
+  async (
+    requestId
+  ) => {
+    if (
+      !isValidObjectId(
+        requestId
+      )
+    ) {
+      throw createServiceError(
+        "Invalid leave request.",
+        400
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 1. LOAD LEAVE REQUEST
+     * ---------------------------------------------------------
+     */
+
+    const request =
+      await LeaveRequest
+        .findById(
+          requestId
+        )
+        .populate(
+          "employeeId",
+          "employeeCode fullName designation orgUnitCode user"
+        )
+        .populate(
+          "leaveTypeId",
+          "code name shortName category"
+        )
+        .populate(
+          "currentApproverEmployeeId",
+          "employeeCode fullName designation orgUnitCode user"
+        );
+
+    if (!request) {
+      throw createServiceError(
+        "Leave request not found.",
+        404,
+        "LEAVE_REQUEST_NOT_FOUND"
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 2. ONLY PENDING LEAVE CAN GENERATE APPROVAL LINK
+     * ---------------------------------------------------------
+     */
+
+    if (
+      request.status !==
+      "PENDING_APPROVAL"
+    ) {
+      throw createServiceError(
+        "Only pending leave requests can generate an approval link.",
+        409,
+        "LEAVE_NOT_PENDING"
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 3. RESOLVE REPORTING MANAGER
+     * ---------------------------------------------------------
+     */
+
+    const approverEmployee =
+      request
+        .currentApproverEmployeeId;
+
+    const approverEmployeeId =
+      normalizeId(
+        approverEmployee
+          ?._id ||
+        approverEmployee
+      );
+
+    const approverUserId =
+      normalizeId(
+        request
+          .currentApproverUserId ||
+        approverEmployee
+          ?.user
+      );
+
+    if (
+      !approverEmployeeId ||
+      !approverUserId
+    ) {
+      throw createServiceError(
+        "Reporting manager does not have an active SE-RMS user account.",
+        409,
+        "LEAVE_APPROVER_USER_NOT_FOUND"
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 4. LOAD MANAGER USER
+     *
+     * WhatsApp identity MUST come from User.whatsappNumber.
+     * Employee.mobileNumber is NOT used here.
+     * ---------------------------------------------------------
+     */
+
+    const approverUser =
+      await User
+        .findOne({
+          _id:
+            approverUserId,
+
+          status:
+            "ACTIVE",
+        })
+        .select(
+          "_id whatsappNumber displayName"
+        )
+        .lean();
+
+    if (!approverUser) {
+      throw createServiceError(
+        "Reporting manager user account is not active.",
+        409,
+        "LEAVE_APPROVER_USER_NOT_FOUND"
+      );
+    }
+
+    const managerWhatsAppNumber =
+      normalizeText(
+        approverUser
+          .whatsappNumber
+      );
+
+    if (
+      !managerWhatsAppNumber
+    ) {
+      throw createServiceError(
+        "Reporting manager does not have a registered WhatsApp number.",
+        409,
+        "LEAVE_APPROVER_WHATSAPP_NOT_FOUND"
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 5. CREATE SECURE ONE-TIME TOKEN
+     * ---------------------------------------------------------
+     */
+
+    const token =
+      createLeaveApprovalToken();
+
+    const tokenHash =
+      hashLeaveApprovalToken(
+        token
+      );
+
+    const now =
+      new Date();
+
+    const expiresAt =
+      new Date(
+        now.getTime() +
+        getLeaveApprovalTokenHours() *
+          60 *
+          60 *
+          1000
+      );
+
+    /*
+     * ---------------------------------------------------------
+     * 6. SAVE ONLY HASH IN DATABASE
+     *
+     * Raw token is NEVER stored.
+     * ---------------------------------------------------------
+     */
+
+    request.whatsappApproval = {
+      tokenHash,
+
+      approverUserId:
+        approverUser._id,
+
+      approverEmployeeId,
+
+      expiresAt,
+
+      sentAt:
+        now,
+
+      usedAt:
+        null,
+
+      action:
+        "",
+    };
+
+    await request.save();
+
+    /*
+     * ---------------------------------------------------------
+     * 7. BUILD PUBLIC APPROVAL BASE URL
+     * ---------------------------------------------------------
+     */
+
+    const publicBaseUrl =
+      normalizeText(
+        process.env
+          .LEAVE_APPROVAL_PUBLIC_URL
+      )
+        .replace(
+          /\/+$/,
+          ""
+        );
+
+    if (
+      !publicBaseUrl
+    ) {
+      throw createServiceError(
+        "LEAVE_APPROVAL_PUBLIC_URL is not configured.",
+        500,
+        "LEAVE_APPROVAL_PUBLIC_URL_MISSING"
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 8. BUILD APPROVE / REJECT URLs
+     * ---------------------------------------------------------
+     */
+
+    const encodedToken =
+      encodeURIComponent(
+        token
+      );
+
+    const approveUrl =
+      `${publicBaseUrl}/${encodedToken}?action=approve`;
+
+    const rejectUrl =
+      `${publicBaseUrl}/${encodedToken}?action=reject`;
+
+    /*
+     * ---------------------------------------------------------
+     * 9. RELOAD POPULATED REQUEST
+     * ---------------------------------------------------------
+     */
+
+    const populated =
+      await LeaveRequest
+        .findById(
+          request._id
+        )
+        .populate(
+          "employeeId",
+          "employeeCode fullName designation orgUnitCode user"
+        )
+        .populate(
+          "leaveTypeId",
+          "code name shortName category"
+        )
+        .populate(
+          "currentApproverEmployeeId",
+          "employeeCode fullName designation orgUnitCode user"
+        )
+        .lean();
+
+    /*
+     * ---------------------------------------------------------
+     * 10. DEBUG LOG
+     * ---------------------------------------------------------
+     */
+
+    console.log(
+      "[LEAVE][APPROVAL_LINK][CREATED]",
+      {
+        requestNumber:
+          populated
+            ?.requestNumber ||
+          request
+            ?.requestNumber ||
+          "",
+
+        approverEmployeeId:
+          String(
+            approverEmployeeId ||
+            ""
+          ),
+
+        approverUserId:
+          String(
+            approverUser
+              ?._id ||
+            ""
+          ),
+
+        whatsappNumber:
+          managerWhatsAppNumber,
+
+        expiresAt,
+
+        hasApproveUrl:
+          Boolean(
+            approveUrl
+          ),
+
+        hasRejectUrl:
+          Boolean(
+            rejectUrl
+          ),
+      }
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * 11. RETURN EVERYTHING REQUIRED BY WHATSAPP SERVICE
+     * ---------------------------------------------------------
+     */
+
+    return {
+      token,
+
+      expiresAt,
+
+      approverUser,
+
+      managerWhatsAppNumber,
+
+      approveUrl,
+
+      rejectUrl,
+
+      request:
+        populated,
+    };
+  };
+
+/* =========================================================
+   GET PUBLIC APPROVAL DETAILS
+
+   READ ONLY.
+
+   GET request NEVER changes leave status.
+========================================================= */
+
+const getLeaveByApprovalToken =
+  async (
+    token
+  ) => {
+    const cleanToken =
+      normalizeText(
+        token
+      );
+
+    if (!cleanToken) {
+      return null;
+    }
+
+    const tokenHash =
+      hashLeaveApprovalToken(
+        cleanToken
+      );
+
+    return LeaveRequest
+      .findOne({
+        "whatsappApproval.tokenHash":
+          tokenHash,
+      })
+      .populate(
+        "employeeId",
+        "employeeCode fullName designation orgUnitCode"
+      )
+      .populate(
+        "leaveTypeId",
+        "code name shortName category"
+      )
+      .populate(
+        "currentApproverEmployeeId",
+        "employeeCode fullName designation orgUnitCode"
+      )
+      .lean();
+  };
+
+/* =========================================================
+   VALIDATE TOKEN
+========================================================= */
+
+const validateLeaveApprovalToken =
+  async (
+    token
+  ) => {
+    const cleanToken =
+      normalizeText(
+        token
+      );
+
+    if (!cleanToken) {
+      throw createServiceError(
+        "Approval token is required.",
+        400,
+        "LEAVE_APPROVAL_TOKEN_REQUIRED"
+      );
+    }
+
+    const tokenHash =
+      hashLeaveApprovalToken(
+        cleanToken
+      );
+
+    const request =
+      await LeaveRequest
+        .findOne({
+          "whatsappApproval.tokenHash":
+            tokenHash,
+        });
+
+    if (!request) {
+      throw createServiceError(
+        "This approval link is invalid.",
+        404,
+        "LEAVE_APPROVAL_LINK_INVALID"
+      );
+    }
+
+    if (
+      request
+        .whatsappApproval
+        ?.usedAt
+    ) {
+      throw createServiceError(
+        "This approval link has already been used.",
+        409,
+        "LEAVE_APPROVAL_LINK_USED"
+      );
+    }
+
+    const expiresAt =
+      request
+        .whatsappApproval
+        ?.expiresAt;
+
+    if (
+      !expiresAt ||
+      new Date(
+        expiresAt
+      ).getTime() <=
+        Date.now()
+    ) {
+      throw createServiceError(
+        "This approval link has expired.",
+        410,
+        "LEAVE_APPROVAL_LINK_EXPIRED"
+      );
+    }
+
+    if (
+      request.status !==
+      "PENDING_APPROVAL"
+    ) {
+      throw createServiceError(
+        "This leave request is no longer pending approval.",
+        409,
+        "LEAVE_NOT_PENDING"
+      );
+    }
+
+    const tokenApproverUserId =
+      normalizeId(
+        request
+          .whatsappApproval
+          ?.approverUserId
+      );
+
+    const currentApproverUserId =
+      normalizeId(
+        request
+          .currentApproverUserId
+      );
+
+    const tokenApproverEmployeeId =
+      normalizeId(
+        request
+          .whatsappApproval
+          ?.approverEmployeeId
+      );
+
+    const currentApproverEmployeeId =
+      normalizeId(
+        request
+          .currentApproverEmployeeId
+      );
+
+    if (
+      !tokenApproverUserId ||
+      !currentApproverUserId ||
+      tokenApproverUserId !==
+        currentApproverUserId ||
+      !tokenApproverEmployeeId ||
+      !currentApproverEmployeeId ||
+      tokenApproverEmployeeId !==
+        currentApproverEmployeeId
+    ) {
+      throw createServiceError(
+        "This approval link is no longer assigned to the current approver.",
+        403,
+        "LEAVE_APPROVER_CHANGED"
+      );
+    }
+
+    return {
+      request,
+
+      tokenHash,
+
+      approverUserId:
+        tokenApproverUserId,
+    };
+  };
+
+/* =========================================================
+   PUBLIC APPROVAL
+
+   Uses existing approveRequest/rejectRequest.
+
+   Therefore the normal leave engine remains authoritative.
+========================================================= */
+
+const processPublicLeaveApproval =
+  async ({
+    token,
+    action,
+    comment = "",
+  }) => {
+    const normalizedAction =
+      normalizeText(
+        action
+      )
+        .toLowerCase();
+
+    if (
+      ![
+        "approve",
+        "reject",
+      ].includes(
+        normalizedAction
+      )
+    ) {
+      throw createServiceError(
+        "Invalid approval action.",
+        400
+      );
+    }
+
+    const {
+      request,
+
+      tokenHash,
+
+      approverUserId,
+    } =
+      await validateLeaveApprovalToken(
+        token
+      );
+
+    const approverUser =
+      await User
+        .findOne({
+          _id:
+            approverUserId,
+
+          status:
+            "ACTIVE",
+        })
+        .lean();
+
+    if (!approverUser) {
+      throw createServiceError(
+        "The assigned approver account is no longer active.",
+        403
+      );
+    }
+
+    const cleanComment =
+      normalizeText(
+        comment
+      );
+
+    if (
+      normalizedAction ===
+        "reject" &&
+      !cleanComment
+    ) {
+      throw createServiceError(
+        "Rejection reason is required.",
+        400
+      );
+    }
+
+    /*
+     * Claim token atomically before executing approval.
+     */
+
+    const claimedAt =
+      new Date();
+
+    const claimed =
+      await LeaveRequest
+        .findOneAndUpdate(
+          {
+            _id:
+              request._id,
+
+            status:
+              "PENDING_APPROVAL",
+
+            currentApproverUserId:
+              approverUserId,
+
+            "whatsappApproval.tokenHash":
+              tokenHash,
+
+            "whatsappApproval.approverUserId":
+              approverUserId,
+
+            "whatsappApproval.usedAt":
+              null,
+
+            "whatsappApproval.expiresAt": {
+              $gt:
+                claimedAt,
+            },
+          },
+
+          {
+            $set: {
+              "whatsappApproval.usedAt":
+                claimedAt,
+
+              "whatsappApproval.action":
+                normalizedAction ===
+                "approve"
+                  ? "APPROVED"
+                  : "REJECTED",
+            },
+          },
+
+          {
+            new:
+              true,
+          }
+        );
+
+    if (!claimed) {
+      throw createServiceError(
+        "This approval link has already been used or is no longer valid.",
+        409
+      );
+    }
+
+    try {
+      let result;
+
+      if (
+        normalizedAction ===
+        "approve"
+      ) {
+        result =
+          await approveRequest({
+            user:
+              approverUser,
+
+            requestId:
+              request._id,
+
+            comment:
+              cleanComment,
+
+            requestMeta: {
+              ipAddress:
+                "",
+
+              userAgent:
+                "Public WhatsApp Leave Approval",
+            },
+          });
+
+        return {
+          action:
+            "APPROVED",
+
+          request:
+            result,
+
+          approver:
+            approverUser,
+        };
+      }
+
+      result =
+        await rejectRequest({
+          user:
+            approverUser,
+
+          requestId:
+            request._id,
+
+          comment:
+            cleanComment,
+
+          requestMeta: {
+            ipAddress:
+              "",
+
+            userAgent:
+              "Public WhatsApp Leave Approval",
+          },
+        });
+
+      return {
+        action:
+          "REJECTED",
+
+        request:
+          result,
+
+        approver:
+          approverUser,
+      };
+    } catch (error) {
+      /*
+       * If normal approval failed before changing status,
+       * release token so manager can try again.
+       */
+
+      const latest =
+        await LeaveRequest
+          .findById(
+            request._id
+          )
+          .select(
+            "status whatsappApproval"
+          )
+          .lean();
+
+      if (
+        latest?.status ===
+        "PENDING_APPROVAL"
+      ) {
+        await LeaveRequest
+          .updateOne(
+            {
+              _id:
+                request._id,
+
+              status:
+                "PENDING_APPROVAL",
+
+              "whatsappApproval.tokenHash":
+                tokenHash,
+
+              "whatsappApproval.usedAt":
+                claimedAt,
+            },
+
+            {
+              $set: {
+                "whatsappApproval.usedAt":
+                  null,
+
+                "whatsappApproval.action":
+                  "",
+              },
+            }
+          );
+      }
+
+      throw error;
+    }
+  };
 /* =========================================================
    EXPORTS
 ========================================================= */
@@ -3331,4 +4192,12 @@ module.exports = {
   getReportingSubtreeIds,
 
   buildLeaveVisibilityScope,
+
+  prepareWhatsAppApproval,
+
+  getLeaveByApprovalToken,
+
+  validateLeaveApprovalToken,
+
+  processPublicLeaveApproval,
 };

@@ -19,7 +19,41 @@ const router =
   express.Router();
 
 /* =========================================================
+   PUBLIC WHATSAPP APPROVAL
+
+   IMPORTANT:
+
+   GET:
+   confirmation UI only
+   NO database status mutation
+
+   POST:
+   actual approval / rejection
+========================================================= */
+
+router.get(
+  "/public/approval/:token",
+  leaveController
+    .getPublicApprovalPage
+);
+
+router.post(
+  "/public/approval/:token",
+  express.urlencoded({
+    extended:
+      false,
+
+    limit:
+      "20kb",
+  }),
+  leaveController
+    .processPublicApproval
+);
+
+/* =========================================================
    AUTHENTICATION
+
+   Everything below this point requires login.
 ========================================================= */
 
 router.use(
@@ -60,10 +94,7 @@ router.use(
 );
 
 /* =========================================================
-   LEAVE MASTER DATA
-
-   Available to authenticated employees.
-   Service only returns active leave types.
+   LEAVE TYPES
 ========================================================= */
 
 router.get(
@@ -73,10 +104,7 @@ router.get(
 );
 
 /* =========================================================
-   EMPLOYEE SELF — BALANCES
-
-   Employee can only retrieve their own balance.
-   Employee identity is resolved from req.user on backend.
+   MY BALANCES
 ========================================================= */
 
 router.get(
@@ -86,9 +114,7 @@ router.get(
 );
 
 /* =========================================================
-   EMPLOYEE SELF — LEAVE REQUESTS
-
-   Employee can only retrieve their own requests.
+   MY REQUESTS
 ========================================================= */
 
 router.get(
@@ -98,20 +124,9 @@ router.get(
 );
 
 /* =========================================================
-   EMPLOYEE SELF — APPLY LEAVE
+   APPLY LEAVE
 
-   IMPORTANT:
-   employeeId and approver are NOT accepted as authority
-   from the frontend.
-
-   Service resolves:
-   req.user
-      ↓
-   Employee
-      ↓
-   Employee.reportsTo
-      ↓
-   currentApproverEmployeeId
+   Employee identity always comes from req.user.
 ========================================================= */
 
 router.post(
@@ -122,13 +137,6 @@ router.post(
 
 /* =========================================================
    APPROVAL INBOX
-
-   Manager / authorized approver.
-
-   Service verifies that the logged-in employee is the
-   currentApproverEmployeeId.
-
-   Department visibility alone does NOT grant approval.
 ========================================================= */
 
 router.get(
@@ -138,27 +146,7 @@ router.get(
 );
 
 /* =========================================================
-   SCOPED LEAVE REGISTER
-
-   Backend service controls visibility:
-
-   Employee
-   → SELF
-
-   Manager
-   → reporting subtree
-
-   Head / HOD
-   → authorized department
-
-   HR
-   → configured/global scope
-
-   SUPER_ADMIN
-   → ALL
-
-   IMPORTANT:
-   Frontend filters must never expand backend scope.
+   SCOPED REGISTER
 ========================================================= */
 
 router.get(
@@ -168,11 +156,7 @@ router.get(
 );
 
 /* =========================================================
-   HR / SUPER ADMIN — BALANCE ADJUSTMENT
-
-   Service performs the final authorization check.
-
-   Do not expose this simply because the route exists.
+   BALANCE ADJUSTMENT
 ========================================================= */
 
 router.post(
@@ -182,15 +166,9 @@ router.post(
 );
 
 /* =========================================================
-   SINGLE LEAVE REQUEST
+   SINGLE REQUEST
 
-   IMPORTANT:
-   Keep all /:id routes AFTER static routes such as:
-   /types
-   /me/*
-   /approvals/*
-   /scope
-   /admin/*
+   Keep /:id routes after static routes.
 ========================================================= */
 
 router.get(
@@ -200,15 +178,7 @@ router.get(
 );
 
 /* =========================================================
-   APPROVE LEAVE
-
-   Normal approval requires:
-   logged-in Employee._id
-   ===
-   LeaveRequest.currentApproverEmployeeId
-
-   SUPER_ADMIN administrative authority is handled
-   inside the service.
+   APPROVE
 ========================================================= */
 
 router.post(
@@ -218,9 +188,7 @@ router.post(
 );
 
 /* =========================================================
-   REJECT LEAVE
-
-   Same authority rules as approval.
+   REJECT
 ========================================================= */
 
 router.post(
@@ -230,14 +198,7 @@ router.post(
 );
 
 /* =========================================================
-   CANCEL OWN LEAVE
-
-   Pending:
-   → can be cancelled directly
-
-   Approved:
-   → becomes CANCEL_REQUESTED
-   → manager approval flow
+   CANCEL
 ========================================================= */
 
 router.post(

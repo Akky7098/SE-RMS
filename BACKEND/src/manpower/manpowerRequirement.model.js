@@ -154,9 +154,6 @@ const manpowerRequirementSchema =
 
       /* =====================================================
          DEPARTMENT
-
-         Normally automatically selected from requester's
-         primary department.
       ===================================================== */
 
       department: {
@@ -261,10 +258,35 @@ const manpowerRequirementSchema =
       },
 
       /* =====================================================
-         BUDGET
+         COMPENSATION
 
-         Monthly CTC/range for now.
+         Monthly salary is captured for HR convenience.
+
+         budgetMin / budgetMax remain the canonical
+         ANNUAL package values used by the existing system.
       ===================================================== */
+
+      monthlySalaryMin: {
+        type:
+          Number,
+
+        default:
+          null,
+
+        min:
+          0,
+      },
+
+      monthlySalaryMax: {
+        type:
+          Number,
+
+        default:
+          null,
+
+        min:
+          0,
+      },
 
       budgetMin: {
         type:
@@ -313,6 +335,39 @@ const manpowerRequirementSchema =
           "FULL_TIME",
       },
 
+      shiftAvailability: {
+        type:
+          String,
+
+        enum: [
+          "DAY",
+          "NIGHT",
+          "FLEXIBLE",
+          "GENERAL",
+          "ANY",
+        ],
+
+        default:
+          "ANY",
+
+        index:
+          true,
+      },
+
+      office: {
+        type:
+          Schema.Types.ObjectId,
+
+        ref:
+          "Office",
+
+        default:
+          null,
+
+        index:
+          true,
+      },
+
       location: {
         type:
           String,
@@ -325,6 +380,100 @@ const manpowerRequirementSchema =
 
         default:
           "",
+      },
+
+      /* =====================================================
+         SOURCE
+
+         WEB:
+         Created from normal SE-RMS frontend.
+
+         WHATSAPP:
+         Created from Manpower WhatsApp group.
+      ===================================================== */
+
+      source: {
+        type:
+          String,
+
+        enum: [
+          "WEB",
+          "WHATSAPP",
+        ],
+
+        default:
+          "WEB",
+
+        index:
+          true,
+      },
+
+      /* =====================================================
+         WHATSAPP CREATION SOURCE
+
+         Only populated when source = WHATSAPP.
+      ===================================================== */
+
+      whatsappSource: {
+        groupJid: {
+          type:
+            String,
+
+          trim:
+            true,
+
+          default:
+            "",
+        },
+
+        senderJid: {
+          type:
+            String,
+
+          trim:
+            true,
+
+          default:
+            "",
+        },
+
+        senderPhone: {
+          type:
+            String,
+
+          trim:
+            true,
+
+          default:
+            "",
+        },
+
+        messageId: {
+          type:
+            String,
+
+          trim:
+            true,
+
+          default:
+            "",
+        },
+
+        rawText: {
+          type:
+            String,
+
+          default:
+            "",
+        },
+
+        submittedAt: {
+          type:
+            Date,
+
+          default:
+            null,
+        },
       },
 
       requiredByDate: {
@@ -465,6 +614,85 @@ const manpowerRequirementSchema =
 
         default:
           [],
+      },
+
+      /* =====================================================
+         WHATSAPP APPROVAL LINK
+
+         IMPORTANT:
+
+         Raw approval token is NEVER stored.
+
+         Only SHA-256 token hash is stored.
+
+         The token is tied to the exact approver selected by
+         the existing resolveApprover() workflow.
+
+         This works for BOTH:
+         WEB-created MPR
+         WHATSAPP-created MPR
+      ===================================================== */
+
+      whatsappApproval: {
+        tokenHash: {
+          type:
+            String,
+
+          trim:
+            true,
+
+          default:
+            "",
+        },
+
+        approver: {
+          type:
+            Schema.Types.ObjectId,
+
+          ref:
+            "User",
+
+          default:
+            null,
+        },
+
+        expiresAt: {
+          type:
+            Date,
+
+          default:
+            null,
+        },
+
+        usedAt: {
+          type:
+            Date,
+
+          default:
+            null,
+        },
+
+        action: {
+          type:
+            String,
+
+          enum: [
+            "",
+            "APPROVED",
+            "REJECTED",
+          ],
+
+          default:
+            "",
+        },
+
+        sentAt: {
+          type:
+            Date,
+
+          default:
+            null,
+        },
       },
 
       /* =====================================================
@@ -666,6 +894,65 @@ manpowerRequirementSchema.index({
   createdAt:
     -1,
 });
+
+/*
+ * Prevent the same WhatsApp message from creating
+ * duplicate MPR records.
+ */
+
+manpowerRequirementSchema.index(
+  {
+    "whatsappSource.messageId":
+      1,
+  },
+  {
+    unique:
+      true,
+
+    sparse:
+      true,
+
+    partialFilterExpression: {
+      source:
+        "WHATSAPP",
+
+      "whatsappSource.messageId": {
+        $type:
+          "string",
+
+        $gt:
+          "",
+      },
+    },
+  }
+);
+
+/*
+ * Fast secure approval-token lookup.
+ *
+ * Empty tokenHash values are excluded from this index.
+ */
+
+manpowerRequirementSchema.index(
+  {
+    "whatsappApproval.tokenHash":
+      1,
+  },
+  {
+    sparse:
+      true,
+
+    partialFilterExpression: {
+      "whatsappApproval.tokenHash": {
+        $type:
+          "string",
+
+        $gt:
+          "",
+      },
+    },
+  }
+);
 
 /* =========================================================
    MODEL

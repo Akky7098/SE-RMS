@@ -1,30 +1,28 @@
+const crypto = require("crypto");
+
 const {
   ManpowerRequirement,
-} =
-  require(
-    "./manpowerRequirement.model"
-  );
+} = require(
+  "./manpowerRequirement.model"
+);
 
 const {
   ManpowerCounter,
-} =
-  require(
-    "./manpowerCounter.model"
-  );
+} = require(
+  "./manpowerCounter.model"
+);
 
 const {
   Department,
-} =
-  require(
-    "../department/department.model"
-  );
+} = require(
+  "../department/department.model"
+);
 
 const {
   DepartmentMembership,
-} =
-  require(
-    "../department/departmentMembership.model"
-  );
+} = require(
+  "../department/departmentMembership.model"
+);
 
 const departmentService =
   require(
@@ -36,6 +34,11 @@ const UserModule =
     "../user/user.model"
   );
 
+const employeeModule =
+  require(
+    "../employee/employee.model"
+  );
+
 const ApiError =
   require(
     "../utils/ApiError"
@@ -44,6 +47,110 @@ const ApiError =
 const User =
   UserModule.User ||
   UserModule;
+
+const Employee =
+  employeeModule.Employee ||
+  employeeModule;
+
+/* =========================================================
+   IMPORTANT — BAILEYS
+
+   DO NOT import baileys.client.js at the top of this file.
+
+   baileys.client.js
+        ↓
+   manpower.whatsapp.service.js
+        ↓
+   manpower.service.js
+
+   A top-level import here would create a circular dependency.
+
+   We therefore load Baileys ONLY when a message must be sent.
+========================================================= */
+
+const getWhatsAppClient =
+  () =>
+    require(
+      "../baileys/baileysClient"
+    );
+
+/* =========================================================
+   WHATSAPP APPROVAL CONFIG
+========================================================= */
+
+const getApprovalPublicUrl =
+  () => {
+    const configured =
+      String(
+        process.env
+          .MANPOWER_APPROVAL_PUBLIC_URL ||
+        "https://api.nuvanata.io/api/v1/manpower/public/approval"
+      )
+        .trim()
+        .replace(
+          /\/+$/,
+          ""
+        );
+
+    return configured;
+  };
+
+const getApprovalTokenHours =
+  () => {
+    const value =
+      Number(
+        process.env
+          .MANPOWER_APPROVAL_TOKEN_HOURS ||
+        72
+      );
+
+    if (
+      !Number.isFinite(
+        value
+      ) ||
+      value <= 0
+    ) {
+      return 72;
+    }
+
+    return value;
+  };
+
+const getConfiguredMprGroup =
+  () =>
+    String(
+      process.env
+        .WHATSAPP_MPR_GROUP_ID ||
+      ""
+    ).trim();
+
+/* =========================================================
+   PHONE NORMALIZATION
+========================================================= */
+
+const normalizePhone =
+  (
+    value
+  ) => {
+    let phone =
+      String(
+        value ||
+        ""
+      ).replace(
+        /\D/g,
+        ""
+      );
+
+    if (
+      phone.length ===
+      10
+    ) {
+      phone =
+        `91${phone}`;
+    }
+
+    return phone;
+  };
 
 /* =========================================================
    REQUEST NUMBER
@@ -66,18 +173,15 @@ const generateRequestNumber =
           {
             key,
           },
-
           {
             $inc: {
               sequence:
                 1,
             },
           },
-
           {
             upsert:
               true,
-
             new:
               true,
           }
@@ -159,20 +263,6 @@ const getUserDepartmentIds =
 
 /* =========================================================
    DEPARTMENTS USER MANAGES FOR MANPOWER
-
-   IMPORTANT:
-
-   Only DEPARTMENT_SUPER_ADMIN gets department-wide
-   manpower visibility.
-
-   Plain:
-   ADMIN
-   HEAD
-   MANAGER
-   MEMBER
-
-   do NOT get department-wide manpower access merely
-   because they belong to that department.
 ========================================================= */
 
 const getManagedManpowerDepartmentIds =
@@ -251,12 +341,6 @@ const isDepartmentSuperAdminFor =
 
 /* =========================================================
    RESOLVE REQUEST DEPARTMENT
-
-   Normal user:
-   → own active department
-
-   Global SUPER_ADMIN:
-   → may select any active department
 ========================================================= */
 
 const resolveRequestDepartment =
@@ -345,9 +429,6 @@ const resolveRequestDepartment =
         .department;
     }
 
-    /*
-     * getActiveMemberships sorts primary first.
-     */
     return memberships[0]
       .department;
   };
@@ -391,13 +472,11 @@ const findGlobalSuperAdmin =
 /* =========================================================
    RESOLVE APPROVER
 
-   Priority:
+   EXISTING AUTHORITY REMAINS UNCHANGED.
 
    1. Department Super Admin
    2. Parent Department Super Admin
    3. Global Super Admin
-
-   Requester cannot approve own request.
 ========================================================= */
 
 const resolveApprover =
@@ -528,6 +607,863 @@ const populateRequirement =
   };
 
 /* =========================================================
+   FIND EMPLOYEE FOR USER
+
+   Used only to obtain the WhatsApp/mobile number.
+
+   User remains the authority for approval.
+========================================================= */
+
+const findEmployeeForUser =
+  async (
+    userId
+  ) => {
+    if (
+      !userId
+    ) {
+      return null;
+    }
+
+    return Employee
+      .findOne({
+        user:
+          userId,
+
+        status: {
+          $ne:
+            "EXITED",
+        },
+      })
+      .select(
+        "_id fullName employeeCode mobileNumber phone user"
+      )
+      .lean();
+  };
+
+/* =========================================================
+   DISPLAY NAME
+========================================================= */
+
+const getUserDisplayName =
+  (
+    user
+  ) =>
+    String(
+      user?.displayName ||
+      user?.fullName ||
+      user?.name ||
+      user?.email ||
+      "Employee"
+    ).trim();
+
+/* =========================================================
+   DATE FORMAT
+========================================================= */
+
+const formatDate =
+  (
+    value
+  ) => {
+    if (
+      !value
+    ) {
+      return "-";
+    }
+
+    const date =
+      new Date(
+        value
+      );
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "-";
+    }
+
+    return [
+      String(
+        date.getDate()
+      ).padStart(
+        2,
+        "0"
+      ),
+
+      String(
+        date.getMonth() +
+        1
+      ).padStart(
+        2,
+        "0"
+      ),
+
+      date.getFullYear(),
+    ].join(
+      "/"
+    );
+  };
+
+/* =========================================================
+   MONEY FORMAT
+========================================================= */
+
+const formatMoney =
+  (
+    value
+  ) => {
+    const number =
+      Number(
+        value
+      );
+
+    if (
+      !Number.isFinite(
+        number
+      )
+    ) {
+      return "-";
+    }
+
+    return new Intl.NumberFormat(
+      "en-IN",
+      {
+        maximumFractionDigits:
+          0,
+      }
+    ).format(
+      number
+    );
+  };
+
+/* =========================================================
+   EXPERIENCE FORMAT
+========================================================= */
+
+const formatExperience =
+  (
+    minimum,
+    maximum
+  ) => {
+    const min =
+      Number(
+        minimum ||
+        0
+      );
+
+    if (
+      maximum ===
+        null ||
+      maximum ===
+        undefined ||
+      maximum ===
+        ""
+    ) {
+      return `${min}+ Years`;
+    }
+
+    return `${min}-${Number(
+      maximum
+    )} Years`;
+  };
+
+/* =========================================================
+   SALARY FORMAT
+========================================================= */
+
+const formatSalary =
+  (
+    minimum,
+    maximum
+  ) => {
+    const min =
+      minimum !==
+        null &&
+      minimum !==
+        undefined
+        ? formatMoney(
+            minimum
+          )
+        : "-";
+
+    const max =
+      maximum !==
+        null &&
+      maximum !==
+        undefined
+        ? formatMoney(
+            maximum
+          )
+        : "-";
+
+    if (
+      min !== "-" &&
+      max !== "-"
+    ) {
+      return `₹${min} - ₹${max}`;
+    }
+
+    if (
+      min !== "-"
+    ) {
+      return `₹${min}+`;
+    }
+
+    if (
+      max !== "-"
+    ) {
+      return `Up to ₹${max}`;
+    }
+
+    return "-";
+  };
+
+/* =========================================================
+   APPROVAL TOKEN
+========================================================= */
+
+const createApprovalToken =
+  () =>
+    crypto
+      .randomBytes(
+        32
+      )
+      .toString(
+        "hex"
+      );
+
+const hashApprovalToken =
+  (
+    token
+  ) =>
+    crypto
+      .createHash(
+        "sha256"
+      )
+      .update(
+        String(
+          token ||
+          ""
+        )
+      )
+      .digest(
+        "hex"
+      );
+
+/* =========================================================
+   BUILD APPROVAL URLS
+========================================================= */
+
+const buildApprovalUrls =
+  (
+    token
+  ) => {
+    const baseUrl =
+      getApprovalPublicUrl();
+
+    return {
+      approveUrl:
+        `${baseUrl}/${encodeURIComponent(
+          token
+        )}?action=approve`,
+
+      rejectUrl:
+        `${baseUrl}/${encodeURIComponent(
+          token
+        )}?action=reject`,
+    };
+  };
+
+/* =========================================================
+   PRIVATE APPROVER MESSAGE
+========================================================= */
+
+const buildApproverMessage = ({
+  requirement,
+  approveUrl,
+  rejectUrl,
+}) => {
+  const departmentName =
+    requirement?.department?.name ||
+    requirement?.department?.code ||
+    "-";
+
+  const requesterName =
+    getUserDisplayName(
+      requirement?.requestedBy
+    );
+
+  const priority =
+    String(
+      requirement.priority ||
+      "NORMAL"
+    ).toUpperCase();
+
+  const priorityLabel =
+    priority === "HIGH" ||
+    priority === "URGENT"
+      ? `🔴 ${priority}`
+      : priority === "MEDIUM"
+      ? `🟠 ${priority}`
+      : `🔵 ${priority}`;
+
+  return [
+    "🔔 *NEW MANPOWER REQUEST*",
+    "",
+    `*${requirement.requestNumber}*`,
+    "",
+    `*Department:* ${departmentName}`,
+    `*Position:* ${requirement.positionTitle}`,
+    `*Openings:* ${requirement.numberOfOpenings}`,
+    `*Experience:* ${formatExperience(
+      requirement.minimumExperienceYears,
+      requirement.maximumExperienceYears
+    )}`,
+    `*Salary:* ${formatSalary(
+      requirement.monthlySalaryMin,
+      requirement.monthlySalaryMax
+    )}`,
+    `*Location:* ${requirement.location || "-"}`,
+    `*Required By:* ${formatDate(
+      requirement.requiredByDate
+    )}`,
+    `*Priority:* ${priorityLabel}`,
+    "",
+    `*Requested By:* ${requesterName}`,
+    "",
+    "Please review this manpower request.",
+    "",
+    "✅ *APPROVE REQUEST*",
+    approveUrl,
+    "",
+    "❌ *REJECT REQUEST*",
+    rejectUrl,
+    "",
+    "🔐 Each approval link is secure and can be used only once.",
+  ].join("\n");
+};
+
+/* =========================================================
+   SEND PRIVATE APPROVER WHATSAPP
+
+   Called for BOTH:
+   WEB
+   WHATSAPP
+
+   Notification failure NEVER cancels MPR creation.
+========================================================= */
+
+const sendApprovalWhatsApp =
+  async (
+    requirementId
+  ) => {
+    const requirement =
+      await ManpowerRequirement
+        .findById(
+          requirementId
+        )
+        .populate(
+          "department",
+          "name code"
+        )
+        .populate(
+          "requestedBy",
+          "displayName email role"
+        )
+        .populate(
+          "currentApprover",
+          "displayName email role"
+        );
+
+    if (
+      !requirement
+    ) {
+      throw new Error(
+        "MPR not found while preparing approval WhatsApp"
+      );
+    }
+
+    if (
+      requirement.status !==
+      "PENDING_APPROVAL"
+    ) {
+      return false;
+    }
+
+    const approverId =
+      requirement
+        .currentApprover
+        ?._id ||
+      requirement
+        .currentApprover;
+
+    if (
+      !approverId
+    ) {
+      throw new Error(
+        `No current approver found for ${requirement.requestNumber}`
+      );
+    }
+
+    const approverUser =
+  await User
+    .findOne({
+      _id:
+        approverId,
+
+      status:
+        "ACTIVE",
+    })
+    .select(
+      "_id displayName email whatsappNumber"
+    )
+    .lean();
+
+if (
+  !approverUser
+) {
+  throw new Error(
+    `No active User record found for approver of ${requirement.requestNumber}`
+  );
+}
+
+const phone =
+  normalizePhone(
+    approverUser
+      .whatsappNumber
+  );
+
+if (
+  !phone
+) {
+  throw new Error(
+    `Approver does not have a registered WhatsApp number for ${requirement.requestNumber}`
+  );
+}
+    const token =
+      createApprovalToken();
+
+    const tokenHash =
+      hashApprovalToken(
+        token
+      );
+
+    const now =
+      new Date();
+
+    const expiresAt =
+      new Date(
+        now.getTime() +
+        (
+          getApprovalTokenHours() *
+          60 *
+          60 *
+          1000
+        )
+      );
+
+    requirement.whatsappApproval = {
+      tokenHash,
+
+      approver:
+        approverId,
+
+      expiresAt,
+
+      usedAt:
+        null,
+
+      action:
+        "",
+
+      sentAt:
+        now,
+    };
+
+    await requirement.save();
+
+    const {
+      approveUrl,
+      rejectUrl,
+    } =
+      buildApprovalUrls(
+        token
+      );
+
+    const text =
+      buildApproverMessage({
+        requirement,
+        approveUrl,
+        rejectUrl,
+      });
+
+    const {
+      sendTextToPhone,
+    } =
+      getWhatsAppClient();
+
+    if (
+      typeof sendTextToPhone !==
+      "function"
+    ) {
+      throw new Error(
+        "Baileys sendTextToPhone() is not available"
+      );
+    }
+
+    await sendTextToPhone(
+      phone,
+      text
+    );
+
+    return true;
+  };
+
+/* =========================================================
+   SAFE APPROVER NOTIFICATION
+========================================================= */
+
+const sendApprovalWhatsAppSafely =
+  async (
+    requirementId
+  ) => {
+    try {
+      await sendApprovalWhatsApp(
+        requirementId
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "[MPR][WHATSAPP][APPROVAL_NOTIFICATION_FAILED]",
+        error?.message ||
+        error
+      );
+    }
+  };
+
+/* =========================================================
+   REQUESTER WHATSAPP DETAILS
+
+   WHATSAPP MPR:
+   → use original sender JID.
+
+   WEB MPR:
+   → resolve Employee phone from requestedBy.
+========================================================= */
+
+const resolveRequesterWhatsApp =
+  async (
+    requirement
+  ) => {
+    const source =
+      String(
+        requirement
+          ?.source ||
+        ""
+      ).toUpperCase();
+
+    if (
+      source ===
+        "WHATSAPP" &&
+      requirement
+        ?.whatsappSource
+        ?.senderJid
+    ) {
+      const senderJid =
+        String(
+          requirement
+            .whatsappSource
+            .senderJid
+        ).trim();
+
+      const phone =
+        normalizePhone(
+          requirement
+            .whatsappSource
+            .senderPhone ||
+          senderJid.split(
+            "@"
+          )[0]
+        );
+
+      return {
+        jid:
+          senderJid,
+
+        phone,
+
+        tag:
+          phone
+            ? `@${phone}`
+            : getUserDisplayName(
+                requirement
+                  .requestedBy
+              ),
+      };
+    }
+
+    const requesterId =
+      requirement
+        ?.requestedBy
+        ?._id ||
+      requirement
+        ?.requestedBy;
+
+    const employee =
+      await findEmployeeForUser(
+        requesterId
+      );
+
+    if (
+      !employee
+    ) {
+      return {
+        jid:
+          "",
+
+        phone:
+          "",
+
+        tag:
+          getUserDisplayName(
+            requirement
+              .requestedBy
+          ),
+      };
+    }
+
+    const phone =
+      normalizePhone(
+        employee.mobileNumber ||
+        employee.phone
+      );
+
+    if (
+      !phone
+    ) {
+      return {
+        jid:
+          "",
+
+        phone:
+          "",
+
+        tag:
+          getUserDisplayName(
+            requirement
+              .requestedBy
+          ),
+      };
+    }
+
+    try {
+      const {
+        normalizePhoneJid,
+      } =
+        getWhatsAppClient();
+
+      const jid =
+        typeof normalizePhoneJid ===
+        "function"
+          ? normalizePhoneJid(
+              phone
+            )
+          : `${phone}@s.whatsapp.net`;
+
+      return {
+        jid,
+
+        phone,
+
+        tag:
+          `@${phone}`,
+      };
+    } catch (
+      error
+    ) {
+      return {
+        jid:
+          `${phone}@s.whatsapp.net`,
+
+        phone,
+
+        tag:
+          `@${phone}`,
+      };
+    }
+  };
+
+/* =========================================================
+   BUILD GROUP RESULT MESSAGE
+========================================================= */
+
+const buildGroupResultMessage =
+  ({
+    requirement,
+    action,
+    requesterTag,
+    remarks,
+  }) => {
+    const approved =
+      action ===
+      "APPROVED";
+
+    const lines = [
+      requesterTag,
+      "",
+      approved
+        ? "✅ Manpower Request Approved."
+        : "❌ Manpower Request Rejected.",
+      "",
+      `Request: ${requirement.requestNumber}`,
+      `Position: ${requirement.positionTitle}`,
+      `Openings: ${requirement.numberOfOpenings}`,
+      `Status: ${action}`,
+    ];
+
+    const cleanRemarks =
+      String(
+        remarks ||
+        ""
+      ).trim();
+
+    if (
+      cleanRemarks
+    ) {
+      lines.push(
+        approved
+          ? `Remarks: ${cleanRemarks}`
+          : `Reason: ${cleanRemarks}`
+      );
+    }
+
+    return lines.join(
+      "\n"
+    );
+  };
+
+/* =========================================================
+   GROUP RESULT NOTIFICATION
+========================================================= */
+
+const notifyManpowerGroupStatus =
+  async ({
+    requirementId,
+    action,
+    remarks,
+  }) => {
+    const requirement =
+      await ManpowerRequirement
+        .findById(
+          requirementId
+        )
+        .populate(
+          "requestedBy",
+          "displayName email role"
+        )
+        .populate(
+          "department",
+          "name code"
+        )
+        .lean();
+
+    if (
+      !requirement
+    ) {
+      throw new Error(
+        "MPR not found for WhatsApp status notification"
+      );
+    }
+
+    const groupJid =
+      getConfiguredMprGroup() ||
+      String(
+        requirement
+          ?.whatsappSource
+          ?.groupJid ||
+        ""
+      ).trim();
+
+    if (
+      !groupJid
+    ) {
+      throw new Error(
+        "WHATSAPP_MPR_GROUP_ID is not configured"
+      );
+    }
+
+    const requester =
+      await resolveRequesterWhatsApp(
+        requirement
+      );
+
+    const text =
+      buildGroupResultMessage({
+        requirement,
+        action,
+        requesterTag:
+          requester.tag,
+        remarks,
+      });
+
+    const mentions =
+      requester.jid
+        ? [
+            requester.jid,
+          ]
+        : [];
+
+    const {
+      sendTextMessage,
+    } =
+      getWhatsAppClient();
+
+    if (
+      typeof sendTextMessage !==
+      "function"
+    ) {
+      throw new Error(
+        "Baileys sendTextMessage() is not available"
+      );
+    }
+
+    await sendTextMessage(
+      groupJid,
+      text,
+      {
+        mentions,
+      }
+    );
+
+    return true;
+  };
+
+/* =========================================================
+   SAFE GROUP NOTIFICATION
+========================================================= */
+
+const notifyManpowerGroupStatusSafely =
+  async (
+    payload
+  ) => {
+    try {
+      await notifyManpowerGroupStatus(
+        payload
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "[MPR][WHATSAPP][GROUP_NOTIFICATION_FAILED]",
+        error?.message ||
+        error
+      );
+    }
+  };
+
+/* =========================================================
    FIND HR DEPARTMENT
 ========================================================= */
 
@@ -574,10 +1510,6 @@ const getHrDepartment =
 
 /* =========================================================
    HR USER CHECK
-
-   Any active HR department member passes.
-
-   Global SUPER_ADMIN always passes.
 ========================================================= */
 
 const isHrUser =
@@ -624,16 +1556,6 @@ const isHrUser =
 
 /* =========================================================
    HR MANAGEMENT CHECK
-
-   Can manage whole HR recruitment queue:
-
-   - Global SUPER_ADMIN
-   - HR DEPARTMENT_SUPER_ADMIN
-   - HR HOD
-   - HR ADMIN
-
-   HR MEMBER cannot assign/reassign owners and cannot see
-   the complete HR management queue.
 ========================================================= */
 
 const canManageHrHiring =
@@ -688,8 +1610,6 @@ const canManageHrHiring =
 
 /* =========================================================
    VERIFY SELECTED HR EMPLOYEE
-
-   Any active HR member can be assigned as hiring owner.
 ========================================================= */
 
 const getValidHrEmployee =
@@ -818,6 +1738,12 @@ const createRequirement =
           maximumExperienceYears:
             input.maximumExperienceYears,
 
+          monthlySalaryMin:
+            input.monthlySalaryMin,
+
+          monthlySalaryMax:
+            input.monthlySalaryMax,
+
           budgetMin:
             input.budgetMin,
 
@@ -830,8 +1756,22 @@ const createRequirement =
           employmentType:
             input.employmentType,
 
+          shiftAvailability:
+            input.shiftAvailability,
+
+          office:
+            input.office,
+
           location:
             input.location,
+
+          source:
+            input.source ||
+            "WEB",
+
+          whatsappSource:
+            input.whatsappSource ||
+            undefined,
 
           requiredByDate:
             input.requiredByDate,
@@ -890,6 +1830,21 @@ const createRequirement =
             user._id,
         });
 
+    /*
+     * IMPORTANT:
+     *
+     * No source check here.
+     *
+     * WEB and WHATSAPP MPR both send the private
+     * approval notification.
+     *
+     * Notification failure must not fail MPR creation.
+     */
+
+    await sendApprovalWhatsAppSafely(
+      requirement._id
+    );
+
     return getRequirementById(
       requirement._id,
       user
@@ -898,26 +1853,6 @@ const createRequirement =
 
 /* =========================================================
    GET ONE
-
-   Visibility:
-
-   Global SUPER_ADMIN
-   → all
-
-   Requester
-   → own request
-
-   Current approver
-   → assigned pending approval
-
-   Department SUPER ADMIN
-   → own managed department
-
-   HR management
-   → HR-visible approved / hiring requests
-
-   Assigned HR owner
-   → assigned requirement
 ========================================================= */
 
 const getRequirementById =
@@ -1047,26 +1982,6 @@ const getRequirementById =
 
 /* =========================================================
    LIST REQUIREMENTS
-
-   Visibility matrix:
-
-   GLOBAL SUPER_ADMIN
-   → all
-
-   Normal requester
-   → own
-
-   Current valid approver
-   → assigned request
-
-   Department Super Admin
-   → managed department
-
-   HR management
-   → approved HR-visible requests from ALL departments
-
-   HR member
-   → only assigned hiring
 ========================================================= */
 
 const listRequirements =
@@ -1104,34 +2019,22 @@ const listRequirements =
         );
 
       const visibilityConditions = [
-        /*
-         * Own request always visible.
-         */
         {
           requestedBy:
             user._id,
         },
 
-        /*
-         * Assigned approval.
-         */
         {
           currentApprover:
             user._id,
         },
 
-        /*
-         * Assigned HR work.
-         */
         {
           assignedHr:
             user._id,
         },
       ];
 
-      /*
-       * Department Super Admin gets department-wide view.
-       */
       if (
         managedDepartmentIds.length >
         0
@@ -1144,10 +2047,6 @@ const listRequirements =
         });
       }
 
-      /*
-       * HR management gets cross-department visibility
-       * only AFTER approval.
-       */
       if (
         hrManager
       ) {
@@ -1230,26 +2129,12 @@ const listRequirements =
 
 /* =========================================================
    APPROVAL INBOX
-
-   Global SUPER_ADMIN
-   → actionable pending requests except own
-
-   Department SUPER ADMIN
-   → only requests actually assigned to them AND from
-     department they manage.
-
-   ADMIN / HEAD / MANAGER / MEMBER
-   → no manpower approval authority.
 ========================================================= */
 
 const getApprovalInbox =
   async (
     user
   ) => {
-    /* =====================================================
-       GLOBAL SUPER ADMIN
-    ===================================================== */
-
     if (
       user.role ===
       "SUPER_ADMIN"
@@ -1274,10 +2159,6 @@ const getApprovalInbox =
           })
       ).lean();
     }
-
-    /* =====================================================
-       DEPARTMENT SUPER ADMIN ONLY
-    ===================================================== */
 
     const managedDepartmentIds =
       await getManagedManpowerDepartmentIds(
@@ -1336,17 +2217,6 @@ const getApprovalInbox =
 
 /* =========================================================
    APPROVE
-
-   Allowed:
-
-   - Global SUPER_ADMIN
-   - Current approver who is DEPARTMENT_SUPER_ADMIN of the
-     approval department
-
-   Never:
-   - Requester approving own
-   - Plain ADMIN
-   - Other department Super Admin
 ========================================================= */
 
 const approveRequirement =
@@ -1459,9 +2329,6 @@ const approveRequirement =
     requirement.approvedAt =
       now;
 
-    /*
-     * THIS RELEASES IT TO HR.
-     */
     requirement.visibleToHR =
       true;
 
@@ -1487,6 +2354,25 @@ const approveRequirement =
 
     await requirement.save();
 
+    /*
+     * FIX:
+     *
+     * Existing code incorrectly sent REJECTED and referenced
+     * undefined variable "reason".
+     */
+
+    await notifyManpowerGroupStatusSafely({
+      requirementId:
+        requirement._id,
+
+      action:
+        "APPROVED",
+
+      remarks:
+        remarks ||
+        "",
+    });
+
     return getRequirementById(
       requirement._id,
       user
@@ -1495,8 +2381,6 @@ const approveRequirement =
 
 /* =========================================================
    REJECT
-
-   Uses same approval authorization as APPROVE.
 ========================================================= */
 
 const rejectRequirement =
@@ -1530,9 +2414,6 @@ const rejectRequirement =
       );
     }
 
-    /*
-     * Requester cannot reject through approval workflow.
-     */
     if (
       String(
         requirement
@@ -1639,6 +2520,18 @@ const rejectRequirement =
 
     await requirement.save();
 
+    await notifyManpowerGroupStatusSafely({
+      requirementId:
+        requirement._id,
+
+      action:
+        "REJECTED",
+
+      remarks:
+        reason ||
+        "",
+    });
+
     return getRequirementById(
       requirement._id,
       user
@@ -1646,20 +2539,464 @@ const rejectRequirement =
   };
 
 /* =========================================================
-   HR MANAGEMENT QUEUE
+   GET REQUIREMENT BY WHATSAPP APPROVAL TOKEN
+
+   Used by public confirmation-page controller.
+
+   Raw token never reaches MongoDB.
+========================================================= */
+
+const getRequirementByApprovalToken =
+  async (
+    token
+  ) => {
+    const cleanToken =
+      String(
+        token ||
+        ""
+      ).trim();
+
+    if (
+      !cleanToken
+    ) {
+      return null;
+    }
+
+    const tokenHash =
+      hashApprovalToken(
+        cleanToken
+      );
+
+    return ManpowerRequirement
+      .findOne({
+        "whatsappApproval.tokenHash":
+          tokenHash,
+      })
+      .populate(
+        "department",
+        "name code slug"
+      )
+      .populate(
+        "requestedBy",
+        "displayName email role"
+      )
+      .populate(
+        "currentApprover",
+        "displayName email role"
+      )
+      .populate(
+        "whatsappApproval.approver",
+        "displayName email role status"
+      )
+      .lean();
+  };
+
+/* =========================================================
+   VALIDATE PUBLIC APPROVAL TOKEN
+========================================================= */
+
+const validateApprovalTokenRequirement =
+  async (
+    token
+  ) => {
+    const cleanToken =
+      String(
+        token ||
+        ""
+      ).trim();
+
+    if (
+      !cleanToken
+    ) {
+      throw new ApiError(
+        400,
+        "Approval token is required"
+      );
+    }
+
+    const tokenHash =
+      hashApprovalToken(
+        cleanToken
+      );
+
+    const requirement =
+      await ManpowerRequirement
+        .findOne({
+          "whatsappApproval.tokenHash":
+            tokenHash,
+        });
+
+    if (
+      !requirement
+    ) {
+      throw new ApiError(
+        404,
+        "This approval link is invalid"
+      );
+    }
+
+    if (
+      requirement
+        .whatsappApproval
+        ?.usedAt
+    ) {
+      throw new ApiError(
+        409,
+        "This approval link has already been used"
+      );
+    }
+
+    const expiresAt =
+      requirement
+        .whatsappApproval
+        ?.expiresAt;
+
+    if (
+      !expiresAt ||
+      new Date(
+        expiresAt
+      ).getTime() <=
+        Date.now()
+    ) {
+      throw new ApiError(
+        410,
+        "This approval link has expired"
+      );
+    }
+
+    if (
+      requirement.status !==
+      "PENDING_APPROVAL"
+    ) {
+      throw new ApiError(
+        409,
+        `This manpower request has already been ${String(
+          requirement.status
+        ).toLowerCase()}`
+      );
+    }
+
+    const tokenApproverId =
+      requirement
+        .whatsappApproval
+        ?.approver;
+
+    const currentApproverId =
+      requirement
+        .currentApprover;
+
+    if (
+      !tokenApproverId ||
+      !currentApproverId ||
+      String(
+        tokenApproverId
+      ) !==
+      String(
+        currentApproverId
+      )
+    ) {
+      throw new ApiError(
+        403,
+        "This approval link is no longer assigned to the current approver"
+      );
+    }
+
+    return {
+      requirement,
+      tokenHash,
+    };
+  };
+
+/* =========================================================
+   PROCESS WHATSAPP APPROVAL
 
    IMPORTANT:
 
-   This is NOT for every HR member.
+   The token does NOT directly mutate approval fields.
 
-   Allowed:
+   It resolves the exact stored approver and then calls the
+   EXISTING approveRequirement / rejectRequirement functions.
 
-   - Global SUPER_ADMIN
-   - HR Department Super Admin
-   - HR HOD
-   - HR ADMIN
+   Therefore existing approval authorization remains
+   authoritative.
+========================================================= */
 
-   Renu as MEMBER should use My Hiring instead.
+const processWhatsAppApproval =
+  async ({
+    token,
+    action,
+    remarks,
+    reason,
+  }) => {
+    const normalizedAction =
+      String(
+        action ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+    if (
+      ![
+        "approve",
+        "reject",
+      ].includes(
+        normalizedAction
+      )
+    ) {
+      throw new ApiError(
+        400,
+        "Invalid approval action"
+      );
+    }
+
+    const {
+      requirement,
+      tokenHash,
+    } =
+      await validateApprovalTokenRequirement(
+        token
+      );
+
+    const approverId =
+      requirement
+        .whatsappApproval
+        .approver;
+
+    const approver =
+      await User
+        .findOne({
+          _id:
+            approverId,
+
+          status:
+            "ACTIVE",
+        });
+
+    if (
+      !approver
+    ) {
+      throw new ApiError(
+        403,
+        "The assigned approver account is no longer active"
+      );
+    }
+
+    /*
+     * Claim the token before executing the approval action.
+     *
+     * This prevents two simultaneous clicks from processing
+     * the same token.
+     */
+
+    const claimedAt =
+      new Date();
+
+    const claimed =
+      await ManpowerRequirement
+        .findOneAndUpdate(
+          {
+            _id:
+              requirement._id,
+
+            status:
+              "PENDING_APPROVAL",
+
+            currentApprover:
+              approverId,
+
+            "whatsappApproval.tokenHash":
+              tokenHash,
+
+            "whatsappApproval.approver":
+              approverId,
+
+            "whatsappApproval.usedAt":
+              null,
+
+            "whatsappApproval.expiresAt": {
+              $gt:
+                claimedAt,
+            },
+          },
+
+          {
+            $set: {
+              "whatsappApproval.usedAt":
+                claimedAt,
+
+              "whatsappApproval.action":
+                normalizedAction ===
+                "approve"
+                  ? "APPROVED"
+                  : "REJECTED",
+            },
+          },
+
+          {
+            new:
+              true,
+          }
+        );
+
+    if (
+      !claimed
+    ) {
+      throw new ApiError(
+        409,
+        "This approval link has already been used or is no longer valid"
+      );
+    }
+
+    try {
+      if (
+        normalizedAction ===
+        "approve"
+      ) {
+        const result =
+          await approveRequirement({
+            requirementId:
+              requirement._id,
+
+            user:
+              approver,
+
+            remarks:
+              String(
+                remarks ||
+                ""
+              ).trim(),
+          });
+
+        return {
+          action:
+            "APPROVED",
+
+          requirement:
+            result,
+        };
+      }
+
+      const cleanReason =
+        String(
+          reason ||
+          ""
+        ).trim();
+
+      if (
+        !cleanReason
+      ) {
+        /*
+         * Release token claim because controller/user must
+         * still be allowed to submit the required reason.
+         */
+
+        await ManpowerRequirement
+          .updateOne(
+            {
+              _id:
+                requirement._id,
+
+              "whatsappApproval.tokenHash":
+                tokenHash,
+
+              "whatsappApproval.usedAt":
+                claimedAt,
+            },
+
+            {
+              $set: {
+                "whatsappApproval.usedAt":
+                  null,
+
+                "whatsappApproval.action":
+                  "",
+              },
+            }
+          );
+
+        throw new ApiError(
+          400,
+          "Rejection reason is required"
+        );
+      }
+
+      const result =
+        await rejectRequirement({
+          requirementId:
+            requirement._id,
+
+          user:
+            approver,
+
+          reason:
+            cleanReason,
+        });
+
+      return {
+        action:
+          "REJECTED",
+
+        requirement:
+          result,
+      };
+    } catch (
+      error
+    ) {
+      /*
+       * If the existing approval function fails before
+       * changing status, release the token so a legitimate
+       * approver is not permanently locked out.
+       */
+
+      const latest =
+        await ManpowerRequirement
+          .findById(
+            requirement._id
+          )
+          .select(
+            "status whatsappApproval"
+          )
+          .lean();
+
+      if (
+        latest?.status ===
+        "PENDING_APPROVAL"
+      ) {
+        await ManpowerRequirement
+          .updateOne(
+            {
+              _id:
+                requirement._id,
+
+              status:
+                "PENDING_APPROVAL",
+
+              "whatsappApproval.tokenHash":
+                tokenHash,
+
+              "whatsappApproval.usedAt":
+                claimedAt,
+            },
+
+            {
+              $set: {
+                "whatsappApproval.usedAt":
+                  null,
+
+                "whatsappApproval.action":
+                  "",
+              },
+            }
+          );
+      }
+
+      throw error;
+    }
+  };
+
+/* =========================================================
+   HR MANAGEMENT QUEUE
 ========================================================= */
 
 const getHrQueue =
@@ -1708,10 +3045,6 @@ const getHrQueue =
 
 /* =========================================================
    AVAILABLE HR EMPLOYEES
-
-   Hiring-owner dropdown.
-
-   Only HR management / Global SUPER_ADMIN may access.
 ========================================================= */
 
 const getAvailableHrEmployees =
@@ -1813,14 +3146,6 @@ const getAvailableHrEmployees =
 
 /* =========================================================
    ASSIGN / REASSIGN HR OWNER
-
-   Roshan:
-   HR Department Super Admin
-   → can assign Renu
-
-   Renu:
-   HR Member
-   → cannot reassign herself/others
 ========================================================= */
 
 const assignHrToRequirement =
@@ -1931,10 +3256,6 @@ const assignHrToRequirement =
 
     await requirement.save();
 
-    /*
-     * Reassign existing active candidates if ownership
-     * changes after candidate creation.
-     */
     const {
       Candidate,
     } =
@@ -1983,11 +3304,6 @@ const assignHrToRequirement =
 
 /* =========================================================
    MY HIRING
-
-   HR employee sees only requirements assigned to them.
-
-   Renu:
-   → gets only Renu's hiring.
 ========================================================= */
 
 const getMyHiring =
@@ -2107,18 +3423,6 @@ const getMyHiring =
 
 /* =========================================================
    START HIRING
-
-   Requirement must:
-
-   1. Be APPROVED
-   2. Be visible to HR
-   3. Have assigned HR owner
-
-   May start:
-
-   - Global SUPER_ADMIN
-   - HR management
-   - Assigned HR owner
 ========================================================= */
 
 const startHiring =
@@ -2220,6 +3524,15 @@ const startHiring =
     requirement.updatedBy =
       user._id;
 
+    /*
+     * IMPORTANT:
+     *
+     * There is NO approval WhatsApp notification here.
+     *
+     * The old file incorrectly attempted to send APPROVED
+     * again when HR started hiring.
+     */
+
     await requirement.save();
 
     return getRequirementById(
@@ -2246,6 +3559,18 @@ module.exports = {
   approveRequirement,
 
   rejectRequirement,
+
+  /*
+   * Public secure WhatsApp approval workflow.
+   */
+
+  getRequirementByApprovalToken,
+
+  processWhatsAppApproval,
+
+  /*
+   * HR workflow.
+   */
 
   getHrQueue,
 

@@ -159,17 +159,59 @@ const validateCreateManpower =
       );
     }
 
-    const budgetMin =
+       const monthlySalaryMin =
       optionalNumber(
-        body.budgetMin,
-        "Minimum budget"
+        body.monthlySalaryMin,
+        "Minimum monthly salary"
       );
 
-    const budgetMax =
+    const monthlySalaryMax =
       optionalNumber(
-        body.budgetMax,
-        "Maximum budget"
+        body.monthlySalaryMax,
+        "Maximum monthly salary"
       );
+
+    if (
+      monthlySalaryMin !==
+        null &&
+      monthlySalaryMax !==
+        null &&
+      monthlySalaryMax <
+        monthlySalaryMin
+    ) {
+      throw new ApiError(
+        400,
+        "Maximum monthly salary cannot be lower than minimum monthly salary"
+      );
+    }
+
+    /*
+     * If monthly salary is supplied, annual package is
+     * calculated automatically.
+     *
+     * Existing WEB callers may continue sending budgetMin /
+     * budgetMax directly.
+     */
+
+    const budgetMin =
+      monthlySalaryMin !==
+      null
+        ? monthlySalaryMin *
+          12
+        : optionalNumber(
+            body.budgetMin,
+            "Minimum budget"
+          );
+
+    const budgetMax =
+      monthlySalaryMax !==
+      null
+        ? monthlySalaryMax *
+          12
+        : optionalNumber(
+            body.budgetMax,
+            "Maximum budget"
+          );
 
     if (
       budgetMin !==
@@ -269,6 +311,33 @@ const validateCreateManpower =
       }
     }
 
+
+        const shiftAvailability =
+      String(
+        body.shiftAvailability ||
+          "ANY"
+      )
+        .trim()
+        .toUpperCase();
+
+    const allowedShiftAvailability = [
+      "DAY",
+      "NIGHT",
+      "FLEXIBLE",
+      "GENERAL",
+      "ANY",
+    ];
+
+    if (
+      !allowedShiftAvailability.includes(
+        shiftAvailability
+      )
+    ) {
+      throw new ApiError(
+        400,
+        "Invalid shift availability"
+      );
+    }
     return {
       /*
        * Usually omitted.
@@ -293,6 +362,10 @@ const validateCreateManpower =
 
       maximumExperienceYears,
 
+            monthlySalaryMin,
+
+      monthlySalaryMax,
+
       budgetMin,
 
       budgetMax,
@@ -305,13 +378,74 @@ const validateCreateManpower =
           .trim()
           .toUpperCase(),
 
-      employmentType,
+            employmentType,
+
+      shiftAvailability,
+
+      office:
+        optionalObjectId(
+          body.office,
+          "Office"
+        ),
 
       location:
         String(
           body.location ||
             ""
         ).trim(),
+
+      source:
+        String(
+          body.source ||
+            "WEB"
+        )
+          .trim()
+          .toUpperCase(),
+
+            whatsappSource:
+        body.whatsappSource &&
+        typeof body.whatsappSource ===
+          "object"
+          ? {
+              groupJid:
+                String(
+                  body.whatsappSource
+                    .groupJid ||
+                    ""
+                ).trim(),
+
+              senderJid:
+                String(
+                  body.whatsappSource
+                    .senderJid ||
+                    ""
+                ).trim(),
+
+              senderPhone:
+                String(
+                  body.whatsappSource
+                    .senderPhone ||
+                    ""
+                ).trim(),
+
+              messageId:
+                String(
+                  body.whatsappSource
+                    .messageId ||
+                    ""
+                ).trim(),
+
+              rawText:
+                String(
+                  body.whatsappSource
+                    .rawText ||
+                    ""
+                ),
+
+              submittedAt:
+                new Date(),
+            }
+          : null,
 
       requiredByDate,
 

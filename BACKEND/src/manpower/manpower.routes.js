@@ -11,6 +11,10 @@ const {
   );
 
 const {
+  manpowerApprovalPage,
+
+  processManpowerApproval,
+
   createRequirement,
 
   listRequirements,
@@ -41,9 +45,44 @@ const router =
   express.Router();
 
 /* =========================================================
+   PUBLIC WHATSAPP APPROVAL ROUTES
+
+   IMPORTANT:
+
+   These routes MUST remain BEFORE router.use(authenticate).
+
+   The secure one-time token is the authorization mechanism
+   for these two routes.
+
+   Full production URL:
+
+   GET
+   https://api.nuvanata.io/api/v1/manpower/public/approval/:token?action=approve
+
+   GET
+   https://api.nuvanata.io/api/v1/manpower/public/approval/:token?action=reject
+
+   POST
+   https://api.nuvanata.io/api/v1/manpower/public/approval/:token/approve
+
+   POST
+   https://api.nuvanata.io/api/v1/manpower/public/approval/:token/reject
+========================================================= */
+
+router.get(
+  "/public/approval/:token",
+  manpowerApprovalPage
+);
+
+router.post(
+  "/public/approval/:token/:action",
+  processManpowerApproval
+);
+
+/* =========================================================
    AUTH
 
-   All manpower routes require login.
+   Everything below this point requires normal SE-RMS login.
 ========================================================= */
 
 router.use(
@@ -56,13 +95,11 @@ router.use(
 
 router.get(
   "/",
-
   listRequirements
 );
 
 router.post(
   "/",
-
   createRequirement
 );
 
@@ -75,7 +112,6 @@ router.post(
 
 router.get(
   "/approvals/inbox",
-
   getApprovalInbox
 );
 
@@ -90,7 +126,6 @@ router.get(
 
 router.get(
   "/hr/employees",
-
   getHrEmployees
 );
 
@@ -105,7 +140,6 @@ router.get(
 
 router.get(
   "/hr/my-hiring",
-
   getMyHiring
 );
 
@@ -120,7 +154,6 @@ router.get(
 
 router.get(
   "/hr/queue",
-
   getHrQueue
 );
 
@@ -130,23 +163,25 @@ router.get(
 
 router.patch(
   "/:requirementId/assign-hr",
-
   assignHr
 );
 
 /* =========================================================
-   APPROVAL ACTIONS
+   AUTHENTICATED APPROVAL ACTIONS
+
+   Existing web application approval endpoints remain
+   completely available.
+
+   These are separate from the secure WhatsApp link.
 ========================================================= */
 
 router.post(
   "/:requirementId/approve",
-
   approveRequirement
 );
 
 router.post(
   "/:requirementId/reject",
-
   rejectRequirement
 );
 
@@ -156,7 +191,6 @@ router.post(
 
 router.post(
   "/:requirementId/start-hiring",
-
   startHiring
 );
 
@@ -168,7 +202,6 @@ router.post(
 
 router.get(
   "/:requirementId",
-
   getRequirement
 );
 
