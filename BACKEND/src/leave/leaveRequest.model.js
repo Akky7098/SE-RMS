@@ -542,64 +542,50 @@ const leaveRequestSchema =
          Token is tied to the exact approver user.
       ===================================================== */
 
-      publicApprovalTokenHash: {
-        type:
-          String,
+     whatsappApproval: {
+  tokenHash: {
+    type: String,
+    trim: true,
+    default: null,
+  },
 
-        trim:
-          true,
+  approverUserId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
 
-        default:
-          null,
+  approverEmployeeId: {
+    type: Schema.Types.ObjectId,
+    ref: "Employee",
+    default: null,
+  },
 
-        select:
-          false,
+  expiresAt: {
+    type: Date,
+    default: null,
+  },
 
-        index:
-          true,
-      },
+  sentAt: {
+    type: Date,
+    default: null,
+  },
 
-      publicApprovalTokenExpiresAt: {
-        type:
-          Date,
+  usedAt: {
+    type: Date,
+    default: null,
+  },
 
-        default:
-          null,
-
-        select:
-          false,
-
-        index:
-          true,
-      },
-
-      publicApprovalTokenUsedAt: {
-        type:
-          Date,
-
-        default:
-          null,
-
-        select:
-          false,
-      },
-
-      publicApprovalApproverUserId: {
-        type:
-          Schema.Types.ObjectId,
-
-        ref:
-          "User",
-
-        default:
-          null,
-
-        select:
-          false,
-
-        index:
-          true,
-      },
+  action: {
+    type: String,
+    enum: [
+      "",
+      "APPROVED",
+      "REJECTED",
+    ],
+    default: "",
+  },
+},
 
       createdBy: {
         type:
@@ -680,11 +666,8 @@ leaveRequestSchema.index({
 
 /* Public approval token lookup */
 leaveRequestSchema.index({
-  publicApprovalTokenHash:
-    1,
-
-  publicApprovalTokenExpiresAt:
-    1,
+  "whatsappApproval.tokenHash": 1,
+  "whatsappApproval.expiresAt": 1,
 });
 
 /* =========================================================
