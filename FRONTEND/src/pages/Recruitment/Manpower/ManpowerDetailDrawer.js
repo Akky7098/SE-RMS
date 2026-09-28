@@ -52,9 +52,13 @@ const formatBudget = (
           ? "en-IN"
           : "en-US",
         {
-          style: "currency",
+          style:
+            "currency",
+
           currency,
-          maximumFractionDigits: 0,
+
+          maximumFractionDigits:
+            0,
         }
       );
 
@@ -65,32 +69,234 @@ const formatBudget = (
       max !== undefined
     ) {
       return `${formatter.format(
-        Number(min)
+        Number(
+          min
+        )
       )} – ${formatter.format(
-        Number(max)
+        Number(
+          max
+        )
       )} / year`;
     }
 
     const value =
-      min ?? max;
+      min ??
+      max;
 
     return `${formatter.format(
-      Number(value || 0)
+      Number(
+        value ||
+        0
+      )
     )} / year`;
   } catch (
     error
   ) {
     return `${currency} ${
-      min ?? max ?? 0
+      min ??
+      max ??
+      0
     }`;
   }
 };
 
 /* =========================================================
-   API ACTION ERROR
+   MONTHLY SALARY
+========================================================= */
 
-   Converts technical HTTP errors into messages suitable
-   for normal ERP users.
+const formatMonthlySalary = (
+  requirement
+) => {
+  const explicitMin =
+    requirement
+      ?.monthlySalaryMin;
+
+  const explicitMax =
+    requirement
+      ?.monthlySalaryMax;
+
+  const min =
+    explicitMin !==
+      undefined &&
+    explicitMin !==
+      null
+      ? explicitMin
+      : requirement
+          ?.budgetMin !==
+          undefined &&
+        requirement
+          ?.budgetMin !==
+          null
+        ? Number(
+            requirement
+              .budgetMin
+          ) /
+          12
+        : null;
+
+  const max =
+    explicitMax !==
+      undefined &&
+    explicitMax !==
+      null
+      ? explicitMax
+      : requirement
+          ?.budgetMax !==
+          undefined &&
+        requirement
+          ?.budgetMax !==
+          null
+        ? Number(
+            requirement
+              .budgetMax
+          ) /
+          12
+        : null;
+
+  if (
+    min === null &&
+    max === null
+  ) {
+    return "Not specified";
+  }
+
+  const formatter =
+    new Intl.NumberFormat(
+      "en-IN",
+      {
+        style:
+          "currency",
+
+        currency:
+          requirement
+            ?.currency ||
+          "INR",
+
+        maximumFractionDigits:
+          0,
+      }
+    );
+
+  if (
+    min !== null &&
+    max !== null
+  ) {
+    return `${formatter.format(
+      Number(
+        min
+      )
+    )} – ${formatter.format(
+      Number(
+        max
+      )
+    )} / month`;
+  }
+
+  return `${formatter.format(
+    Number(
+      min ??
+      max ??
+      0
+    )
+  )} / month`;
+};
+
+/* =========================================================
+   EXPERIENCE
+========================================================= */
+
+const formatExperience = (
+  requirement
+) => {
+  const min =
+    requirement
+      ?.minimumExperienceYears;
+
+  const max =
+    requirement
+      ?.maximumExperienceYears;
+
+  if (
+    min === undefined &&
+    max === undefined
+  ) {
+    return "Not specified";
+  }
+
+  if (
+    min !== undefined &&
+    min !== null &&
+    max !== undefined &&
+    max !== null
+  ) {
+    if (
+      Number(
+        min
+      ) ===
+      Number(
+        max
+      )
+    ) {
+      return `${Number(
+        min
+      )} Years`;
+    }
+
+    return `${Number(
+      min
+    )} – ${Number(
+      max
+    )} Years`;
+  }
+
+  return `${
+    Number(
+      min ??
+      max ??
+      0
+    )
+  } Years`;
+};
+
+/* =========================================================
+   TEXT FORMATTER
+========================================================= */
+
+const formatEnumText = (
+  value,
+  fallback = "—"
+) => {
+  const text =
+    String(
+      value ||
+      ""
+    )
+      .trim()
+      .replaceAll(
+        "_",
+        " "
+      );
+
+  if (
+    !text
+  ) {
+    return fallback;
+  }
+
+  return text
+    .toLowerCase()
+    .replace(
+      /\b\w/g,
+      (
+        character
+      ) =>
+        character
+          .toUpperCase()
+    );
+};
+
+/* =========================================================
+   API ACTION ERROR
 ========================================================= */
 
 const getFriendlyActionError = (
@@ -99,24 +305,19 @@ const getFriendlyActionError = (
 ) => {
   const status =
     Number(
-      error?.response?.status ||
+      error?.response
+        ?.status ||
       0
     );
 
   const backendMessage =
     String(
-      error?.response?.data
+      error?.response
+        ?.data
         ?.message ||
       ""
     ).trim();
 
-  /*
-   * Keep useful business messages from backend.
-   *
-   * Examples:
-   * You cannot approve your own manpower requirement
-   * You are not the assigned approver
-   */
   if (
     backendMessage &&
     !backendMessage
@@ -134,46 +335,50 @@ const getFriendlyActionError = (
   }
 
   if (
-    status === 403
+    status ===
+    403
   ) {
-    return (
-      action === "approve"
-        ? "You are not authorized to approve this manpower request."
-        : "You are not authorized to reject this manpower request."
-    );
+    return action ===
+      "approve"
+      ? "You are not authorized to approve this manpower request."
+      : "You are not authorized to reject this manpower request.";
   }
 
   if (
-    status === 404
+    status ===
+    404
   ) {
-    return "This manpower request could not be found. It may have been changed or removed.";
+    return "This manpower request could not be found.";
   }
 
   if (
-    status === 409
+    status ===
+    409
   ) {
-    return "This manpower request has already been processed. Refresh the page to see its latest status.";
+    return "This manpower request has already been processed.";
   }
 
   if (
-    status === 400
+    status ===
+    400
   ) {
-    return (
-      action === "approve"
-        ? "This manpower request could not be approved. Please review the request and try again."
-        : "This manpower request could not be rejected. Please review the request and try again."
-    );
+    return action ===
+      "approve"
+      ? "This manpower request could not be approved."
+      : "This manpower request could not be rejected.";
   }
 
   if (
-    status >= 500
+    status >=
+    500
   ) {
     return "SE-RMS could not complete this action right now. Please try again.";
   }
 
   return getApiErrorMessage(
     error,
-    action === "approve"
+    action ===
+      "approve"
       ? "The manpower request could not be approved."
       : "The manpower request could not be rejected."
   );
@@ -212,30 +417,12 @@ const ManpowerDetailDrawer = ({
     false
   );
 
-  /* =====================================================
-     ACTION STATE
-
-     Values:
-     ""
-     "APPROVE"
-     "REJECT"
-
-     Using explicit action name prevents duplicate clicks
-     and allows proper button loading state.
-  ===================================================== */
-
   const [
     actionLoading,
     setActionLoading,
   ] = useState(
     ""
   );
-
-  /* =====================================================
-     LOAD ERROR
-
-     Reserved for actual requirement loading errors.
-  ===================================================== */
 
   const [
     error,
@@ -244,12 +431,6 @@ const ManpowerDetailDrawer = ({
     ""
   );
 
-  /* =====================================================
-     USER-FACING ACTION MESSAGE
-
-     success / error
-  ===================================================== */
-
   const [
     actionMessage,
     setActionMessage,
@@ -257,24 +438,12 @@ const ManpowerDetailDrawer = ({
     null
   );
 
-  /* =====================================================
-     CONFIRMATION MODAL
-
-     type:
-     APPROVE
-     REJECT
-  ===================================================== */
-
   const [
     confirmAction,
     setConfirmAction,
   ] = useState(
     ""
   );
-
-  /* =====================================================
-     ACTION INPUTS
-  ===================================================== */
 
   const [
     approvalRemarks,
@@ -298,7 +467,7 @@ const ManpowerDetailDrawer = ({
   );
 
   /* =====================================================
-     RESET WHEN RECORD CHANGES
+     RESET
   ===================================================== */
 
   useEffect(() => {
@@ -342,6 +511,34 @@ const ManpowerDetailDrawer = ({
   }, [
     open,
     requirementId,
+  ]);
+
+  /* =====================================================
+     BODY SCROLL LOCK
+  ===================================================== */
+
+  useEffect(() => {
+    if (
+      !open
+    ) {
+      return undefined;
+    }
+
+    const previousOverflow =
+      document.body.style
+        .overflow;
+
+    document.body.style
+      .overflow =
+      "hidden";
+
+    return () => {
+      document.body.style
+        .overflow =
+        previousOverflow;
+    };
+  }, [
+    open,
   ]);
 
   /* =====================================================
@@ -418,10 +615,7 @@ const ManpowerDetailDrawer = ({
   ]);
 
   /* =====================================================
-     ESC KEY
-
-     Confirmation closes first.
-     Drawer closes only when no action is running.
+     ESCAPE
   ===================================================== */
 
   useEffect(() => {
@@ -489,12 +683,14 @@ const ManpowerDetailDrawer = ({
 
   const status =
     getManpowerStatusMeta(
-      requirement?.status
+      requirement
+        ?.status
     );
 
   const priority =
     getPriorityMeta(
-      requirement?.priority
+      requirement
+        ?.priority
     );
 
   const skills =
@@ -508,10 +704,6 @@ const ManpowerDetailDrawer = ({
             Boolean
           )
       : [];
-
-  /* =====================================================
-     APPROVAL HISTORY
-  ===================================================== */
 
   const history =
     useMemo(
@@ -530,11 +722,11 @@ const ManpowerDetailDrawer = ({
               ) =>
                 new Date(
                   b?.actionAt ||
-                    0
+                  0
                 ).getTime() -
                 new Date(
                   a?.actionAt ||
-                    0
+                  0
                 ).getTime()
             )
           : [],
@@ -543,21 +735,55 @@ const ManpowerDetailDrawer = ({
       ]
     );
 
-  /* =====================================================
-     ACTION VISIBILITY
-
-     Backend remains final permission authority.
-  ===================================================== */
-
   const showApprovalActions =
     Boolean(
       canApprove &&
-      requirement?.status ===
+      requirement
+        ?.status ===
         "PENDING_APPROVAL"
     );
 
   /* =====================================================
-     SAFE CLOSE
+     PEOPLE
+  ===================================================== */
+
+  const requester =
+    requirement
+      ?.requestedBy ||
+    null;
+
+  const approvalPerson =
+    requirement
+      ?.status ===
+      "APPROVED"
+      ? requirement
+          ?.approvedBy ||
+        requirement
+          ?.currentApprover
+      : requirement
+          ?.status ===
+          "REJECTED"
+        ? requirement
+            ?.rejectedBy ||
+          requirement
+            ?.currentApprover
+        : requirement
+            ?.currentApprover ||
+          null;
+
+  const approvalPersonLabel =
+    requirement
+      ?.status ===
+      "APPROVED"
+      ? "Approved By"
+      : requirement
+          ?.status ===
+          "REJECTED"
+        ? "Rejected By"
+        : "Current Approver";
+
+  /* =====================================================
+     CLOSE
   ===================================================== */
 
   const handleClose =
@@ -573,7 +799,7 @@ const ManpowerDetailDrawer = ({
     };
 
   /* =====================================================
-     OPEN APPROVE CONFIRMATION
+     CONFIRMATIONS
   ===================================================== */
 
   const openApproveConfirmation =
@@ -597,10 +823,6 @@ const ManpowerDetailDrawer = ({
       );
     };
 
-  /* =====================================================
-     OPEN REJECT CONFIRMATION
-  ===================================================== */
-
   const openRejectConfirmation =
     () => {
       if (
@@ -622,10 +844,6 @@ const ManpowerDetailDrawer = ({
       );
     };
 
-  /* =====================================================
-     CLOSE CONFIRMATION
-  ===================================================== */
-
   const closeConfirmation =
     () => {
       if (
@@ -645,14 +863,6 @@ const ManpowerDetailDrawer = ({
 
   /* =====================================================
      APPROVE
-
-     IMPORTANT:
-     Send JSON object:
-     {
-       remarks: "..."
-     }
-
-     Do NOT send a plain string.
   ===================================================== */
 
   const handleApprove =
@@ -684,7 +894,7 @@ const ManpowerDetailDrawer = ({
               remarks:
                 String(
                   approvalRemarks ||
-                    ""
+                  ""
                 ).trim(),
             }
           );
@@ -706,14 +916,16 @@ const ManpowerDetailDrawer = ({
             "success",
 
           title:
-            "Manpower request approved",
+            "Request approved",
 
           message:
             `${
-              updated?.requestNumber ||
-              requirement?.requestNumber ||
-              "The request"
-            } has been approved successfully. It is now available to HR for the hiring workflow.`,
+              updated
+                ?.requestNumber ||
+              requirement
+                ?.requestNumber ||
+              "Request"
+            } approved successfully.`,
         });
 
         if (
@@ -753,12 +965,6 @@ const ManpowerDetailDrawer = ({
 
   /* =====================================================
      REJECT
-
-     IMPORTANT:
-     Send JSON object:
-     {
-       reason: "..."
-     }
   ===================================================== */
 
   const handleReject =
@@ -773,14 +979,14 @@ const ManpowerDetailDrawer = ({
       const reason =
         String(
           rejectionReason ||
-            ""
+          ""
         ).trim();
 
       if (
         !reason
       ) {
         setRejectionError(
-          "Please enter a reason before rejecting this manpower request."
+          "Rejection reason is required."
         );
 
         return;
@@ -828,14 +1034,16 @@ const ManpowerDetailDrawer = ({
             "success",
 
           title:
-            "Manpower request rejected",
+            "Request rejected",
 
           message:
             `${
-              updated?.requestNumber ||
-              requirement?.requestNumber ||
-              "The request"
-            } has been rejected and the reason has been recorded in the approval history.`,
+              updated
+                ?.requestNumber ||
+              requirement
+                ?.requestNumber ||
+              "Request"
+            } rejected.`,
         });
 
         if (
@@ -874,7 +1082,7 @@ const ManpowerDetailDrawer = ({
     };
 
   /* =====================================================
-     NOT OPEN
+     CLOSED
   ===================================================== */
 
   if (
@@ -889,23 +1097,26 @@ const ManpowerDetailDrawer = ({
 
   return (
     <>
-      {/* ===================================================
-          DETAIL DRAWER
-      ==================================================== */}
+      {/* =================================================
+          MAIN DETAIL POPUP
+      ================================================== */}
 
       <div
-        className="se-mpr-overlay"
+        className="se-mpr-detail-modal-overlay"
         onMouseDown={
           handleClose
         }
       >
-        <aside
-          className="se-mpr-detail-drawer se-mpr-detail-premium"
+        <section
+          className="se-mpr-detail-modal"
           onMouseDown={(
             event
           ) =>
             event.stopPropagation()
           }
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="se-mpr-detail-modal-title"
           aria-busy={
             Boolean(
               actionLoading
@@ -917,677 +1128,561 @@ const ManpowerDetailDrawer = ({
           ================================================== */}
 
           {loading ? (
-            <div className="se-mpr-detail-loading">
-              <span />
+            <div className="se-mpr-detail-modal-loading">
+              <div className="se-mpr-detail-loading">
+                <span />
 
-              <span />
+                <span />
 
-              <span />
+                <span />
 
-              <span />
+                <span />
+              </div>
             </div>
           ) : requirement ? (
             <>
-              {/* ===============================================
+              {/* =================================================
                   HEADER
-              ================================================ */}
+              ================================================== */}
 
-              <header className="se-mpr-drawer-head detail">
-                <div className="se-mpr-detail-title">
-                  <span>
+              <header className="se-mpr-detail-modal-header">
+                <div className="se-mpr-detail-modal-heading">
+                  <div className="se-mpr-detail-modal-eyebrow">
                     {safeText(
                       requirement
                         ?.requestNumber,
                       "MANPOWER REQUEST"
                     )}
-                  </span>
+                  </div>
 
-                  <h2>
-                    {safeText(
-                      requirement
-                        ?.positionTitle,
-                      "Manpower Requirement"
-                    )}
-                  </h2>
+                  <div className="se-mpr-detail-modal-title-row">
+                    <h2 id="se-mpr-detail-modal-title">
+                      {safeText(
+                        requirement
+                          ?.positionTitle,
+                        "Manpower Requirement"
+                      )}
+                    </h2>
 
-                  <div className="se-mpr-detail-badges">
-                    <RecruitmentStatusBadge
-                      label={
-                        status.label
-                      }
-                      tone={
-                        status.tone
-                      }
-                    />
+                    <div className="se-mpr-detail-badges">
+                      <RecruitmentStatusBadge
+                        label={
+                          status.label
+                        }
+                        tone={
+                          status.tone
+                        }
+                      />
 
-                    <RecruitmentStatusBadge
-                      label={
-                        priority.label
-                      }
-                      tone={
-                        priority.tone
-                      }
-                    />
+                      <RecruitmentStatusBadge
+                        label={
+                          priority.label
+                        }
+                        tone={
+                          priority.tone
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <button
                   type="button"
+                  className="se-mpr-detail-modal-close"
                   onClick={
                     handleClose
                   }
-                  className="se-mpr-close"
                   disabled={
                     Boolean(
                       actionLoading
                     )
                   }
-                  aria-label="Close manpower detail"
+                  aria-label="Close manpower request"
                 >
                   ×
                 </button>
               </header>
 
-              {/* ===============================================
-                  BODY
-              ================================================ */}
+              {/* =================================================
+                  ACTION MESSAGE
+              ================================================== */}
 
-              <div className="se-mpr-detail-body">
-                {/* =============================================
-                    USER FRIENDLY ACTION FEEDBACK
-                ============================================== */}
+              {actionMessage ? (
+                <div
+                  className={`se-mpr-action-message ${actionMessage.type}`}
+                  role={
+                    actionMessage
+                      .type ===
+                    "error"
+                      ? "alert"
+                      : "status"
+                  }
+                >
+                  <span className="se-mpr-action-message-icon">
+                    {actionMessage
+                      .type ===
+                    "success"
+                      ? "✓"
+                      : "!"}
+                  </span>
 
-                {actionMessage ? (
-                  <div
-                    className={`se-mpr-action-message ${actionMessage.type}`}
-                    role={
-                      actionMessage.type ===
-                      "error"
-                        ? "alert"
-                        : "status"
-                    }
-                  >
-                    <span className="se-mpr-action-message-icon">
-                      {actionMessage.type ===
-                      "success"
-                        ? "✓"
-                        : "!"}
-                    </span>
-
-                    <div>
-                      <strong>
-                        {
-                          actionMessage.title
-                        }
-                      </strong>
-
-                      <p>
-                        {
-                          actionMessage.message
-                        }
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setActionMessage(
-                          null
-                        )
+                  <div>
+                    <strong>
+                      {
+                        actionMessage
+                          .title
                       }
-                      aria-label="Dismiss message"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ) : null}
-
-                {/* =============================================
-                    LOAD ERROR
-                ============================================== */}
-
-                {error ? (
-                  <div className="se-mpr-form-error">
-                    <span>
-                      !
-                    </span>
-
-                    <div>
-                      <strong>
-                        Something needs attention
-                      </strong>
-
-                      <p>
-                        {
-                          error
-                        }
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-
-                {/* =============================================
-                    SUMMARY
-                ============================================== */}
-
-                <section className="se-mpr-detail-summary">
-                  <div>
-                    <span>
-                      OPENINGS
-                    </span>
-
-                    <strong>
-                      {Number(
-                        requirement
-                          ?.numberOfOpenings ||
-                          0
-                      )}
                     </strong>
+
+                    <p>
+                      {
+                        actionMessage
+                          .message
+                      }
+                    </p>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActionMessage(
+                        null
+                      )
+                    }
+                    aria-label="Dismiss message"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : null}
+
+              {/* =================================================
+                  ERROR
+              ================================================== */}
+
+              {error ? (
+                <div className="se-mpr-form-error">
+                  <span>
+                    !
+                  </span>
 
                   <div>
-                    <span>
-                      DEPARTMENT
-                    </span>
-
                     <strong>
-                      {safeText(
-                        requirement
-                          ?.department
-                          ?.name,
-                        "—"
-                      )}
+                      Unable to load request
                     </strong>
+
+                    <p>
+                      {
+                        error
+                      }
+                    </p>
                   </div>
+                </div>
+              ) : null}
 
-                  <div>
-                    <span>
-                      REQUIRED BY
-                    </span>
+              {/* =================================================
+                  BODY
+              ================================================== */}
 
-                    <strong>
-                      {formatRecruitmentDate(
-                        requirement
-                          ?.requiredByDate
-                      )}
-                    </strong>
-                  </div>
+              <div className="se-mpr-detail-modal-body">
+                {/* ===============================================
+                    LEFT CONTENT
+                ================================================ */}
 
-                  <div>
-                    <span>
-                      LOCATION
-                    </span>
+                <main className="se-mpr-detail-modal-main">
+                  {/* =============================================
+                      PRIMARY SUMMARY
+                  ============================================== */}
 
-                    <strong>
-                      {safeText(
-                        requirement
-                          ?.location,
-                        "Not specified"
-                      )}
-                    </strong>
-                  </div>
-                </section>
-
-                {/* =============================================
-                    INFORMATION
-                ============================================== */}
-
-                <section className="se-mpr-detail-section">
-                  <div className="se-mpr-detail-section-head">
-                    <span>
-                      REQUIREMENT
-                    </span>
-
-                    <h3>
-                      Hiring details
-                    </h3>
-                  </div>
-
-                  <div className="se-mpr-info-grid">
-                    <div>
+                  <section className="se-mpr-popup-summary-grid">
+                    <div className="se-mpr-popup-summary-card">
                       <span>
-                        Employment Type
+                        OPENINGS
+                      </span>
+
+                      <strong>
+                        {Number(
+                          requirement
+                            ?.numberOfOpenings ||
+                          0
+                        )}
+                      </strong>
+                    </div>
+
+                    <div className="se-mpr-popup-summary-card">
+                      <span>
+                        DEPARTMENT
                       </span>
 
                       <strong>
                         {safeText(
                           requirement
-                            ?.employmentType,
+                            ?.department
+                            ?.name,
                           "—"
-                        ).replaceAll(
-                          "_",
-                          " "
                         )}
                       </strong>
                     </div>
 
-                    <div>
+                    <div className="se-mpr-popup-summary-card">
                       <span>
-                        Experience
-                      </span>
-
-                      <strong>
-                        {Number(
-                          requirement
-                            ?.minimumExperienceYears ||
-                            0
-                        )}
-
-                        {" – "}
-
-                        {Number(
-                          requirement
-                            ?.maximumExperienceYears ||
-                            0
-                        )}
-
-                        {" years"}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>
-                        Annual Package
-                      </span>
-
-                      <strong>
-                        {formatBudget(
-                          requirement
-                        )}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>
-                        Requested On
+                        REQUIRED BY
                       </span>
 
                       <strong>
                         {formatRecruitmentDate(
                           requirement
-                            ?.createdAt
+                            ?.requiredByDate
                         )}
                       </strong>
                     </div>
-                  </div>
-                </section>
 
-                {/* =============================================
-                    SKILLS
-                ============================================== */}
+                    <div className="se-mpr-popup-summary-card">
+                      <span>
+                        LOCATION
+                      </span>
 
-                <section className="se-mpr-detail-section">
-                  <div className="se-mpr-detail-section-head">
-                    <span>
-                      ROLE PROFILE
-                    </span>
-
-                    <h3>
-                      Required skills
-                    </h3>
-                  </div>
-
-                  {skills.length >
-                  0 ? (
-                    <div className="se-mpr-detail-skills">
-                      {skills.map(
-                        (
-                          skill,
-                          index
-                        ) => (
-                          <span
-                            key={`${skill}-${index}`}
-                          >
-                            {
-                              skill
-                            }
-                          </span>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className="se-mpr-detail-empty-text">
-                      No specific skills
-                      were entered.
-                    </p>
-                  )}
-                </section>
-
-                {/* =============================================
-                    BUSINESS REASON
-                ============================================== */}
-
-                <section className="se-mpr-detail-section">
-                  <div className="se-mpr-detail-section-head">
-                    <span>
-                      BUSINESS NEED
-                    </span>
-
-                    <h3>
-                      Reason for hiring
-                    </h3>
-                  </div>
-
-                  <div className="se-mpr-reason-card">
-                    <p>
-                      {safeText(
-                        requirement
-                          ?.reason,
-                        "No reason provided."
-                      )}
-                    </p>
-                  </div>
-                </section>
-
-                {/* =============================================
-                    REQUEST / APPROVAL
-                ============================================== */}
-
-                <section className="se-mpr-detail-section">
-                  <div className="se-mpr-detail-section-head">
-                    <span>
-                      OWNERSHIP
-                    </span>
-
-                    <h3>
-                      Request & approval
-                    </h3>
-                  </div>
-
-                  <div className="se-mpr-owner-grid">
-                    <div>
-                      <span className="se-mpr-owner-avatar requester">
+                      <strong>
                         {safeText(
                           requirement
-                            ?.requestedBy
-                            ?.displayName,
-                          "R"
-                        )
-                          .charAt(
-                            0
-                          )
-                          .toUpperCase()}
-                      </span>
-
-                      <span>
-                        <small>
-                          REQUESTED BY
-                        </small>
-
-                        <strong>
-                          {safeText(
-                            requirement
-                              ?.requestedBy
-                              ?.displayName,
-                            "Unknown"
-                          )}
-                        </strong>
-
-                        <p>
-                          {safeText(
-                            requirement
-                              ?.requestedBy
-                              ?.email,
-                            ""
-                          )}
-                        </p>
-                      </span>
+                            ?.office
+                            ?.name ||
+                          requirement
+                            ?.location,
+                          "—"
+                        )}
+                      </strong>
                     </div>
-
-                    <div>
-                      <span className="se-mpr-owner-avatar approver">
-                        {safeText(
-                          requirement
-                            ?.currentApprover
-                            ?.displayName ||
-                          requirement
-                            ?.approvedBy
-                            ?.displayName ||
-                          requirement
-                            ?.rejectedBy
-                            ?.displayName,
-                          "A"
-                        )
-                          .charAt(
-                            0
-                          )
-                          .toUpperCase()}
-                      </span>
-
-                      <span>
-                        <small>
-                          {requirement
-                            ?.status ===
-                          "PENDING_APPROVAL"
-                            ? "CURRENT APPROVER"
-                            : requirement
-                                  ?.status ===
-                                "APPROVED"
-                              ? "APPROVED BY"
-                              : requirement
-                                    ?.status ===
-                                  "REJECTED"
-                                ? "REJECTED BY"
-                                : "APPROVAL"}
-                        </small>
-
-                        <strong>
-                          {safeText(
-                            requirement
-                              ?.currentApprover
-                              ?.displayName ||
-                            requirement
-                              ?.approvedBy
-                              ?.displayName ||
-                            requirement
-                              ?.rejectedBy
-                              ?.displayName,
-                            "—"
-                          )}
-                        </strong>
-
-                        <p>
-                          {safeText(
-                            requirement
-                              ?.approvalDepartment
-                              ?.name,
-                            ""
-                          )}
-                        </p>
-                      </span>
-                    </div>
-                  </div>
-                </section>
-
-                {/* =============================================
-                    REJECTION
-                ============================================== */}
-
-                {requirement
-                  ?.status ===
-                  "REJECTED" &&
-                requirement
-                  ?.rejectionReason ? (
-                  <section className="se-mpr-rejected-box">
-                    <span>
-                      REJECTION REASON
-                    </span>
-
-                    <p>
-                      {
-                        requirement
-                          .rejectionReason
-                      }
-                    </p>
                   </section>
-                ) : null}
 
-                {/* =============================================
-                    APPROVAL HISTORY
-                ============================================== */}
+                  {/* =============================================
+                      HIRING DETAILS
+                  ============================================== */}
 
-                <section className="se-mpr-detail-section">
-                  <div className="se-mpr-detail-section-head">
-                    <span>
-                      AUDIT TRAIL
-                    </span>
-
-                    <h3>
-                      Approval history
-                    </h3>
-                  </div>
-
-                  {history.length >
-                  0 ? (
-                    <div className="se-mpr-history">
-                      {history.map(
-                        (
-                          item,
-                          index
-                        ) => (
-                          <div
-                            key={
-                              item._id ||
-                              `${item.action}-${index}`
-                            }
-                            className="se-mpr-history-item"
-                          >
-                            <div className="se-mpr-history-track">
-                              <span
-                                className={[
-                                  "se-mpr-history-dot",
-
-                                  String(
-                                    item
-                                      ?.action ||
-                                      ""
-                                  ).toLowerCase(),
-                                ].join(
-                                  " "
-                                )}
-                              />
-
-                              {index <
-                              history.length -
-                                1 ? (
-                                <i />
-                              ) : null}
-                            </div>
-
-                            <div className="se-mpr-history-content">
-                              <div>
-                                <strong>
-                                  {safeText(
-                                    item
-                                      ?.action,
-                                    "Update"
-                                  ).replaceAll(
-                                    "_",
-                                    " "
-                                  )}
-                                </strong>
-
-                                <span>
-                                  {formatRecruitmentDateTime(
-                                    item
-                                      ?.actionAt
-                                  )}
-                                </span>
-                              </div>
-
-                              <p>
-                                {safeText(
-                                  item
-                                    ?.actor
-                                    ?.displayName,
-                                  "System"
-                                )}
-                              </p>
-
-                              {item
-                                ?.remarks ? (
-                                <blockquote>
-                                  {
-                                    item
-                                      .remarks
-                                  }
-                                </blockquote>
-                              ) : null}
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className="se-mpr-detail-empty-text">
-                      No approval history
-                      available.
-                    </p>
-                  )}
-                </section>
-
-                {/* =============================================
-                    APPROVAL ACTION
-                ============================================== */}
-
-                {showApprovalActions ? (
-                  <section className="se-mpr-approval-zone se-mpr-approval-zone-premium">
-                    <div className="se-mpr-approval-zone-head">
+                  <section className="se-mpr-popup-section">
+                    <div className="se-mpr-popup-section-title">
                       <span>
-                        ACTION REQUIRED
+                        REQUIREMENT
                       </span>
 
                       <h3>
-                        Review this manpower request
+                        Hiring Details
                       </h3>
-
-                      <p>
-                        Choose an action below.
-                        SE-RMS will ask for final
-                        confirmation before anything
-                        is changed.
-                      </p>
                     </div>
 
-                    <div className="se-mpr-approval-guidance">
+                    <div className="se-mpr-popup-info-grid">
+                      <div>
+                        <span>
+                          Employment Type
+                        </span>
+
+                        <strong>
+                          {formatEnumText(
+                            requirement
+                              ?.employmentType
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Experience
+                        </span>
+
+                        <strong>
+                          {formatExperience(
+                            requirement
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Shift
+                        </span>
+
+                        <strong>
+                          {formatEnumText(
+                            requirement
+                              ?.shiftAvailability,
+                            "Not specified"
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Requested On
+                        </span>
+
+                        <strong>
+                          {formatRecruitmentDate(
+                            requirement
+                              ?.createdAt
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Monthly Salary
+                        </span>
+
+                        <strong>
+                          {formatMonthlySalary(
+                            requirement
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Annual Package
+                        </span>
+
+                        <strong>
+                          {formatBudget(
+                            requirement
+                          )}
+                        </strong>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* =============================================
+                      SKILLS + BUSINESS REASON
+                  ============================================== */}
+
+                  <div className="se-mpr-popup-two-column">
+                    <section className="se-mpr-popup-section">
+                      <div className="se-mpr-popup-section-title">
+                        <span>
+                          ROLE PROFILE
+                        </span>
+
+                        <h3>
+                          Required Skills
+                        </h3>
+                      </div>
+
+                      {skills.length >
+                      0 ? (
+                        <div className="se-mpr-detail-skills">
+                          {skills.map(
+                            (
+                              skill,
+                              index
+                            ) => (
+                              <span
+                                key={`${skill}-${index}`}
+                              >
+                                {
+                                  skill
+                                }
+                              </span>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <p className="se-mpr-detail-empty-text">
+                          No skills specified.
+                        </p>
+                      )}
+                    </section>
+
+                    <section className="se-mpr-popup-section">
+                      <div className="se-mpr-popup-section-title">
+                        <span>
+                          BUSINESS NEED
+                        </span>
+
+                        <h3>
+                          Reason for Hiring
+                        </h3>
+                      </div>
+
+                      <div className="se-mpr-reason-card">
+                        <p>
+                          {safeText(
+                            requirement
+                              ?.reason,
+                            "No reason provided."
+                          )}
+                        </p>
+                      </div>
+                    </section>
+                  </div>
+
+                  {/* =============================================
+                      OWNERSHIP
+                  ============================================== */}
+
+                  <section className="se-mpr-popup-section">
+                    <div className="se-mpr-popup-section-title">
                       <span>
-                        i
+                        OWNERSHIP
                       </span>
 
-                      <p>
-                        Approving sends this
-                        requirement to the HR hiring
-                        workflow. Rejecting closes
-                        this request with a recorded
-                        reason.
-                      </p>
+                      <h3>
+                        Request & Approval
+                      </h3>
                     </div>
 
-                    <div className="se-mpr-approval-actions">
-                      <button
-                        type="button"
-                        className="reject"
-                        onClick={
-                          openRejectConfirmation
-                        }
-                        disabled={
-                          Boolean(
-                            actionLoading
+                    <div className="se-mpr-owner-grid">
+                      <div>
+                        <span className="se-mpr-owner-avatar requester">
+                          {safeText(
+                            requester
+                              ?.displayName,
+                            "R"
                           )
-                        }
-                      >
-                        <span className="se-mpr-action-button-icon">
-                          ×
+                            .charAt(
+                              0
+                            )
+                            .toUpperCase()}
                         </span>
 
                         <span>
-                          Reject Request
+                          <small>
+                            REQUESTED BY
+                          </small>
+
+                          <strong>
+                            {safeText(
+                              requester
+                                ?.displayName,
+                              "Unknown"
+                            )}
+                          </strong>
+
+                          {requester
+                            ?.email ? (
+                            <p>
+                              {
+                                requester
+                                  .email
+                              }
+                            </p>
+                          ) : null}
                         </span>
-                      </button>
+                      </div>
+
+                      <div>
+                        <span className="se-mpr-owner-avatar approver">
+                          {safeText(
+                            approvalPerson
+                              ?.displayName,
+                            "A"
+                          )
+                            .charAt(
+                              0
+                            )
+                            .toUpperCase()}
+                        </span>
+
+                        <span>
+                          <small>
+                            {
+                              approvalPersonLabel
+                            }
+                          </small>
+
+                          <strong>
+                            {safeText(
+                              approvalPerson
+                                ?.displayName,
+                              "Not assigned"
+                            )}
+                          </strong>
+
+                          <p>
+                            {safeText(
+                              requirement
+                                ?.approvalDepartment
+                                ?.name,
+                              ""
+                            )}
+                          </p>
+                        </span>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* =============================================
+                      REJECTION REASON
+                  ============================================== */}
+
+                  {requirement
+                    ?.status ===
+                    "REJECTED" &&
+                  requirement
+                    ?.rejectionReason ? (
+                    <section className="se-mpr-rejected-box">
+                      <span>
+                        REJECTION REASON
+                      </span>
+
+                      <p>
+                        {
+                          requirement
+                            .rejectionReason
+                        }
+                      </p>
+                    </section>
+                  ) : null}
+                </main>
+
+                {/* ===============================================
+                    RIGHT COLUMN
+                ================================================ */}
+
+                <aside className="se-mpr-detail-modal-side">
+                  {/* =============================================
+                      APPROVAL ACTIONS
+                  ============================================== */}
+
+                  {showApprovalActions ? (
+                    <section className="se-mpr-popup-action-card">
+                      <div className="se-mpr-popup-action-head">
+                        <span>
+                          ACTION REQUIRED
+                        </span>
+
+                        <h3>
+                          Review Request
+                        </h3>
+                      </div>
+
+                      <div className="se-mpr-popup-action-request">
+                        <strong>
+                          {safeText(
+                            requirement
+                              ?.positionTitle,
+                            "Manpower Request"
+                          )}
+                        </strong>
+
+                        <span>
+                          {Number(
+                            requirement
+                              ?.numberOfOpenings ||
+                            0
+                          )}{" "}
+                          Opening
+                          {Number(
+                            requirement
+                              ?.numberOfOpenings ||
+                            0
+                          ) ===
+                          1
+                            ? ""
+                            : "s"}
+                        </span>
+                      </div>
 
                       <button
                         type="button"
-                        className="approve"
+                        className="se-mpr-popup-approve-btn"
                         onClick={
                           openApproveConfirmation
                         }
@@ -1597,17 +1692,152 @@ const ManpowerDetailDrawer = ({
                           )
                         }
                       >
-                        <span className="se-mpr-action-button-icon">
+                        <span>
                           ✓
                         </span>
 
-                        <span>
-                          Approve Request
-                        </span>
+                        Approve Request
                       </button>
+
+                      <button
+                        type="button"
+                        className="se-mpr-popup-reject-btn"
+                        onClick={
+                          openRejectConfirmation
+                        }
+                        disabled={
+                          Boolean(
+                            actionLoading
+                          )
+                        }
+                      >
+                        <span>
+                          ×
+                        </span>
+
+                        Reject Request
+                      </button>
+                    </section>
+                  ) : (
+                    <section className="se-mpr-popup-status-card">
+                      <span>
+                        STATUS
+                      </span>
+
+                      <div>
+                        <RecruitmentStatusBadge
+                          label={
+                            status.label
+                          }
+                          tone={
+                            status.tone
+                          }
+                        />
+                      </div>
+                    </section>
+                  )}
+
+                  {/* =============================================
+                      AUDIT HISTORY
+                  ============================================== */}
+
+                  <section className="se-mpr-popup-history-card">
+                    <div className="se-mpr-popup-section-title">
+                      <span>
+                        AUDIT TRAIL
+                      </span>
+
+                      <h3>
+                        Approval History
+                      </h3>
                     </div>
+
+                    {history.length >
+                    0 ? (
+                      <div className="se-mpr-history">
+                        {history.map(
+                          (
+                            item,
+                            index
+                          ) => (
+                            <div
+                              key={
+                                item
+                                  ?._id ||
+                                `${item?.action}-${index}`
+                              }
+                              className="se-mpr-history-item"
+                            >
+                              <div className="se-mpr-history-track">
+                                <span
+                                  className={[
+                                    "se-mpr-history-dot",
+
+                                    String(
+                                      item
+                                        ?.action ||
+                                      ""
+                                    ).toLowerCase(),
+                                  ].join(
+                                    " "
+                                  )}
+                                />
+
+                                {index <
+                                history.length -
+                                  1 ? (
+                                  <i />
+                                ) : null}
+                              </div>
+
+                              <div className="se-mpr-history-content">
+                                <div>
+                                  <strong>
+                                    {formatEnumText(
+                                      item
+                                        ?.action,
+                                      "Update"
+                                    )}
+                                  </strong>
+
+                                  <span>
+                                    {formatRecruitmentDateTime(
+                                      item
+                                        ?.actionAt
+                                    )}
+                                  </span>
+                                </div>
+
+                                <p>
+                                  {safeText(
+                                    item
+                                      ?.actor
+                                      ?.displayName,
+                                    "System"
+                                  )}
+                                </p>
+
+                                {item
+                                  ?.remarks ? (
+                                  <blockquote>
+                                    {
+                                      item
+                                        .remarks
+                                    }
+                                  </blockquote>
+                                ) : null}
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <p className="se-mpr-detail-empty-text">
+                        No approval history.
+                      </p>
+                    )}
                   </section>
-                ) : null}
+                </aside>
               </div>
             </>
           ) : (
@@ -1635,12 +1865,12 @@ const ManpowerDetailDrawer = ({
               </button>
             </div>
           )}
-        </aside>
+        </section>
       </div>
 
-      {/* ===================================================
-          APPROVE CONFIRMATION MODAL
-      ==================================================== */}
+      {/* =================================================
+          APPROVE CONFIRMATION
+      ================================================== */}
 
       {confirmAction ===
       "APPROVE" ? (
@@ -1667,31 +1897,29 @@ const ManpowerDetailDrawer = ({
 
             <div className="se-mpr-confirm-heading">
               <span>
-                APPROVAL CONFIRMATION
+                APPROVAL
               </span>
 
               <h3 id="se-mpr-confirm-approve-title">
-                Approve manpower request?
+                Approve Request?
               </h3>
 
               <p>
-                You are about to approve{" "}
                 <strong>
                   {safeText(
                     requirement
                       ?.requestNumber,
-                    "this request"
-                  )}
-                </strong>{" "}
-                for{" "}
-                <strong>
-                  {safeText(
-                    requirement
-                      ?.positionTitle,
-                    "this position"
+                    "Request"
                   )}
                 </strong>
-                .
+
+                {" · "}
+
+                {safeText(
+                  requirement
+                    ?.positionTitle,
+                  "Manpower Requirement"
+                )}
               </p>
             </div>
 
@@ -1720,7 +1948,7 @@ const ManpowerDetailDrawer = ({
                   {Number(
                     requirement
                       ?.numberOfOpenings ||
-                      0
+                    0
                   )}
                 </strong>
               </div>
@@ -1728,7 +1956,7 @@ const ManpowerDetailDrawer = ({
 
             <label className="se-mpr-confirm-field">
               <span>
-                Approval Remarks
+                Remarks
 
                 <small>
                   Optional
@@ -1753,22 +1981,9 @@ const ManpowerDetailDrawer = ({
                       .value
                   )
                 }
-                placeholder="Add approval remarks if required..."
+                placeholder="Approval remarks..."
               />
             </label>
-
-            <div className="se-mpr-confirm-warning positive">
-              <span>
-                →
-              </span>
-
-              <p>
-                After approval, this manpower
-                requirement becomes available
-                to HR for hiring-owner
-                assignment and recruitment.
-              </p>
-            </div>
 
             <footer className="se-mpr-confirm-actions">
               <button
@@ -1807,7 +2022,7 @@ const ManpowerDetailDrawer = ({
                   </>
                 ) : (
                   <>
-                    Yes, Approve Request
+                    Approve Request
 
                     <span>
                       ✓
@@ -1820,9 +2035,9 @@ const ManpowerDetailDrawer = ({
         </div>
       ) : null}
 
-      {/* ===================================================
-          REJECT CONFIRMATION MODAL
-      ==================================================== */}
+      {/* =================================================
+          REJECT CONFIRMATION
+      ================================================== */}
 
       {confirmAction ===
       "REJECT" ? (
@@ -1849,31 +2064,29 @@ const ManpowerDetailDrawer = ({
 
             <div className="se-mpr-confirm-heading">
               <span>
-                REJECTION CONFIRMATION
+                REJECTION
               </span>
 
               <h3 id="se-mpr-confirm-reject-title">
-                Reject manpower request?
+                Reject Request?
               </h3>
 
               <p>
-                You are about to reject{" "}
                 <strong>
                   {safeText(
                     requirement
                       ?.requestNumber,
-                    "this request"
-                  )}
-                </strong>{" "}
-                for{" "}
-                <strong>
-                  {safeText(
-                    requirement
-                      ?.positionTitle,
-                    "this position"
+                    "Request"
                   )}
                 </strong>
-                .
+
+                {" · "}
+
+                {safeText(
+                  requirement
+                    ?.positionTitle,
+                  "Manpower Requirement"
+                )}
               </p>
             </div>
 
@@ -1902,7 +2115,7 @@ const ManpowerDetailDrawer = ({
                   {Number(
                     requirement
                       ?.numberOfOpenings ||
-                      0
+                    0
                   )}
                 </strong>
               </div>
@@ -1945,7 +2158,7 @@ const ManpowerDetailDrawer = ({
                     );
                   }
                 }}
-                placeholder="Clearly explain why this manpower request is being rejected..."
+                placeholder="Enter rejection reason..."
               />
 
               {rejectionError ? (
@@ -1954,26 +2167,8 @@ const ManpowerDetailDrawer = ({
                     rejectionError
                   }
                 </small>
-              ) : (
-                <small>
-                  This reason becomes part of
-                  the permanent approval
-                  history.
-                </small>
-              )}
+              ) : null}
             </label>
-
-            <div className="se-mpr-confirm-warning danger">
-              <span>
-                !
-              </span>
-
-              <p>
-                Rejection closes this request
-                and it will not be released to
-                HR for recruitment.
-              </p>
-            </div>
 
             <footer className="se-mpr-confirm-actions">
               <button
@@ -2012,7 +2207,7 @@ const ManpowerDetailDrawer = ({
                   </>
                 ) : (
                   <>
-                    Yes, Reject Request
+                    Reject Request
 
                     <span>
                       ×

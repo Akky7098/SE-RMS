@@ -9,24 +9,20 @@ import {
 } from "../utils/recruitmentHelpers";
 
 /* =========================================================
-   COMPONENT
+   HIRING WORKSPACE HEADER
 ========================================================= */
 
 const HiringWorkspaceHeader = ({
   requirement,
 
   candidateCount = 0,
-
   followUpCount = 0,
-
   interviewCount = 0,
 
   onBack,
-
   onAddCandidate,
 
   canAddCandidate = false,
-
   addCandidateReason = "",
 }) => {
   /* =====================================================
@@ -86,12 +82,12 @@ const HiringWorkspaceHeader = ({
     );
 
   /* =====================================================
-     ADD CANDIDATE TOOLTIP
+     ADD CANDIDATE STATE
   ===================================================== */
 
   const candidateActionTitle =
     canAddCandidate
-      ? "Add a candidate to this hiring requirement"
+      ? "Add candidate"
       : addCandidateReason ||
         (
           hiringActive
@@ -104,103 +100,35 @@ const HiringWorkspaceHeader = ({
   ===================================================== */
 
   return (
-    <section className="se-hw-header">
-      {/* =================================================
-          TOP ACTION BAR
-      ================================================== */}
-
-      <div className="se-hw-header-top">
-        <button
-          type="button"
-          className="se-hw-back-btn"
-          onClick={
-            onBack
-          }
-        >
-          <span
-            aria-hidden="true"
-          >
-            ←
-          </span>
-
-          <span>
-            Back
-          </span>
-        </button>
-
-        <div className="se-hw-header-actions">
-          {!canAddCandidate ? (
-            <div className="se-hw-candidate-action-hint">
-              <span>
-                i
-              </span>
-
-              <div>
-                <strong>
-                  Candidate intake locked
-                </strong>
-
-                <small>
-                  {
-                    candidateActionTitle
-                  }
-                </small>
-              </div>
-            </div>
-          ) : null}
-
-          <button
-            type="button"
-            className={[
-              "se-hw-add-candidate",
-
-              !canAddCandidate
-                ? "is-disabled"
-                : "",
-            ]
-              .filter(
-                Boolean
-              )
-              .join(
-                " "
-              )}
-            onClick={() => {
-              if (
-                canAddCandidate
-              ) {
-                onAddCandidate?.();
-              }
-            }}
-            disabled={
-              !canAddCandidate
-            }
-            title={
-              candidateActionTitle
-            }
-          >
-            <span
-              aria-hidden="true"
-            >
-              +
-            </span>
-
-            Add Candidate
-          </button>
-        </div>
-      </div>
-
-      {/* =================================================
-          HERO
-      ================================================== */}
-
-      <div className="se-hw-hero">
+    <section className="se-hw-header se-hw-header-v2">
+      <div className="se-hw-hero se-hw-hero-v2">
         {/* =================================================
-            ROLE
+            LEFT SIDE
         ================================================== */}
 
         <div className="se-hw-hero-main">
-          <div className="se-hw-hero-label">
-            <span>
+          {/* ===============================================
+              TOP META ROW
+          ================================================ */}
+
+          <div className="se-hw-hero-topline">
+            <button
+              type="button"
+              className="se-hw-back-btn se-hw-back-btn-v2"
+              onClick={onBack}
+            >
+              <span aria-hidden="true">
+                ←
+              </span>
+
+              <span>
+                Back
+              </span>
+            </button>
+
+            <span className="se-hw-hero-divider" />
+
+            <span className="se-hw-request-number">
               {safeText(
                 requirement
                   ?.requestNumber,
@@ -216,11 +144,14 @@ const HiringWorkspaceHeader = ({
             />
 
             <span
-              className={`se-hw-priority ${
+              className={[
+                "se-hw-priority",
                 priority
                   ?.className ||
-                ""
-              }`}
+                  "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
               {priority?.label ||
                 safeText(
@@ -231,175 +162,192 @@ const HiringWorkspaceHeader = ({
             </span>
           </div>
 
-          <h1>
-            {safeText(
-              requirement
-                ?.positionTitle,
-              "Hiring Requirement"
-            )}
-          </h1>
-
-          <p className="se-hw-role-meta">
-            <span>
-              {safeText(
-                requirement
-                  ?.department
-                  ?.name,
-                "Department"
-              )}
-            </span>
-
-            <i>
-              •
-            </i>
-
-            <span>
-              {
-                openings
-              }{" "}
-              opening
-              {openings ===
-              1
-                ? ""
-                : "s"}
-            </span>
-
-            <i>
-              •
-            </i>
-
-            <span>
-              Required{" "}
-              {formatRecruitmentDate(
-                requirement
-                  ?.requiredByDate
-              )}
-            </span>
-          </p>
-
           {/* ===============================================
-              HIRING OWNER
+              ROLE
           ================================================ */}
 
-          <div className="se-hw-owner">
+          <div className="se-hw-role-block">
+            <h1>
+              {safeText(
+                requirement
+                  ?.positionTitle,
+                "Hiring Requirement"
+              )}
+            </h1>
+
+            <div className="se-hw-role-meta">
+              <span>
+                {safeText(
+                  requirement
+                    ?.department
+                    ?.name,
+                  "Department"
+                )}
+              </span>
+
+              <i>•</i>
+
+              <span>
+                {openings}{" "}
+                opening
+                {openings === 1
+                  ? ""
+                  : "s"}
+              </span>
+
+              <i>•</i>
+
+              <span>
+                Required{" "}
+                {formatRecruitmentDate(
+                  requirement
+                    ?.requiredByDate
+                )}
+              </span>
+            </div>
+          </div>
+
+          {/* ===============================================
+              OWNER
+          ================================================ */}
+
+          <div className="se-hw-owner se-hw-owner-v2">
             <span className="se-hw-owner-avatar">
               {ownerName ===
               "Not assigned"
                 ? "?"
                 : ownerName
-                    .charAt(
-                      0
-                    )
+                    .charAt(0)
                     .toUpperCase()}
             </span>
 
-            <div>
+            <div className="se-hw-owner-info">
               <span>
                 HIRING OWNER
               </span>
 
-              <strong>
-                {
-                  ownerName
-                }
-              </strong>
+              <div className="se-hw-owner-line">
+                <strong>
+                  {ownerName}
+                </strong>
 
-              <small>
-                {
-                  ownerEmail
-                }
-              </small>
-            </div>
-          </div>
-
-          {/* ===============================================
-              WORKFLOW STATE
-          ================================================ */}
-
-          <div
-            className={[
-              "se-hw-workflow-state",
-
-              hiringActive
-                ? "is-active"
-                : "is-waiting",
-            ].join(
-              " "
-            )}
-          >
-            <span>
-              {hiringActive
-                ? "✓"
-                : "!"}
-            </span>
-
-            <div>
-              <strong>
-                {hiringActive
-                  ? "Recruitment is active"
-                  : "Recruitment has not started"}
-              </strong>
-
-              <small>
-                {hiringActive
-                  ? "Candidate sourcing, screening and interview workflow is available."
-                  : "The HR manager must start hiring before candidate intake begins."}
-              </small>
+                <small>
+                  {ownerEmail}
+                </small>
+              </div>
             </div>
           </div>
         </div>
 
         {/* =================================================
-            STATS
+            RIGHT SIDE
         ================================================== */}
 
-        <div className="se-hw-hero-stats">
-          <div>
-            <span className="candidate">
-              C
-            </span>
+        <div className="se-hw-hero-side">
+          {/* ===============================================
+              ADD CANDIDATE
+          ================================================ */}
 
-            <strong>
-              {
-                candidateCount
+          <div className="se-hw-primary-action-wrap">
+            <button
+              type="button"
+              className={[
+                "se-hw-add-candidate",
+                "se-hw-add-candidate-v2",
+
+                !canAddCandidate
+                  ? "is-disabled"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() => {
+                if (
+                  canAddCandidate
+                ) {
+                  onAddCandidate?.();
+                }
+              }}
+              disabled={
+                !canAddCandidate
               }
-            </strong>
+              title={
+                candidateActionTitle
+              }
+            >
+              <span
+                className="se-hw-add-icon"
+                aria-hidden="true"
+              >
+                +
+              </span>
 
-            <small>
-              Candidates
-            </small>
+              <span>
+                Add Candidate
+              </span>
+            </button>
+
+            {!canAddCandidate ? (
+              <small className="se-hw-add-disabled-reason">
+                {
+                  candidateActionTitle
+                }
+              </small>
+            ) : null}
           </div>
 
-          <div>
-            <span className="followup">
-              ↻
-            </span>
+          {/* ===============================================
+              QUICK STATS
+          ================================================ */}
 
-            <strong>
-              {
-                followUpCount
-              }
-            </strong>
+          <div className="se-hw-hero-stats se-hw-hero-stats-v2">
+            <div className="se-hw-quick-stat">
+              <span className="candidate">
+                C
+              </span>
 
-            <small>
-              Follow-ups
-            </small>
-          </div>
+              <div>
+                <strong>
+                  {candidateCount}
+                </strong>
 
-          <div>
-            <span className="interview">
-              I
-            </span>
+                <small>
+                  Candidates
+                </small>
+              </div>
+            </div>
 
-            <strong>
-              {
-                interviewCount
-              }
-            </strong>
+            <div className="se-hw-quick-stat">
+              <span className="followup">
+                ↻
+              </span>
 
-            <small>
-              Interviews
-            </small>
+              <div>
+                <strong>
+                  {followUpCount}
+                </strong>
+
+                <small>
+                  Follow-ups
+                </small>
+              </div>
+            </div>
+
+            <div className="se-hw-quick-stat">
+              <span className="interview">
+                I
+              </span>
+
+              <div>
+                <strong>
+                  {interviewCount}
+                </strong>
+
+                <small>
+                  Interviews
+                </small>
+              </div>
+            </div>
           </div>
         </div>
       </div>

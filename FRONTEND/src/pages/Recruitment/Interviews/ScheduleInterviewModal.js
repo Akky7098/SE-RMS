@@ -18,168 +18,87 @@ import {
 } from "../utils/recruitmentHelpers";
 
 /* =========================================================
-   DEFAULT FORM
+   DEFAULTS
 ========================================================= */
 
 const EMPTY_FORM = {
   roundNumber: "1",
-
-  roundName:
-    "Technical Round",
-
-  mode:
-    "IN_PERSON",
-
-  officeLocation:
-    "DELHI",
-
-  meetingLink:
-    "",
-
-  scheduledAt:
-    "",
-
-  durationMinutes:
-    "45",
-
-  interviewer:
-    "",
-
-  remarks:
-    "",
+  roundName: "Technical Round",
+  mode: "IN_PERSON",
+  officeLocation: "DELHI",
+  meetingLink: "",
+  scheduledAt: "",
+  durationMinutes: "45",
+  interviewer: "",
+  remarks: "",
 };
 
-/* =========================================================
-   ACTIVE INTERVIEW STATUSES
-
-   These statuses block another active interview.
-
-   COMPLETED / CANCELLED / NO_SHOW do not block
-   another interview round.
-========================================================= */
-
-const ACTIVE_INTERVIEW_STATUSES =
-  new Set([
-    "PENDING",
-    "SCHEDULED",
-    "RESCHEDULED",
-    "CHECKED_IN",
-    "IN_PROGRESS",
-  ]);
+const ACTIVE_INTERVIEW_STATUSES = new Set([
+  "PENDING",
+  "SCHEDULED",
+  "RESCHEDULED",
+  "CHECKED_IN",
+  "IN_PROGRESS",
+]);
 
 /* =========================================================
-   DATE / TIME HELPERS
+   HELPERS
 ========================================================= */
 
-const toLocalDateTimeValue = (
-  date
-) => {
-  const value =
-    new Date(date);
+const toLocalDateTimeValue = (date) => {
+  const value = new Date(date);
 
-  value.setSeconds(
-    0,
-    0
-  );
+  value.setSeconds(0, 0);
 
   value.setMinutes(
-    value.getMinutes() -
-      value.getTimezoneOffset()
+    value.getMinutes() - value.getTimezoneOffset()
   );
 
-  return value
-    .toISOString()
-    .slice(
-      0,
-      16
-    );
+  return value.toISOString().slice(0, 16);
 };
 
-const getMinimumDateTime =
-  () => {
-    /*
-     * One-minute future buffer.
-     * Avoid browser/server clock race.
-     */
+const getMinimumDateTime = () => {
+  return toLocalDateTimeValue(
+    new Date(Date.now() + 60 * 1000)
+  );
+};
 
-    const date =
-      new Date(
-        Date.now() +
-          60 * 1000
-      );
-
-    return toLocalDateTimeValue(
-      date
-    );
-  };
-
-const formatPreviewDate = (
-  value
-) => {
-  if (
-    !value
-  ) {
+const formatPreviewDate = (value) => {
+  if (!value) {
     return {
-      date:
-        "Not selected",
-
-      time:
-        "Not selected",
+      date: "Not selected",
+      time: "Not selected",
     };
   }
 
-  const date =
-    new Date(value);
+  const date = new Date(value);
 
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
+  if (Number.isNaN(date.getTime())) {
     return {
-      date:
-        "Not selected",
-
-      time:
-        "Not selected",
+      date: "Not selected",
+      time: "Not selected",
     };
   }
 
   return {
-    date:
-      date.toLocaleDateString(
-        "en-IN",
-        {
-          weekday:
-            "short",
+    date: date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
 
-          day:
-            "2-digit",
-
-          month:
-            "short",
-
-          year:
-            "numeric",
-        }
-      ),
-
-    time:
-      date.toLocaleTimeString(
-        "en-IN",
-        {
-          hour:
-            "2-digit",
-
-          minute:
-            "2-digit",
-
-          hour12:
-            true,
-        }
-      ),
+    time: date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }),
   };
 };
+
+const getStatus = (interview) =>
+  String(interview?.status || "")
+    .trim()
+    .toUpperCase();
 
 /* =========================================================
    COMPONENT
@@ -187,46 +106,17 @@ const formatPreviewDate = (
 
 const ScheduleInterviewModal = ({
   open,
-
   candidate,
-
   onClose,
-
   onScheduled,
 }) => {
-  /* =======================================================
-     FORM
-  ======================================================= */
-
-  const [
-    form,
-    setForm,
-  ] = useState({
+  const [form, setForm] = useState({
     ...EMPTY_FORM,
   });
 
-  /* =======================================================
-     META / INTERVIEWERS
-  ======================================================= */
-
-  const [
-    meta,
-    setMeta,
-  ] = useState({});
-
-  const [
-    loadingMeta,
-    setLoadingMeta,
-  ] = useState(false);
-
-  const [
-    metaError,
-    setMetaError,
-  ] = useState("");
-
-  /* =======================================================
-     DUPLICATE CHECK
-  ======================================================= */
+  const [meta, setMeta] = useState({});
+  const [loadingMeta, setLoadingMeta] = useState(false);
+  const [metaError, setMetaError] = useState("");
 
   const [
     checkingDuplicate,
@@ -238,241 +128,130 @@ const ScheduleInterviewModal = ({
     setExistingActiveInterview,
   ] = useState(null);
 
-  /* =======================================================
-     SUBMISSION
-  ======================================================= */
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  const [
-    submitting,
-    setSubmitting,
-  ] = useState(false);
-
-  const [
-    error,
-    setError,
-  ] = useState("");
-
-  const [
-    fieldErrors,
-    setFieldErrors,
-  ] = useState({});
-
-  /* =======================================================
-     CANDIDATE ID
-  ======================================================= */
-
-  const candidateId =
-    getRecordId(
-      candidate
-    );
+  const candidateId = getRecordId(candidate);
 
   /* =========================================================
-     LOAD INTERVIEW META
-
-     IMPORTANT:
-     candidateId is sent to backend.
-
-     Backend then returns:
-     - active users of candidate department
-     - global SUPER_ADMIN users
+     LOAD INTERVIEWERS
   ========================================================= */
 
-  const loadMeta =
-    useCallback(
-      async () => {
-        if (
-          !candidateId
-        ) {
-          setMeta({});
+  const loadMeta = useCallback(async () => {
+    if (!candidateId) {
+      setMeta({});
 
-          setMetaError(
-            "Candidate ID is missing. Interviewers cannot be loaded."
-          );
+      setMetaError(
+        "Candidate information is unavailable."
+      );
 
-          return;
-        }
+      return;
+    }
 
-        try {
-          setLoadingMeta(
-            true
-          );
+    try {
+      setLoadingMeta(true);
+      setMetaError("");
 
-          setMetaError(
-            ""
-          );
+      const result = await getInterviewMeta(
+        candidateId
+      );
 
-          const result =
-            await getInterviewMeta(
-              candidateId
-            );
+      setMeta(result || {});
 
-          setMeta(
-            result || {}
-          );
+      const records =
+        result?.interviewers ||
+        result?.users ||
+        result?.employees ||
+        [];
 
-          const returnedInterviewers =
-            result?.interviewers ||
-            result?.users ||
-            result?.employees ||
-            [];
+      if (!Array.isArray(records) || !records.length) {
+        setMetaError(
+          "No eligible interviewer is available."
+        );
+      }
+    } catch (loadError) {
+      console.error(
+        "Interview meta load error:",
+        loadError
+      );
 
-          if (
-            !Array.isArray(
-              returnedInterviewers
-            ) ||
-            returnedInterviewers.length ===
-              0
-          ) {
-            setMetaError(
-              "No eligible interviewer was found for this department."
-            );
-          }
-        } catch (
-          loadError
-        ) {
-          console.error(
-            "Interview meta load error:",
-            loadError
-          );
+      setMeta({});
 
-          setMeta({});
-
-          setMetaError(
-            getApiErrorMessage(
-              loadError,
-              "Interviewer directory could not be loaded."
-            )
-          );
-        } finally {
-          setLoadingMeta(
-            false
-          );
-        }
-      },
-      [
-        candidateId,
-      ]
-    );
+      setMetaError(
+        getApiErrorMessage(
+          loadError,
+          "Interviewer list could not be loaded."
+        )
+      );
+    } finally {
+      setLoadingMeta(false);
+    }
+  }, [candidateId]);
 
   /* =========================================================
-     CHECK EXISTING ACTIVE INTERVIEW
+     EXISTING ACTIVE INTERVIEW
   ========================================================= */
 
   const checkExistingInterview =
-    useCallback(
-      async () => {
-        if (
-          !candidateId
-        ) {
-          return;
-        }
+    useCallback(async () => {
+      if (!candidateId) {
+        return;
+      }
 
-        try {
-          setCheckingDuplicate(
-            true
-          );
+      try {
+        setCheckingDuplicate(true);
 
-          const result =
-            await getInterviews({
-              candidate:
-                candidateId,
-            });
+        const result = await getInterviews({
+          candidate: candidateId,
+        });
 
-          const records =
-            Array.isArray(
-              result
-            )
-              ? result
-              : [];
+        const records = Array.isArray(result)
+          ? result
+          : [];
 
-          const active =
-            records
-              .filter(
-                (
-                  interview
-                ) => {
-                  const status =
-                    String(
-                      interview
-                        ?.status ||
-                        ""
-                    )
-                      .trim()
-                      .toUpperCase();
-
-                  return ACTIVE_INTERVIEW_STATUSES.has(
-                    status
-                  );
-                }
+        const active =
+          records
+            .filter((interview) =>
+              ACTIVE_INTERVIEW_STATUSES.has(
+                getStatus(interview)
               )
-              .sort(
-                (
-                  a,
-                  b
-                ) => {
-                  const timeA =
-                    new Date(
-                      a?.scheduledAt ||
-                        a?.createdAt ||
-                        0
-                    ).getTime();
+            )
+            .sort((a, b) => {
+              const first = new Date(
+                a?.scheduledAt ||
+                  a?.createdAt ||
+                  0
+              ).getTime();
 
-                  const timeB =
-                    new Date(
-                      b?.scheduledAt ||
-                        b?.createdAt ||
-                        0
-                    ).getTime();
+              const second = new Date(
+                b?.scheduledAt ||
+                  b?.createdAt ||
+                  0
+              ).getTime();
 
-                  return (
-                    timeB -
-                    timeA
-                  );
-                }
-              )[0] ||
-            null;
+              return second - first;
+            })[0] || null;
 
-          setExistingActiveInterview(
-            active
-          );
-        } catch (
+        setExistingActiveInterview(active);
+      } catch (duplicateError) {
+        console.error(
+          "Existing interview check failed:",
           duplicateError
-        ) {
-          /*
-           * Do not permanently block the modal if
-           * duplicate lookup temporarily fails.
-           *
-           * Backend still performs authoritative
-           * duplicate protection.
-           */
+        );
 
-          console.error(
-            "Existing interview check failed:",
-            duplicateError
-          );
-
-          setExistingActiveInterview(
-            null
-          );
-        } finally {
-          setCheckingDuplicate(
-            false
-          );
-        }
-      },
-      [
-        candidateId,
-      ]
-    );
+        setExistingActiveInterview(null);
+      } finally {
+        setCheckingDuplicate(false);
+      }
+    }, [candidateId]);
 
   /* =========================================================
-     MODAL OPEN RESET
+     OPEN RESET
   ========================================================= */
 
   useEffect(() => {
-    if (
-      !open
-    ) {
+    if (!open) {
       return;
     }
 
@@ -481,19 +260,12 @@ const ScheduleInterviewModal = ({
     });
 
     setError("");
-
     setFieldErrors({});
-
     setMetaError("");
-
     setMeta({});
-
-    setExistingActiveInterview(
-      null
-    );
+    setExistingActiveInterview(null);
 
     loadMeta();
-
     checkExistingInterview();
   }, [
     open,
@@ -502,36 +274,27 @@ const ScheduleInterviewModal = ({
   ]);
 
   /* =========================================================
-     LOCK BODY SCROLL + ESCAPE KEY
+     BODY LOCK / ESCAPE
   ========================================================= */
 
   useEffect(() => {
-    if (
-      !open
-    ) {
+    if (!open) {
       return undefined;
     }
 
     const previousOverflow =
-      document.body
-        .style
-        .overflow;
+      document.body.style.overflow;
 
-    document.body.style.overflow =
-      "hidden";
+    document.body.style.overflow = "hidden";
 
-    const handleEscape =
-      (
-        event
-      ) => {
-        if (
-          event.key ===
-            "Escape" &&
-          !submitting
-        ) {
-          onClose?.();
-        }
-      };
+    const handleEscape = (event) => {
+      if (
+        event.key === "Escape" &&
+        !submitting
+      ) {
+        onClose?.();
+      }
+    };
 
     window.addEventListener(
       "keydown",
@@ -555,140 +318,78 @@ const ScheduleInterviewModal = ({
 
   /* =========================================================
      INTERVIEWERS
-
-     Backend may return:
-     {
-       interviewers: [...]
-     }
-
-     Compatibility fallbacks are kept.
   ========================================================= */
 
-  const interviewers =
-    useMemo(() => {
-      const records =
-        meta?.interviewers ||
-        meta?.users ||
-        meta?.employees ||
-        [];
+  const interviewers = useMemo(() => {
+    const records =
+      meta?.interviewers ||
+      meta?.users ||
+      meta?.employees ||
+      [];
 
-      if (
-        !Array.isArray(
-          records
-        )
-      ) {
-        return [];
+    if (!Array.isArray(records)) {
+      return [];
+    }
+
+    const unique = new Map();
+
+    records.forEach((item) => {
+      const user = item?.user || item;
+      const id = getRecordId(user);
+
+      if (!id) {
+        return;
       }
 
-      /*
-       * Dedupe defensive layer.
-       */
+      unique.set(String(id), item);
+    });
 
-      const unique =
-        new Map();
+    return Array.from(unique.values()).sort(
+      (first, second) => {
+        const firstUser =
+          first?.user || first;
 
-      records.forEach(
-        (
-          item
-        ) => {
-          const user =
-            item?.user ||
-            item;
+        const secondUser =
+          second?.user || second;
 
-          const id =
-            getRecordId(
-              user
-            );
-
-          if (
-            !id
-          ) {
-            return;
+        return String(
+          firstUser?.displayName || ""
+        ).localeCompare(
+          String(
+            secondUser?.displayName || ""
+          ),
+          "en",
+          {
+            sensitivity: "base",
           }
-
-          unique.set(
-            String(id),
-            item
-          );
-        }
-      );
-
-      return Array.from(
-        unique.values()
-      ).sort(
-        (
-          first,
-          second
-        ) => {
-          const firstUser =
-            first?.user ||
-            first;
-
-          const secondUser =
-            second?.user ||
-            second;
-
-          return String(
-            firstUser
-              ?.displayName ||
-              ""
-          ).localeCompare(
-            String(
-              secondUser
-                ?.displayName ||
-                ""
-            ),
-            "en",
-            {
-              sensitivity:
-                "base",
-            }
-          );
-        }
-      );
-    }, [
-      meta,
-    ]);
+        );
+      }
+    );
+  }, [meta]);
 
   /* =========================================================
      SELECTED INTERVIEWER
   ========================================================= */
 
-  const selectedInterviewer =
-    useMemo(() => {
-      if (
-        !form.interviewer
-      ) {
-        return null;
-      }
+  const selectedInterviewer = useMemo(() => {
+    if (!form.interviewer) {
+      return null;
+    }
 
-      return (
-        interviewers.find(
-          (
-            item
-          ) => {
-            const user =
-              item?.user ||
-              item;
+    return (
+      interviewers.find((item) => {
+        const user = item?.user || item;
 
-            return (
-              String(
-                getRecordId(
-                  user
-                )
-              ) ===
-              String(
-                form.interviewer
-              )
-            );
-          }
-        ) ||
-        null
-      );
-    }, [
-      interviewers,
-      form.interviewer,
-    ]);
+        return (
+          String(getRecordId(user)) ===
+          String(form.interviewer)
+        );
+      }) || null
+    );
+  }, [
+    interviewers,
+    form.interviewer,
+  ]);
 
   const selectedInterviewerUser =
     selectedInterviewer?.user ||
@@ -696,23 +397,16 @@ const ScheduleInterviewModal = ({
     null;
 
   /* =========================================================
-     DATE PREVIEW
+     PREVIEW
   ========================================================= */
 
-  const schedulePreview =
-    useMemo(
-      () =>
-        formatPreviewDate(
-          form.scheduledAt
-        ),
-      [
-        form.scheduledAt,
-      ]
-    );
-
-  /* =========================================================
-     EXISTING INTERVIEW PREVIEW
-  ========================================================= */
+  const schedulePreview = useMemo(
+    () =>
+      formatPreviewDate(
+        form.scheduledAt
+      ),
+    [form.scheduledAt]
+  );
 
   const existingInterviewPreview =
     useMemo(
@@ -723,683 +417,428 @@ const ScheduleInterviewModal = ({
                 ?.scheduledAt
             )
           : null,
-      [
-        existingActiveInterview,
-      ]
+      [existingActiveInterview]
     );
 
   /* =========================================================
-     CLEAR ONE FIELD ERROR
+     UPDATE
   ========================================================= */
 
-  const clearFieldError = (
-    name
-  ) => {
-    setFieldErrors(
-      (
-        current
-      ) => {
-        if (
-          !current?.[
-            name
-          ]
-        ) {
-          return current;
-        }
-
-        const next = {
-          ...current,
-        };
-
-        delete next[
-          name
-        ];
-
-        return next;
+  const clearFieldError = (name) => {
+    setFieldErrors((current) => {
+      if (!current?.[name]) {
+        return current;
       }
-    );
+
+      const next = {
+        ...current,
+      };
+
+      delete next[name];
+
+      return next;
+    });
   };
 
-  /* =========================================================
-     FORM UPDATE
-  ========================================================= */
-
-  const update = (
-    name,
-    value
-  ) => {
+  const update = (name, value) => {
     setError("");
 
-    clearFieldError(
-      name
-    );
+    clearFieldError(name);
 
-    setForm(
-      (
-        current
-      ) => ({
-        ...current,
-
-        [name]:
-          value,
-      })
-    );
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
   };
 
-  /* =========================================================
-     MODE CHANGE
-  ========================================================= */
-
-  const changeMode = (
-    mode
-  ) => {
+  const changeMode = (mode) => {
     setError("");
 
-    setFieldErrors(
-      (
-        current
-      ) => {
-        const next = {
-          ...current,
-        };
-
-        delete next
-          .officeLocation;
-
-        delete next
-          .meetingLink;
-
-        return next;
-      }
-    );
-
-    setForm(
-      (
-        current
-      ) => ({
+    setFieldErrors((current) => {
+      const next = {
         ...current,
+      };
 
-        mode,
+      delete next.officeLocation;
+      delete next.meetingLink;
 
-        meetingLink:
-          mode ===
-          "ONLINE"
-            ? current
-                .meetingLink
-            : "",
+      return next;
+    });
 
-        officeLocation:
-          mode ===
-          "IN_PERSON"
-            ? current
-                .officeLocation ||
-              "DELHI"
-            : "",
-      })
-    );
+    setForm((current) => ({
+      ...current,
+
+      mode,
+
+      meetingLink:
+        mode === "ONLINE"
+          ? current.meetingLink
+          : "",
+
+      officeLocation:
+        mode === "IN_PERSON"
+          ? current.officeLocation ||
+            "DELHI"
+          : "",
+    }));
   };
 
   /* =========================================================
-     FIELD VALIDATION
+     VALIDATION
   ========================================================= */
 
-  const validate =
-    () => {
-      const errors = {};
+  const validate = () => {
+    const errors = {};
 
-      /* -----------------------------------------------------
-         CANDIDATE
-      ----------------------------------------------------- */
+    if (!candidateId) {
+      errors.candidate =
+        "Candidate information is unavailable.";
+    }
 
-      if (
-        !candidateId
-      ) {
-        errors.candidate =
-          "Candidate information is missing. Close this form and refresh the candidate page.";
-      }
+    const roundNumber = Number(
+      form.roundNumber
+    );
 
-      /* -----------------------------------------------------
-         ROUND NUMBER
-      ----------------------------------------------------- */
+    if (
+      !Number.isFinite(roundNumber) ||
+      roundNumber < 1 ||
+      roundNumber > 20
+    ) {
+      errors.roundNumber =
+        "Select a valid round.";
+    }
 
-      const roundNumber =
-        Number(
-          form.roundNumber
-        );
+    const roundName = String(
+      form.roundName || ""
+    ).trim();
 
-      if (
-        !Number.isFinite(
-          roundNumber
-        ) ||
-        roundNumber <
-          1 ||
-        roundNumber >
-          20
-      ) {
-        errors.roundNumber =
-          "Please select a valid interview round.";
-      }
+    if (!roundName) {
+      errors.roundName =
+        "Round name is required.";
+    } else if (roundName.length < 2) {
+      errors.roundName =
+        "Round name is too short.";
+    } else if (roundName.length > 80) {
+      errors.roundName =
+        "Maximum 80 characters.";
+    }
 
-      /* -----------------------------------------------------
-         ROUND NAME
-      ----------------------------------------------------- */
+    const interviewerId = String(
+      form.interviewer || ""
+    ).trim();
 
-      const roundName =
-        String(
-          form.roundName ||
-            ""
-        ).trim();
+    if (!interviewerId) {
+      errors.interviewer =
+        "Select an interviewer.";
+    } else {
+      const validInterviewer =
+        interviewers.some((item) => {
+          const user =
+            item?.user || item;
 
-      if (
-        !roundName
-      ) {
-        errors.roundName =
-          "Interview round name is required.";
-      } else if (
-        roundName.length <
-          2
-      ) {
-        errors.roundName =
-          "Round name must contain at least 2 characters.";
-      } else if (
-        roundName.length >
-          80
-      ) {
-        errors.roundName =
-          "Round name cannot exceed 80 characters.";
-      }
+          return (
+            String(getRecordId(user)) ===
+            interviewerId
+          );
+        });
 
-      /* -----------------------------------------------------
-         INTERVIEWER
-      ----------------------------------------------------- */
-
-      const interviewerId =
-        String(
-          form.interviewer ||
-            ""
-        ).trim();
-
-      if (
-        !interviewerId
-      ) {
+      if (!validInterviewer) {
         errors.interviewer =
-          "Please select an interviewer.";
-      } else {
-        const stillExists =
-          interviewers.some(
-            (
-              item
-            ) => {
-              const user =
-                item?.user ||
-                item;
-
-              return (
-                String(
-                  getRecordId(
-                    user
-                  )
-                ) ===
-                interviewerId
-              );
-            }
-          );
-
-        if (
-          !stillExists
-        ) {
-          errors.interviewer =
-            "The selected interviewer is no longer available. Refresh the interviewer list.";
-        }
+          "Selected interviewer is unavailable.";
       }
+    }
 
-      /* -----------------------------------------------------
-         DATE / TIME
-      ----------------------------------------------------- */
-
-      if (
-        !form.scheduledAt
-      ) {
-        errors.scheduledAt =
-          "Interview date and time are required.";
-      } else {
-        const selectedDate =
-          new Date(
-            form.scheduledAt
-          );
-
-        if (
-          Number.isNaN(
-            selectedDate.getTime()
-          )
-        ) {
-          errors.scheduledAt =
-            "Please select a valid interview date and time.";
-        } else if (
-          selectedDate.getTime() <=
-          Date.now()
-        ) {
-          errors.scheduledAt =
-            "Past date or time cannot be selected.";
-        }
-      }
-
-      /* -----------------------------------------------------
-         DURATION
-      ----------------------------------------------------- */
-
-      const duration =
-        Number(
-          form.durationMinutes
-        );
-
-      if (
-        !Number.isFinite(
-          duration
-        ) ||
-        duration <
-          15 ||
-        duration >
-          240
-      ) {
-        errors.durationMinutes =
-          "Interview duration must be between 15 and 240 minutes.";
-      }
-
-      /* -----------------------------------------------------
-         MODE
-      ----------------------------------------------------- */
-
-      if (
-        ![
-          "IN_PERSON",
-          "ONLINE",
-          "PHONE",
-        ].includes(
-          form.mode
-        )
-      ) {
-        errors.mode =
-          "Please select a valid interview mode.";
-      }
-
-      /* -----------------------------------------------------
-         OFFICE
-      ----------------------------------------------------- */
-
-      if (
-        form.mode ===
-          "IN_PERSON" &&
-        !String(
-          form.officeLocation ||
-            ""
-        ).trim()
-      ) {
-        errors.officeLocation =
-          "Please select the interview office.";
-      }
-
-      /* -----------------------------------------------------
-         ONLINE LINK
-      ----------------------------------------------------- */
-
-      if (
-        form.mode ===
-        "ONLINE"
-      ) {
-        const link =
-          String(
-            form.meetingLink ||
-              ""
-          ).trim();
-
-        if (
-          !link
-        ) {
-          errors.meetingLink =
-            "Meeting link is required for an online interview.";
-        } else {
-          try {
-            const parsedUrl =
-              new URL(
-                link
-              );
-
-            if (
-              ![
-                "http:",
-                "https:",
-              ].includes(
-                parsedUrl.protocol
-              )
-            ) {
-              errors.meetingLink =
-                "Enter a valid HTTP or HTTPS meeting link.";
-            }
-          } catch {
-            errors.meetingLink =
-              "Enter a valid meeting link such as https://meet.google.com/...";
-          }
-        }
-      }
-
-      /* -----------------------------------------------------
-         REMARKS
-      ----------------------------------------------------- */
-
-      if (
-        String(
-          form.remarks ||
-            ""
-        ).length >
-        1000
-      ) {
-        errors.remarks =
-          "Interview notes cannot exceed 1000 characters.";
-      }
-
-      /* -----------------------------------------------------
-         DUPLICATE ACTIVE INTERVIEW
-      ----------------------------------------------------- */
-
-      if (
-        existingActiveInterview
-      ) {
-        errors.duplicate =
-          "An active interview already exists for this candidate. Open the existing interview to reschedule or manage it.";
-      }
-
-      setFieldErrors(
-        errors
+    if (!form.scheduledAt) {
+      errors.scheduledAt =
+        "Date and time are required.";
+    } else {
+      const selectedDate = new Date(
+        form.scheduledAt
       );
 
       if (
-        Object.keys(
-          errors
-        ).length >
-        0
+        Number.isNaN(
+          selectedDate.getTime()
+        )
       ) {
-        setError(
-          "Please correct the highlighted fields before scheduling the interview."
-        );
-
-        return false;
+        errors.scheduledAt =
+          "Select a valid date and time.";
+      } else if (
+        selectedDate.getTime() <=
+        Date.now()
+      ) {
+        errors.scheduledAt =
+          "Select a future date and time.";
       }
+    }
 
-      setError("");
+    const duration = Number(
+      form.durationMinutes
+    );
 
-      return true;
-    };
+    if (
+      !Number.isFinite(duration) ||
+      duration < 15 ||
+      duration > 240
+    ) {
+      errors.durationMinutes =
+        "Invalid duration.";
+    }
 
-  /* =========================================================
-     SUCCESS CLEANUP
-  ========================================================= */
+    if (
+      ![
+        "IN_PERSON",
+        "ONLINE",
+        "PHONE",
+      ].includes(form.mode)
+    ) {
+      errors.mode =
+        "Select an interview mode.";
+    }
 
-  const clearSuccessState =
-    () => {
-      setError("");
+    if (
+      form.mode === "IN_PERSON" &&
+      !String(
+        form.officeLocation || ""
+      ).trim()
+    ) {
+      errors.officeLocation =
+        "Select office location.";
+    }
 
-      setFieldErrors({});
-    };
+    if (form.mode === "ONLINE") {
+      const link = String(
+        form.meetingLink || ""
+      ).trim();
+
+      if (!link) {
+        errors.meetingLink =
+          "Meeting link is required.";
+      } else {
+        try {
+          const parsedUrl =
+            new URL(link);
+
+          if (
+            ![
+              "http:",
+              "https:",
+            ].includes(
+              parsedUrl.protocol
+            )
+          ) {
+            errors.meetingLink =
+              "Enter a valid meeting link.";
+          }
+        } catch {
+          errors.meetingLink =
+            "Enter a valid meeting link.";
+        }
+      }
+    }
+
+    if (
+      String(
+        form.remarks || ""
+      ).length > 1000
+    ) {
+      errors.remarks =
+        "Maximum 1000 characters.";
+    }
+
+    if (existingActiveInterview) {
+      errors.duplicate =
+        "An active interview already exists.";
+    }
+
+    setFieldErrors(errors);
+
+    if (
+      Object.keys(errors).length
+    ) {
+      setError(
+        "Please correct the highlighted fields."
+      );
+
+      return false;
+    }
+
+    setError("");
+
+    return true;
+  };
 
   /* =========================================================
      SUBMIT
-
-     Duplicate is checked AGAIN immediately before POST.
   ========================================================= */
 
-  const handleSubmit =
-    async (
-      event
-    ) => {
-      event.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-      if (
-        submitting ||
-        checkingDuplicate
-      ) {
-        return;
-      }
+    if (
+      submitting ||
+      checkingDuplicate
+    ) {
+      return;
+    }
 
-      if (
-        !validate()
-      ) {
-        return;
-      }
+    if (!validate()) {
+      return;
+    }
 
-      try {
-        setSubmitting(
-          true
-        );
+    try {
+      setSubmitting(true);
+      setError("");
 
-        setError("");
+      /*
+       * Re-check immediately before scheduling.
+       */
 
-        /* ---------------------------------------------------
-           SERVER-SYNC DUPLICATE CHECK
-        --------------------------------------------------- */
+      const latestInterviews =
+        await getInterviews({
+          candidate: candidateId,
+        });
 
-        const latestInterviews =
-          await getInterviews({
-            candidate:
-              candidateId,
-          });
+      const duplicate = (
+        Array.isArray(latestInterviews)
+          ? latestInterviews
+          : []
+      ).find((interview) =>
+        ACTIVE_INTERVIEW_STATUSES.has(
+          getStatus(interview)
+        )
+      );
 
-        const duplicate =
-          (
-            Array.isArray(
-              latestInterviews
-            )
-              ? latestInterviews
-              : []
-          ).find(
-            (
-              interview
-            ) => {
-              const status =
-                String(
-                  interview
-                    ?.status ||
-                    ""
-                )
-                  .trim()
-                  .toUpperCase();
-
-              return ACTIVE_INTERVIEW_STATUSES.has(
-                status
-              );
-            }
-          );
-
-        if (
+      if (duplicate) {
+        setExistingActiveInterview(
           duplicate
-        ) {
-          setExistingActiveInterview(
-            duplicate
-          );
-
-          setFieldErrors(
-            (
-              current
-            ) => ({
-              ...current,
-
-              duplicate:
-                "An active interview already exists for this candidate.",
-            })
-          );
-
-          setError(
-            "This candidate already has an active interview. Please manage or reschedule the existing interview."
-          );
-
-          return;
-        }
-
-        /* ---------------------------------------------------
-           FINAL DATE CHECK
-
-           A form may remain open for several minutes.
-        --------------------------------------------------- */
-
-        const finalScheduledAt =
-          new Date(
-            form.scheduledAt
-          );
-
-        if (
-          Number.isNaN(
-            finalScheduledAt
-              .getTime()
-          ) ||
-          finalScheduledAt
-            .getTime() <=
-          Date.now()
-        ) {
-          setFieldErrors(
-            (
-              current
-            ) => ({
-              ...current,
-
-              scheduledAt:
-                "Selected interview time has already passed. Please choose a new future time.",
-            })
-          );
-
-          setError(
-            "Please select a future interview date and time."
-          );
-
-          return;
-        }
-
-        /* ---------------------------------------------------
-           PAYLOAD
-        --------------------------------------------------- */
-
-        const payload = {
-          roundNumber:
-            Number(
-              form.roundNumber ||
-                1
-            ),
-
-          roundName:
-            form.roundName
-              .trim(),
-
-          interviewer:
-            form.interviewer,
-
-          scheduledAt:
-            finalScheduledAt
-              .toISOString(),
-
-          durationMinutes:
-            Number(
-              form.durationMinutes
-            ),
-
-          timezone:
-            "Asia/Kolkata",
-
-          mode:
-            form.mode,
-
-          officeLocation:
-            form.mode ===
-            "IN_PERSON"
-              ? form
-                  .officeLocation
-              : null,
-
-          meetingLink:
-            form.mode ===
-            "ONLINE"
-              ? form
-                  .meetingLink
-                  .trim()
-              : "",
-
-          remarks:
-            form.remarks
-              .trim(),
-        };
-
-        /* ---------------------------------------------------
-           CREATE
-        --------------------------------------------------- */
-
-        const interview =
-          await scheduleInterview(
-            candidateId,
-            payload
-          );
-
-        clearSuccessState();
-
-        await onScheduled?.(
-          interview
         );
-      } catch (
-        submitError
-      ) {
-        const message =
-          getApiErrorMessage(
-            submitError,
-            "Interview could not be scheduled."
-          );
+
+        setFieldErrors((current) => ({
+          ...current,
+          duplicate:
+            "An active interview already exists.",
+        }));
 
         setError(
-          message
+          "Manage the active interview before creating another round."
         );
 
-        /*
-         * Backend authoritative duplicate protection.
-         */
+        return;
+      }
 
-        if (
-          submitError
-            ?.response
-            ?.status ===
-          409
-        ) {
-          setFieldErrors(
-            (
-              current
-            ) => ({
-              ...current,
+      const finalScheduledAt =
+        new Date(
+          form.scheduledAt
+        );
 
-              duplicate:
-                message,
-            })
-          );
-        }
-      } finally {
-        setSubmitting(
-          false
+      if (
+        Number.isNaN(
+          finalScheduledAt.getTime()
+        ) ||
+        finalScheduledAt.getTime() <=
+          Date.now()
+      ) {
+        setFieldErrors((current) => ({
+          ...current,
+
+          scheduledAt:
+            "Select a future date and time.",
+        }));
+
+        setError(
+          "Interview time has already passed."
+        );
+
+        return;
+      }
+
+      const payload = {
+        roundNumber: Number(
+          form.roundNumber || 1
+        ),
+
+        roundName:
+          form.roundName.trim(),
+
+        interviewer:
+          form.interviewer,
+
+        scheduledAt:
+          finalScheduledAt.toISOString(),
+
+        durationMinutes: Number(
+          form.durationMinutes
+        ),
+
+        timezone:
+          "Asia/Kolkata",
+
+        mode:
+          form.mode,
+
+        officeLocation:
+          form.mode === "IN_PERSON"
+            ? form.officeLocation
+            : null,
+
+        meetingLink:
+          form.mode === "ONLINE"
+            ? form.meetingLink.trim()
+            : "",
+
+        remarks:
+          form.remarks.trim(),
+      };
+
+      const interview =
+        await scheduleInterview(
+          candidateId,
+          payload
+        );
+
+      setError("");
+      setFieldErrors({});
+
+      await onScheduled?.(
+        interview
+      );
+    } catch (submitError) {
+      const message =
+        getApiErrorMessage(
+          submitError,
+          "Interview could not be scheduled."
+        );
+
+      setError(message);
+
+      if (
+        submitError?.response
+          ?.status === 409
+      ) {
+        setFieldErrors(
+          (current) => ({
+            ...current,
+            duplicate: message,
+          })
         );
       }
-    };
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   /* =========================================================
      CLOSE
   ========================================================= */
 
-  const handleClose =
-    () => {
-      if (
-        submitting
-      ) {
-        return;
-      }
+  const handleClose = () => {
+    if (submitting) {
+      return;
+    }
 
-      onClose?.();
-    };
-
-  /* =========================================================
-     BUTTON DISABLED STATE
-  ========================================================= */
+    onClose?.();
+  };
 
   const scheduleDisabled =
     submitting ||
@@ -1408,104 +847,72 @@ const ScheduleInterviewModal = ({
     Boolean(
       existingActiveInterview
     ) ||
-    interviewers.length ===
-      0;
+    interviewers.length === 0;
+
+  if (!open) {
+    return null;
+  }
 
   /* =========================================================
      RENDER
   ========================================================= */
 
-  if (
-    !open
-  ) {
-    return null;
-  }
-
   return (
     <div
       className="se-interview-modal-overlay"
       role="presentation"
-      onMouseDown={(
-        event
-      ) => {
-        /*
-         * Close ONLY if the actual backdrop was clicked.
-         * Clicking inside modal never closes it accidentally.
-         */
-
+      onMouseDown={(event) => {
         if (
           event.target ===
-            event.currentTarget
+          event.currentTarget
         ) {
           handleClose();
         }
       }}
     >
       <section
-        className="se-interview-schedule-modal"
+        className="se-interview-schedule-modal se-interview-schedule-modal--compact"
         role="dialog"
         aria-modal="true"
         aria-labelledby="schedule-interview-title"
-        onMouseDown={(
-          event
-        ) =>
+        onMouseDown={(event) =>
           event.stopPropagation()
         }
       >
-        {/* =================================================
-            HEADER
-        ================================================== */}
+        {/* HEADER */}
 
-        <header className="se-interview-modal-head se-interview-schedule-head">
+        <header className="se-interview-modal-head se-interview-schedule-head se-interview-schedule-head--compact">
           <div>
             <span className="se-interview-eyebrow">
-              INTERVIEW SCHEDULING
+              INTERVIEW
             </span>
 
             <h2 id="schedule-interview-title">
               Schedule Interview
             </h2>
-
-            <p>
-              Select the interview round,
-              interviewer, date and mode.
-              The interview will be saved
-              directly against this
-              candidate's recruitment
-              workflow.
-            </p>
           </div>
 
           <button
             type="button"
             className="se-interview-modal-close"
-            onClick={
-              handleClose
-            }
-            disabled={
-              submitting
-            }
-            aria-label="Close schedule interview"
+            onClick={handleClose}
+            disabled={submitting}
+            aria-label="Close"
           >
             ×
           </button>
         </header>
 
-        {/* =================================================
-            CANDIDATE CONTEXT
-        ================================================== */}
+        {/* CANDIDATE */}
 
-        <div className="se-interview-schedule-context">
+        <div className="se-interview-schedule-context se-interview-schedule-context--compact">
           <div className="candidate">
             <span className="avatar">
               {safeText(
-                candidate
-                  ?.fullName,
+                candidate?.fullName,
                 "C"
               )
-                .charAt(
-                  0
-                )
+                .charAt(0)
                 .toUpperCase()}
             </span>
 
@@ -1516,24 +923,21 @@ const ScheduleInterviewModal = ({
 
               <strong>
                 {safeText(
-                  candidate
-                    ?.fullName,
+                  candidate?.fullName,
                   "Candidate"
                 )}
               </strong>
 
               <p>
                 {safeText(
-                  candidate
-                    ?.positionTitle,
+                  candidate?.positionTitle,
                   "Position"
                 )}
 
                 {" · "}
 
                 {safeText(
-                  candidate
-                    ?.candidateNumber,
+                  candidate?.candidateNumber,
                   "Candidate ID"
                 )}
               </p>
@@ -1542,53 +946,34 @@ const ScheduleInterviewModal = ({
 
           <div className="contact">
             <small>
-              INVITATION EMAIL
+              EMAIL
             </small>
 
             <strong>
               {safeText(
-                candidate
-                  ?.email,
-                "Email not available"
+                candidate?.email,
+                "Not available"
               )}
             </strong>
-
-            <p>
-              {candidate?.email
-                ? "Candidate interview notification recipient"
-                : "Candidate does not currently have an email address"}
-            </p>
           </div>
         </div>
 
-        {/* =================================================
-            DUPLICATE CHECK LOADING
-        ================================================== */}
+        {/* LOADING */}
 
         {checkingDuplicate ? (
-          <div className="se-interview-checking-banner">
+          <div className="se-interview-checking-banner compact">
             <span className="spinner" />
 
-            <div>
-              <strong>
-                Checking interview schedule
-              </strong>
-
-              <p>
-                Verifying that this
-                candidate does not already
-                have an active interview.
-              </p>
-            </div>
+            <strong>
+              Checking existing interview...
+            </strong>
           </div>
         ) : null}
 
-        {/* =================================================
-            EXISTING INTERVIEW
-        ================================================== */}
+        {/* EXISTING */}
 
         {existingActiveInterview ? (
-          <div className="se-interview-duplicate-banner">
+          <div className="se-interview-duplicate-banner compact">
             <span>
               !
             </span>
@@ -1604,232 +989,177 @@ const ScheduleInterviewModal = ({
                     ?.roundName,
                   `Round ${
                     existingActiveInterview
-                      ?.roundNumber ||
-                    1
+                      ?.roundNumber || 1
                   }`
                 )}
 
                 {" · "}
 
-                {existingInterviewPreview
-                  ?.date}
+                {
+                  existingInterviewPreview
+                    ?.date
+                }
 
                 {" · "}
 
-                {existingInterviewPreview
-                  ?.time}
+                {
+                  existingInterviewPreview
+                    ?.time
+                }
               </p>
-
-              <small>
-                Open the existing interview
-                to reschedule, cancel or
-                manage it instead of
-                creating a duplicate.
-              </small>
             </div>
           </div>
         ) : null}
 
-        {/* =================================================
-            GLOBAL ERROR
-        ================================================== */}
+        {/* ERROR */}
 
         {error ? (
-          <div className="se-interview-error se-interview-schedule-error">
+          <div className="se-interview-error se-interview-schedule-error compact">
             <span>
               !
             </span>
 
-            <div>
-              <strong>
-                Please check the form
-              </strong>
-
-              <p>
-                {
-                  error
-                }
-              </p>
-            </div>
+            <p>
+              {error}
+            </p>
           </div>
         ) : null}
 
-        {/* =================================================
-            FORM
-        ================================================== */}
+        {/* FORM */}
 
         <form
-          className="se-interview-form se-interview-premium-form"
-          onSubmit={
-            handleSubmit
-          }
+          className="se-interview-form se-interview-premium-form se-interview-compact-form"
+          onSubmit={handleSubmit}
           noValidate
         >
-          {/* ===============================================
-              01 INTERVIEW ROUND
-          ================================================ */}
+          <div className="se-interview-compact-scroll">
 
-          <section className="se-interview-form-card">
-            <header>
-              <span>
-                01
-              </span>
+            {/* 01 ROUND */}
 
-              <div>
-                <strong>
-                  Interview Round
-                </strong>
-
-                <small>
-                  Select the interview
-                  stage and the employee
-                  who will conduct the
-                  interview.
-                </small>
-              </div>
-            </header>
-
-            <div className="grid">
-              {/* ===========================================
-                  ROUND NUMBER
-              ============================================ */}
-
-              <label
-                className={
-                  fieldErrors
-                    .roundNumber
-                    ? "has-error"
-                    : ""
-                }
-              >
+            <section className="se-interview-form-card se-interview-form-card--compact">
+              <header>
                 <span>
-                  Round Number
+                  01
                 </span>
 
-                <select
-                  value={
-                    form.roundNumber
-                  }
-                  disabled={
-                    submitting
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    update(
-                      "roundNumber",
-                      event
-                        .target
-                        .value
-                    )
+                <div>
+                  <strong>
+                    Round & Interviewer
+                  </strong>
+                </div>
+              </header>
+
+              <div className="grid compact-grid three-col">
+                <label
+                  className={
+                    fieldErrors.roundNumber
+                      ? "has-error"
+                      : ""
                   }
                 >
-                  <option value="1">
-                    Round 1
-                  </option>
+                  <span>
+                    Round
+                  </span>
 
-                  <option value="2">
-                    Round 2
-                  </option>
-
-                  <option value="3">
-                    Round 3
-                  </option>
-
-                  <option value="4">
-                    Round 4
-                  </option>
-                </select>
-
-                {fieldErrors
-                  .roundNumber ? (
-                  <small className="se-interview-field-error">
-                    {
-                      fieldErrors
-                        .roundNumber
+                  <select
+                    value={
+                      form.roundNumber
                     }
-                  </small>
-                ) : null}
-              </label>
-
-              {/* ===========================================
-                  ROUND NAME
-              ============================================ */}
-
-              <label
-                className={
-                  fieldErrors
-                    .roundName
-                    ? "has-error"
-                    : ""
-                }
-              >
-                <span>
-                  Round Name *
-                </span>
-
-                <input
-                  value={
-                    form.roundName
-                  }
-                  maxLength={
-                    80
-                  }
-                  disabled={
-                    submitting
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    update(
-                      "roundName",
-                      event
-                        .target
-                        .value
-                    )
-                  }
-                  placeholder="e.g. Technical Round"
-                />
-
-                {fieldErrors
-                  .roundName ? (
-                  <small className="se-interview-field-error">
-                    {
-                      fieldErrors
-                        .roundName
+                    disabled={
+                      submitting
                     }
-                  </small>
-                ) : null}
-              </label>
+                    onChange={(event) =>
+                      update(
+                        "roundNumber",
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="1">
+                      Round 1
+                    </option>
 
-              {/* ===========================================
-                  INTERVIEWER
-              ============================================ */}
+                    <option value="2">
+                      Round 2
+                    </option>
 
-              <label
-                className={`wide ${
-                  fieldErrors
-                    .interviewer
-                    ? "has-error"
-                    : ""
-                }`}
-              >
-                <span>
-                  Interviewer *
-                </span>
+                    <option value="3">
+                      Round 3
+                    </option>
 
-                {loadingMeta ? (
-                  <div className="se-interview-directory-loading">
-                    <span className="spinner" />
+                    <option value="4">
+                      Round 4
+                    </option>
+                  </select>
 
-                    <span>
-                      Loading eligible
-                      interviewers...
-                    </span>
-                  </div>
-                ) : interviewers.length >
-                  0 ? (
-                  <>
+                  {fieldErrors.roundNumber ? (
+                    <small className="se-interview-field-error">
+                      {
+                        fieldErrors
+                          .roundNumber
+                      }
+                    </small>
+                  ) : null}
+                </label>
+
+                <label
+                  className={
+                    fieldErrors.roundName
+                      ? "has-error"
+                      : ""
+                  }
+                >
+                  <span>
+                    Round Name *
+                  </span>
+
+                  <input
+                    value={
+                      form.roundName
+                    }
+                    maxLength={80}
+                    disabled={
+                      submitting
+                    }
+                    onChange={(event) =>
+                      update(
+                        "roundName",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Technical Round"
+                  />
+
+                  {fieldErrors.roundName ? (
+                    <small className="se-interview-field-error">
+                      {
+                        fieldErrors
+                          .roundName
+                      }
+                    </small>
+                  ) : null}
+                </label>
+
+                <label
+                  className={
+                    fieldErrors.interviewer
+                      ? "has-error"
+                      : ""
+                  }
+                >
+                  <span>
+                    Interviewer *
+                  </span>
+
+                  {loadingMeta ? (
+                    <div className="se-interview-directory-loading compact">
+                      <span className="spinner" />
+
+                      <span>
+                        Loading...
+                      </span>
+                    </div>
+                  ) : interviewers.length ? (
                     <select
                       value={
                         form.interviewer
@@ -1837,14 +1167,10 @@ const ScheduleInterviewModal = ({
                       disabled={
                         submitting
                       }
-                      onChange={(
-                        event
-                      ) =>
+                      onChange={(event) =>
                         update(
                           "interviewer",
-                          event
-                            .target
-                            .value
+                          event.target.value
                         )
                       }
                     >
@@ -1853,9 +1179,7 @@ const ScheduleInterviewModal = ({
                       </option>
 
                       {interviewers.map(
-                        (
-                          item
-                        ) => {
+                        (item) => {
                           const user =
                             item?.user ||
                             item;
@@ -1865,29 +1189,17 @@ const ScheduleInterviewModal = ({
                               user
                             );
 
-                          if (
-                            !id
-                          ) {
+                          if (!id) {
                             return null;
                           }
 
-                          /*
-                           * IMPORTANT:
-                           * Dropdown shows NAME ONLY.
-                           */
-
                           return (
                             <option
-                              key={
-                                id
-                              }
-                              value={
-                                id
-                              }
+                              key={id}
+                              value={id}
                             >
                               {safeText(
-                                user
-                                  ?.displayName,
+                                user?.displayName,
                                 "Employee"
                               )}
                             </option>
@@ -1895,32 +1207,10 @@ const ScheduleInterviewModal = ({
                         }
                       )}
                     </select>
-
-                    <small className="se-interview-field-help">
-                      Eligible interviewers
-                      include active members
-                      of the candidate's
-                      department and Global
-                      Super Admins.
-                    </small>
-                  </>
-                ) : (
-                  <div className="se-interview-directory-unavailable">
-                    <div>
-                      <strong>
-                        No interviewer available
-                      </strong>
-
-                      <p>
-                        Eligible employees
-                        could not be loaded
-                        for this candidate's
-                        department.
-                      </p>
-                    </div>
-
+                  ) : (
                     <button
                       type="button"
+                      className="se-interview-retry-btn"
                       onClick={
                         loadMeta
                       }
@@ -1929,725 +1219,508 @@ const ScheduleInterviewModal = ({
                         submitting
                       }
                     >
-                      Retry
+                      Retry interviewer list
                     </button>
-                  </div>
-                )}
+                  )}
 
-                {metaError ? (
-                  <small className="se-interview-field-warning">
-                    {
-                      metaError
-                    }
-                  </small>
-                ) : null}
+                  {metaError ? (
+                    <small className="se-interview-field-warning">
+                      {metaError}
+                    </small>
+                  ) : null}
 
-                {fieldErrors
-                  .interviewer ? (
-                  <small className="se-interview-field-error">
-                    {
-                      fieldErrors
-                        .interviewer
-                    }
-                  </small>
-                ) : null}
-              </label>
-            </div>
+                  {fieldErrors.interviewer ? (
+                    <small className="se-interview-field-error">
+                      {
+                        fieldErrors
+                          .interviewer
+                      }
+                    </small>
+                  ) : null}
+                </label>
+              </div>
 
-            {/* =============================================
-                SELECTED INTERVIEWER CONFIRMATION
-            ============================================== */}
-
-            {selectedInterviewerUser ? (
-              <div className="se-interview-selected-person">
-                <span>
-                  {safeText(
-                    selectedInterviewerUser
-                      ?.displayName,
-                    "I"
-                  )
-                    .charAt(
-                      0
-                    )
-                    .toUpperCase()}
-                </span>
-
-                <div>
-                  <small>
-                    SELECTED INTERVIEWER
-                  </small>
-
-                  <strong>
+              {selectedInterviewerUser ? (
+                <div className="se-interview-selected-person se-interview-selected-person--compact">
+                  <span>
                     {safeText(
                       selectedInterviewerUser
                         ?.displayName,
-                      "Interviewer"
-                    )}
-                  </strong>
-
-                  <p>
-                    {safeText(
-                      selectedInterviewerUser
-                        ?.email,
-                      "Email not available"
-                    )}
-                  </p>
-                </div>
-
-                <b>
-                  ✓
-                </b>
-              </div>
-            ) : null}
-          </section>
-
-          {/* ===============================================
-              02 DATE & TIME
-          ================================================ */}
-
-          <section className="se-interview-form-card">
-            <header>
-              <span>
-                02
-              </span>
-
-              <div>
-                <strong>
-                  Date & Time
-                </strong>
-
-                <small>
-                  Select the future date,
-                  start time and expected
-                  interview duration.
-                </small>
-              </div>
-            </header>
-
-            <div className="grid">
-              {/* ===========================================
-                  DATE TIME
-              ============================================ */}
-
-              <label
-                className={`wide ${
-                  fieldErrors
-                    .scheduledAt
-                    ? "has-error"
-                    : ""
-                }`}
-              >
-                <span>
-                  Interview Date & Time *
-                </span>
-
-                <input
-                  type="datetime-local"
-                  min={
-                    getMinimumDateTime()
-                  }
-                  value={
-                    form.scheduledAt
-                  }
-                  disabled={
-                    submitting
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    update(
-                      "scheduledAt",
-                      event
-                        .target
-                        .value
+                      "I"
                     )
-                  }
-                />
-
-                {fieldErrors
-                  .scheduledAt ? (
-                  <small className="se-interview-field-error">
-                    {
-                      fieldErrors
-                        .scheduledAt
-                    }
-                  </small>
-                ) : (
-                  <small className="se-interview-field-help">
-                    Past dates and times
-                    cannot be selected.
-                  </small>
-                )}
-              </label>
-
-              {/* ===========================================
-                  DURATION
-              ============================================ */}
-
-              <label
-                className={
-                  fieldErrors
-                    .durationMinutes
-                    ? "has-error"
-                    : ""
-                }
-              >
-                <span>
-                  Duration
-                </span>
-
-                <select
-                  value={
-                    form.durationMinutes
-                  }
-                  disabled={
-                    submitting
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    update(
-                      "durationMinutes",
-                      event
-                        .target
-                        .value
-                    )
-                  }
-                >
-                  <option value="30">
-                    30 Minutes
-                  </option>
-
-                  <option value="45">
-                    45 Minutes
-                  </option>
-
-                  <option value="60">
-                    60 Minutes
-                  </option>
-
-                  <option value="90">
-                    90 Minutes
-                  </option>
-                </select>
-
-                {fieldErrors
-                  .durationMinutes ? (
-                  <small className="se-interview-field-error">
-                    {
-                      fieldErrors
-                        .durationMinutes
-                    }
-                  </small>
-                ) : null}
-              </label>
-
-              {/* ===========================================
-                  TIMEZONE
-              ============================================ */}
-
-              <label>
-                <span>
-                  Timezone
-                </span>
-
-                <input
-                  value="India · Asia/Kolkata"
-                  disabled
-                  readOnly
-                />
-              </label>
-            </div>
-
-            {/* =============================================
-                PREVIEW
-            ============================================== */}
-
-            <div className="se-interview-date-preview">
-              <span>
-                DATE
-              </span>
-
-              <div>
-                <small>
-                  INTERVIEW DATE
-                </small>
-
-                <strong>
-                  {
-                    schedulePreview.date
-                  }
-                </strong>
-              </div>
-
-              <div>
-                <small>
-                  START TIME
-                </small>
-
-                <strong>
-                  {
-                    schedulePreview.time
-                  }
-                </strong>
-              </div>
-
-              <div>
-                <small>
-                  DURATION
-                </small>
-
-                <strong>
-                  {
-                    form.durationMinutes
-                  }{" "}
-                  minutes
-                </strong>
-              </div>
-            </div>
-          </section>
-
-          {/* ===============================================
-              03 MODE
-          ================================================ */}
-
-          <section className="se-interview-form-card">
-            <header>
-              <span>
-                03
-              </span>
-
-              <div>
-                <strong>
-                  Interview Mode
-                </strong>
-
-                <small>
-                  Choose how the candidate
-                  and interviewer will
-                  connect.
-                </small>
-              </div>
-            </header>
-
-            <div className="se-interview-mode-grid se-interview-premium-mode-grid">
-              {[
-                [
-                  "IN_PERSON",
-                  "O",
-                  "In Person",
-                  "At company office",
-                ],
-
-                [
-                  "ONLINE",
-                  "V",
-                  "Online",
-                  "Video meeting",
-                ],
-
-                [
-                  "PHONE",
-                  "☎",
-                  "Phone",
-                  "Voice interview",
-                ],
-              ].map(
-                ([
-                  value,
-                  icon,
-                  title,
-                  description,
-                ]) => (
-                  <button
-                    type="button"
-                    key={
-                      value
-                    }
-                    className={
-                      form.mode ===
-                      value
-                        ? "active"
-                        : ""
-                    }
-                    disabled={
-                      submitting
-                    }
-                    onClick={() =>
-                      changeMode(
-                        value
-                      )
-                    }
-                  >
-                    <span>
-                      {
-                        icon
-                      }
-                    </span>
-
-                    <div>
-                      <strong>
-                        {
-                          title
-                        }
-                      </strong>
-
-                      <small>
-                        {
-                          description
-                        }
-                      </small>
-                    </div>
-
-                    <b>
-                      {form.mode ===
-                      value
-                        ? "✓"
-                        : ""}
-                    </b>
-                  </button>
-                )
-              )}
-            </div>
-
-            {/* =============================================
-                IN PERSON
-            ============================================== */}
-
-            {form.mode ===
-            "IN_PERSON" ? (
-              <label
-                className={`standalone ${
-                  fieldErrors
-                    .officeLocation
-                    ? "has-error"
-                    : ""
-                }`}
-              >
-                <span>
-                  Office Location *
-                </span>
-
-                <select
-                  value={
-                    form.officeLocation
-                  }
-                  disabled={
-                    submitting
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    update(
-                      "officeLocation",
-                      event
-                        .target
-                        .value
-                    )
-                  }
-                >
-                  <option value="DELHI">
-                    Delhi Office
-                  </option>
-
-                  <option value="SONIPAT">
-                    Sonipat Office
-                  </option>
-                </select>
-
-                {fieldErrors
-                  .officeLocation ? (
-                  <small className="se-interview-field-error">
-                    {
-                      fieldErrors
-                        .officeLocation
-                    }
-                  </small>
-                ) : null}
-              </label>
-            ) : null}
-
-            {/* =============================================
-                ONLINE
-            ============================================== */}
-
-            {form.mode ===
-            "ONLINE" ? (
-              <label
-                className={`standalone ${
-                  fieldErrors
-                    .meetingLink
-                    ? "has-error"
-                    : ""
-                }`}
-              >
-                <span>
-                  Meeting Link *
-                </span>
-
-                <input
-                  type="url"
-                  value={
-                    form.meetingLink
-                  }
-                  disabled={
-                    submitting
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    update(
-                      "meetingLink",
-                      event
-                        .target
-                        .value
-                    )
-                  }
-                  placeholder="https://meet.google.com/..."
-                />
-
-                {fieldErrors
-                  .meetingLink ? (
-                  <small className="se-interview-field-error">
-                    {
-                      fieldErrors
-                        .meetingLink
-                    }
-                  </small>
-                ) : (
-                  <small className="se-interview-field-help">
-                    This link will be sent
-                    to both the candidate
-                    and interviewer in the
-                    interview notification.
-                  </small>
-                )}
-              </label>
-            ) : null}
-
-            {/* =============================================
-                PHONE
-            ============================================== */}
-
-            {form.mode ===
-            "PHONE" ? (
-              <div className="se-interview-mode-info phone">
-                <span>
-                  ☎
-                </span>
-
-                <div>
-                  <strong>
-                    Phone Interview
-                  </strong>
-
-                  <p>
-                    Candidate contact:{" "}
-
-                    {safeText(
-                      candidate
-                        ?.mobile,
-                      "Mobile number not available"
-                    )}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-          </section>
-
-          {/* ===============================================
-              04 NOTES
-          ================================================ */}
-
-          <section className="se-interview-form-card">
-            <header>
-              <span>
-                04
-              </span>
-
-              <div>
-                <strong>
-                  Interview Notes
-                </strong>
-
-                <small>
-                  Optional internal notes
-                  for the interviewer.
-                  These are not shown to
-                  the candidate.
-                </small>
-              </div>
-            </header>
-
-            <label
-              className={`standalone ${
-                fieldErrors
-                  .remarks
-                  ? "has-error"
-                  : ""
-              }`}
-            >
-              <span>
-                Internal Remarks
-              </span>
-
-              <textarea
-                value={
-                  form.remarks
-                }
-                maxLength={
-                  1000
-                }
-                disabled={
-                  submitting
-                }
-                onChange={(
-                  event
-                ) =>
-                  update(
-                    "remarks",
-                    event
-                      .target
-                      .value
-                  )
-                }
-                placeholder="Example: Focus on B2B sales experience, customer handling and negotiation skills..."
-              />
-
-              {fieldErrors
-                .remarks ? (
-                <small className="se-interview-field-error">
-                  {
-                    fieldErrors
-                      .remarks
-                  }
-                </small>
-              ) : (
-                <small className="se-interview-field-help">
-                  {
-                    form.remarks
-                      .length
-                  }
-                  /1000 characters
-                </small>
-              )}
-            </label>
-          </section>
-
-          {/* ===============================================
-              EMAIL / NOTIFICATION PREVIEW
-          ================================================ */}
-
-          <section className="se-interview-notification-preview">
-            <div className="se-interview-notification-icon">
-              ✉
-            </div>
-
-            <div className="se-interview-notification-main">
-              <span>
-                INTERVIEW NOTIFICATIONS
-              </span>
-
-              <strong>
-                Notification recipients
-              </strong>
-
-              <p>
-                After the backend mail
-                service is enabled,
-                scheduling this interview
-                will automatically notify
-                the candidate and selected
-                interviewer.
-              </p>
-
-              <div className="se-interview-notification-recipients">
-                {/* =========================================
-                    CANDIDATE
-                ========================================== */}
-
-                <div>
-                  <span className="person candidate">
-                    C
+                      .charAt(0)
+                      .toUpperCase()}
                   </span>
 
                   <div>
                     <small>
-                      CANDIDATE
-                    </small>
-
-                    <strong>
-                      {safeText(
-                        candidate
-                          ?.fullName,
-                        "Candidate"
-                      )}
-                    </strong>
-
-                    <p>
-                      {safeText(
-                        candidate
-                          ?.email,
-                        "Email unavailable"
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {/* =========================================
-                    INTERVIEWER
-                ========================================== */}
-
-                <div>
-                  <span className="person interviewer">
-                    I
-                  </span>
-
-                  <div>
-                    <small>
-                      INTERVIEWER
+                      SELECTED INTERVIEWER
                     </small>
 
                     <strong>
                       {safeText(
                         selectedInterviewerUser
                           ?.displayName,
-                        "Select interviewer"
+                        "Interviewer"
                       )}
                     </strong>
+                  </div>
 
-                    <p>
-                      {safeText(
-                        selectedInterviewerUser
-                          ?.email,
-                        "Email unavailable"
-                      )}
-                    </p>
+                  <b>
+                    ✓
+                  </b>
+                </div>
+              ) : null}
+            </section>
+
+            {/* 02 SCHEDULE */}
+
+            <section className="se-interview-form-card se-interview-form-card--compact">
+              <header>
+                <span>
+                  02
+                </span>
+
+                <div>
+                  <strong>
+                    Schedule
+                  </strong>
+                </div>
+              </header>
+
+              <div className="grid compact-grid schedule-grid">
+                <label
+                  className={
+                    fieldErrors.scheduledAt
+                      ? "has-error"
+                      : ""
+                  }
+                >
+                  <span>
+                    Date & Time *
+                  </span>
+
+                  <input
+                    type="datetime-local"
+                    min={
+                      getMinimumDateTime()
+                    }
+                    value={
+                      form.scheduledAt
+                    }
+                    disabled={
+                      submitting
+                    }
+                    onChange={(event) =>
+                      update(
+                        "scheduledAt",
+                        event.target.value
+                      )
+                    }
+                  />
+
+                  {fieldErrors.scheduledAt ? (
+                    <small className="se-interview-field-error">
+                      {
+                        fieldErrors
+                          .scheduledAt
+                      }
+                    </small>
+                  ) : null}
+                </label>
+
+                <label
+                  className={
+                    fieldErrors
+                      .durationMinutes
+                      ? "has-error"
+                      : ""
+                  }
+                >
+                  <span>
+                    Duration
+                  </span>
+
+                  <select
+                    value={
+                      form.durationMinutes
+                    }
+                    disabled={
+                      submitting
+                    }
+                    onChange={(event) =>
+                      update(
+                        "durationMinutes",
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="30">
+                      30 min
+                    </option>
+
+                    <option value="45">
+                      45 min
+                    </option>
+
+                    <option value="60">
+                      60 min
+                    </option>
+
+                    <option value="90">
+                      90 min
+                    </option>
+                  </select>
+
+                  {fieldErrors
+                    .durationMinutes ? (
+                    <small className="se-interview-field-error">
+                      {
+                        fieldErrors
+                          .durationMinutes
+                      }
+                    </small>
+                  ) : null}
+                </label>
+
+                <div className="se-interview-mini-preview">
+                  <small>
+                    SELECTED
+                  </small>
+
+                  <strong>
+                    {
+                      schedulePreview.date
+                    }
+                  </strong>
+
+                  <span>
+                    {
+                      schedulePreview.time
+                    }
+                    {" · "}
+                    {
+                      form.durationMinutes
+                    }
+                    {" min"}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* 03 MODE */}
+
+            <section className="se-interview-form-card se-interview-form-card--compact">
+              <header>
+                <span>
+                  03
+                </span>
+
+                <div>
+                  <strong>
+                    Mode
+                  </strong>
+                </div>
+              </header>
+
+              <div className="se-interview-mode-grid se-interview-premium-mode-grid se-interview-mode-grid--compact">
+                {[
+                  [
+                    "IN_PERSON",
+                    "O",
+                    "In Person",
+                  ],
+                  [
+                    "ONLINE",
+                    "V",
+                    "Online",
+                  ],
+                  [
+                    "PHONE",
+                    "☎",
+                    "Phone",
+                  ],
+                ].map(
+                  ([
+                    value,
+                    icon,
+                    title,
+                  ]) => (
+                    <button
+                      type="button"
+                      key={value}
+                      className={
+                        form.mode ===
+                        value
+                          ? "active"
+                          : ""
+                      }
+                      disabled={
+                        submitting
+                      }
+                      onClick={() =>
+                        changeMode(
+                          value
+                        )
+                      }
+                    >
+                      <span>
+                        {icon}
+                      </span>
+
+                      <strong>
+                        {title}
+                      </strong>
+
+                      <b>
+                        {form.mode ===
+                        value
+                          ? "✓"
+                          : ""}
+                      </b>
+                    </button>
+                  )
+                )}
+              </div>
+
+              {form.mode ===
+              "IN_PERSON" ? (
+                <label
+                  className={`standalone compact-standalone ${
+                    fieldErrors
+                      .officeLocation
+                      ? "has-error"
+                      : ""
+                  }`}
+                >
+                  <span>
+                    Office *
+                  </span>
+
+                  <select
+                    value={
+                      form.officeLocation
+                    }
+                    disabled={
+                      submitting
+                    }
+                    onChange={(event) =>
+                      update(
+                        "officeLocation",
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="DELHI">
+                      Delhi Office
+                    </option>
+
+                    <option value="SONIPAT">
+                      Sonipat Office
+                    </option>
+                  </select>
+
+                  {fieldErrors
+                    .officeLocation ? (
+                    <small className="se-interview-field-error">
+                      {
+                        fieldErrors
+                          .officeLocation
+                      }
+                    </small>
+                  ) : null}
+                </label>
+              ) : null}
+
+              {form.mode ===
+              "ONLINE" ? (
+                <label
+                  className={`standalone compact-standalone ${
+                    fieldErrors.meetingLink
+                      ? "has-error"
+                      : ""
+                  }`}
+                >
+                  <span>
+                    Meeting Link *
+                  </span>
+
+                  <input
+                    type="url"
+                    value={
+                      form.meetingLink
+                    }
+                    disabled={
+                      submitting
+                    }
+                    onChange={(event) =>
+                      update(
+                        "meetingLink",
+                        event.target.value
+                      )
+                    }
+                    placeholder="https://meet.google.com/..."
+                  />
+
+                  {fieldErrors.meetingLink ? (
+                    <small className="se-interview-field-error">
+                      {
+                        fieldErrors
+                          .meetingLink
+                      }
+                    </small>
+                  ) : null}
+                </label>
+              ) : null}
+
+              {form.mode === "PHONE" ? (
+                <div className="se-interview-phone-compact">
+                  <span>
+                    ☎
+                  </span>
+
+                  <strong>
+                    {safeText(
+                      candidate?.mobile,
+                      "Mobile not available"
+                    )}
+                  </strong>
+                </div>
+              ) : null}
+            </section>
+
+            {/* 04 NOTES */}
+
+            <section className="se-interview-form-card se-interview-form-card--compact notes-card">
+              <header>
+                <span>
+                  04
+                </span>
+
+                <div>
+                  <strong>
+                    Notes
+                  </strong>
+                </div>
+              </header>
+
+              <label
+                className={`standalone ${
+                  fieldErrors.remarks
+                    ? "has-error"
+                    : ""
+                }`}
+              >
+                <textarea
+                  value={
+                    form.remarks
+                  }
+                  maxLength={1000}
+                  disabled={
+                    submitting
+                  }
+                  onChange={(event) =>
+                    update(
+                      "remarks",
+                      event.target.value
+                    )
+                  }
+                  placeholder="Optional interview notes..."
+                />
+
+                <small className="se-interview-field-help">
+                  {
+                    form.remarks.length
+                  }
+                  /1000
+                </small>
+
+                {fieldErrors.remarks ? (
+                  <small className="se-interview-field-error">
+                    {
+                      fieldErrors
+                        .remarks
+                    }
+                  </small>
+                ) : null}
+              </label>
+            </section>
+
+            {/* NOTIFICATION SUMMARY */}
+
+            <section className="se-interview-notification-preview se-interview-notification-preview--compact">
+              <div className="se-interview-notification-icon">
+                ✉
+              </div>
+
+              <div className="se-interview-notification-main">
+                <strong>
+                  Notifications
+                </strong>
+
+                <div className="se-interview-notification-recipients compact-recipients">
+                  <div>
+                    <span className="person candidate">
+                      C
+                    </span>
+
+                    <div>
+                      <small>
+                        CANDIDATE
+                      </small>
+
+                      <strong>
+                        {safeText(
+                          candidate?.fullName,
+                          "Candidate"
+                        )}
+                      </strong>
+
+                      <p>
+                        {safeText(
+                          candidate?.email,
+                          "Email unavailable"
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="person interviewer">
+                      I
+                    </span>
+
+                    <div>
+                      <small>
+                        INTERVIEWER
+                      </small>
+
+                      <strong>
+                        {safeText(
+                          selectedInterviewerUser
+                            ?.displayName,
+                          "Select interviewer"
+                        )}
+                      </strong>
+
+                      <p>
+                        {safeText(
+                          selectedInterviewerUser
+                            ?.email,
+                          "Email unavailable"
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <span className="se-interview-notification-state">
-              PREPARED
-            </span>
-          </section>
-
-          {/* ===============================================
-              DUPLICATE ERROR
-          ================================================ */}
-
-          {fieldErrors
-            .duplicate ? (
-            <div className="se-interview-inline-block-error">
-              <span>
-                !
-              </span>
-
-              <div>
-                <strong>
-                  Duplicate interview blocked
-                </strong>
+            {fieldErrors.duplicate ? (
+              <div className="se-interview-inline-block-error compact">
+                <span>
+                  !
+                </span>
 
                 <p>
                   {
@@ -2656,24 +1729,13 @@ const ScheduleInterviewModal = ({
                   }
                 </p>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {/* ===============================================
-              CANDIDATE ERROR
-          ================================================ */}
-
-          {fieldErrors
-            .candidate ? (
-            <div className="se-interview-inline-block-error">
-              <span>
-                !
-              </span>
-
-              <div>
-                <strong>
-                  Candidate information unavailable
-                </strong>
+            {fieldErrors.candidate ? (
+              <div className="se-interview-inline-block-error compact">
+                <span>
+                  !
+                </span>
 
                 <p>
                   {
@@ -2682,14 +1744,12 @@ const ScheduleInterviewModal = ({
                   }
                 </p>
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
 
-          {/* ===============================================
-              FOOTER
-          ================================================ */}
+          {/* FOOTER */}
 
-          <footer className="se-interview-schedule-footer">
+          <footer className="se-interview-schedule-footer se-interview-schedule-footer--compact">
             <div className="se-interview-schedule-footer-info">
               <span>
                 {existingActiveInterview
@@ -2699,29 +1759,15 @@ const ScheduleInterviewModal = ({
                     : "✓"}
               </span>
 
-              <div>
-                <strong>
-                  {existingActiveInterview
-                    ? "Existing interview found"
-                    : loadingMeta
-                      ? "Loading interviewer directory"
-                      : interviewers.length ===
-                          0
-                        ? "Interviewer required"
-                        : "Ready to schedule"}
-                </strong>
-
-                <small>
-                  {existingActiveInterview
-                    ? "Manage the active interview instead of creating a duplicate."
-                    : loadingMeta
-                      ? "Please wait while eligible interviewers are loaded."
-                      : interviewers.length ===
-                          0
-                        ? "An eligible interviewer must be available before scheduling."
-                        : "Interview will be saved to the candidate recruitment workflow."}
-                </small>
-              </div>
+              <strong>
+                {existingActiveInterview
+                  ? "Existing interview found"
+                  : loadingMeta
+                    ? "Loading..."
+                    : interviewers.length
+                      ? "Ready to schedule"
+                      : "Interviewer required"}
+              </strong>
             </div>
 
             <div className="se-interview-schedule-footer-actions">
@@ -2745,30 +1791,26 @@ const ScheduleInterviewModal = ({
                   scheduleDisabled
                 }
               >
-                {submitting ? (
-                  <>
-                    <span className="se-interview-submit-spinner" />
+                {submitting
+                  ? "Scheduling..."
+                  : checkingDuplicate
+                    ? "Checking..."
+                    : loadingMeta
+                      ? "Loading..."
+                      : existingActiveInterview
+                        ? "Already Scheduled"
+                        : interviewers.length ===
+                            0
+                          ? "Interviewer Required"
+                          : (
+                            <>
+                              Schedule Interview
 
-                    Scheduling...
-                  </>
-                ) : checkingDuplicate ? (
-                  "Checking..."
-                ) : loadingMeta ? (
-                  "Loading..."
-                ) : existingActiveInterview ? (
-                  "Interview Already Scheduled"
-                ) : interviewers.length ===
-                    0 ? (
-                  "Interviewer Required"
-                ) : (
-                  <>
-                    Schedule Interview
-
-                    <span>
-                      →
-                    </span>
-                  </>
-                )}
+                              <span>
+                                →
+                              </span>
+                            </>
+                          )}
               </button>
             </div>
           </footer>

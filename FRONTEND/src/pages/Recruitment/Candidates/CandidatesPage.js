@@ -5,9 +5,7 @@ import React, {
   useState,
 } from "react";
 
-import {
-  useNavigate,
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
   getHrHiringQueue,
@@ -19,11 +17,8 @@ import {
 } from "../../../services/recruitmentService";
 
 import RecruitmentStatusBadge from "../components/RecruitmentStatusBadge";
-
 import RecruitmentEmptyState from "../components/RecruitmentEmptyState";
-
 import RequirementSelectModal from "./RequirementSelectModal";
-
 import AddCandidateDrawer from "./AddCandidateDrawer";
 
 import {
@@ -35,157 +30,18 @@ import {
 } from "../utils/recruitmentHelpers";
 
 import "./CandidateEntry.css";
-
 import "./Candidates.css";
 
+import candidateManagementHero from "../candidate-management-hero.mp4";
+import candidateManagementHeroPoster from "../candidate-management-hero-poster.webp";
 /* =========================================================
-   STATUS FILTERS
+   CANDIDATE STATUS GROUP
 ========================================================= */
 
-const FILTERS = [
-  {
-    key:
-      "ALL",
-
-    label:
-      "All",
-  },
-
-  {
-    key:
-      "NEW",
-
-    label:
-      "New",
-  },
-
-  {
-    key:
-      "CONTACT",
-
-    label:
-      "Contact",
-  },
-
-  {
-    key:
-      "FOLLOW_UP",
-
-    label:
-      "Follow-up",
-  },
-
-  {
-    key:
-      "SCREENING",
-
-    label:
-      "Screening",
-  },
-
-  {
-    key:
-      "SHORTLISTED",
-
-    label:
-      "Shortlisted",
-  },
-
-  {
-    key:
-      "INTERVIEW",
-
-    label:
-      "Interview",
-  },
-
-  {
-    key:
-      "SELECTED",
-
-    label:
-      "Selected",
-  },
-
-  {
-    key:
-      "REJECTED",
-
-    label:
-      "Rejected",
-  },
-];
-
-/* =========================================================
-   STATUS GROUP
-========================================================= */
-
-const candidateGroup = (
-  status
-) => {
-  const value =
-    String(
-      status ||
-        ""
-    ).toUpperCase();
-
-  if (
-    [
-      "NEW",
-      "CONTACT_PENDING",
-    ].includes(
-      value
-    )
-  ) {
-    return "NEW";
-  }
-
-  if (
-    [
-      "CONTACTED",
-    ].includes(
-      value
-    )
-  ) {
-    return "CONTACT";
-  }
-
-  if (
-    value ===
-    "FOLLOW_UP"
-  ) {
-    return "FOLLOW_UP";
-  }
-
-  if (
-    [
-      "SCREENING_PENDING",
-      "SCREENED",
-    ].includes(
-      value
-    )
-  ) {
-    return "SCREENING";
-  }
-
-  if (
-    value ===
-    "SHORTLISTED"
-  ) {
-    return "SHORTLISTED";
-  }
-
-  if (
-    [
-      "INTERVIEW_PENDING",
-      "INTERVIEW_SCHEDULED",
-      "INTERVIEWED",
-    ].includes(
-      value
-    )
-  ) {
-    return "INTERVIEW";
-  }
+const candidateGroup = (status) => {
+  const value = String(status || "")
+    .trim()
+    .toUpperCase();
 
   if (
     [
@@ -201,9 +57,7 @@ const candidateGroup = (
       "DOCUMENT_VERIFICATION",
       "READY_FOR_ONBOARDING",
       "JOINED",
-    ].includes(
-      value
-    )
+    ].includes(value)
   ) {
     return "SELECTED";
   }
@@ -211,1151 +65,917 @@ const candidateGroup = (
   if (
     [
       "NOT_INTERESTED",
+      "REJECTED",
       "REJECTED_SCREENING",
       "REJECTED_INTERVIEW",
       "LOI_DECLINED",
       "OFFER_DECLINED",
       "CLOSED",
-    ].includes(
-      value
-    )
+    ].includes(value)
   ) {
     return "REJECTED";
   }
 
-  return value;
+  if (
+    [
+      "HOLD",
+      "ON_HOLD",
+      "ON HOLD",
+      "PAUSED",
+    ].includes(value)
+  ) {
+    return "HOLD";
+  }
+
+  if (
+    [
+      "INTERVIEW_PENDING",
+      "INTERVIEW_SCHEDULED",
+      "INTERVIEWED",
+    ].includes(value)
+  ) {
+    return "INTERVIEW";
+  }
+
+  return "ACTIVE";
+};
+
+/* =========================================================
+   ROW STATE
+========================================================= */
+
+const getCandidateRowClass = (status) => {
+  const group = candidateGroup(status);
+
+  if (group === "SELECTED") {
+    return "candidate-row-selected";
+  }
+
+  if (group === "REJECTED") {
+    return "candidate-row-rejected";
+  }
+
+  if (group === "HOLD") {
+    return "candidate-row-hold";
+  }
+
+  return "candidate-row-normal";
 };
 
 /* =========================================================
    UNIQUE REQUIREMENTS
 ========================================================= */
 
-const uniqueRequirements = (
-  records = []
-) => {
-  const map =
-    new Map();
+const uniqueRequirements = (records = []) => {
+  const map = new Map();
 
-  records.forEach(
-    (
-      item
-    ) => {
-      const id =
-        getRecordId(
-          item
-        );
+  records.forEach((item) => {
+    const id = getRecordId(item);
 
-      if (
-        id
-      ) {
-        map.set(
-          String(
-            id
-          ),
-          item
-        );
-      }
+    if (id) {
+      map.set(String(id), item);
     }
-  );
+  });
 
-  return Array.from(
-    map.values()
-  );
+  return Array.from(map.values());
 };
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
-const CandidatesPage =
-  () => {
-    const navigate =
-      useNavigate();
+const CandidatesPage = () => {
+  const navigate = useNavigate();
 
-    const [
-      requirements,
-      setRequirements,
-    ] = useState([]);
+  const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
+  const [heroVideoReady, setHeroVideoReady] = useState(false);
 
-    const [
-      candidates,
-      setCandidates,
-    ] = useState([]);
+  useEffect(() => {
+  let timerId = null;
+  let idleId = null;
 
-    const [
-      loading,
-      setLoading,
-    ] = useState(true);
+  const enableVideo = () => {
+    setHeroVideoEnabled(true);
+  };
 
-    const [
-      refreshing,
-      setRefreshing,
-    ] = useState(false);
+  if ("requestIdleCallback" in window) {
+    idleId = window.requestIdleCallback(enableVideo, {
+      timeout: 1800,
+    });
+  } else {
+    timerId = window.setTimeout(enableVideo, 700);
+  }
 
-    const [
-      error,
-      setError,
-    ] = useState("");
+  return () => {
+    if (
+      idleId !== null &&
+      "cancelIdleCallback" in window
+    ) {
+      window.cancelIdleCallback(idleId);
+    }
 
-    const [
-      search,
-      setSearch,
-    ] = useState("");
+    if (timerId !== null) {
+      window.clearTimeout(timerId);
+    }
+  };
+}, []);
 
-    const [
-      filter,
-      setFilter,
-    ] = useState(
-      "ALL"
-    );
+  const [
+    requirements,
+    setRequirements,
+  ] = useState([]);
 
-    const [
-      requirementFilter,
-      setRequirementFilter,
-    ] = useState(
-      "ALL"
-    );
+  const [
+    candidates,
+    setCandidates,
+  ] = useState([]);
 
-    const [
-      selectRequirementOpen,
-      setSelectRequirementOpen,
-    ] = useState(false);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-    const [
-      selectedRequirement,
-      setSelectedRequirement,
-    ] = useState(null);
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(false);
 
-    /* =====================================================
-       LOAD
-    ===================================================== */
+  const [
+    error,
+    setError,
+  ] = useState("");
 
-    const loadCandidates =
-      useCallback(
-        async (
-          silent = false
-        ) => {
-          try {
+  const [
+    search,
+    setSearch,
+  ] = useState("");
+
+  const [
+    selectRequirementOpen,
+    setSelectRequirementOpen,
+  ] = useState(false);
+
+  const [
+    selectedRequirement,
+    setSelectedRequirement,
+  ] = useState(null);
+
+  /* =====================================================
+     LOAD CANDIDATES
+  ===================================================== */
+
+  const loadCandidates = useCallback(
+    async (silent = false) => {
+      try {
+        if (silent) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+
+        setError("");
+
+        const requirementResults =
+          await Promise.allSettled([
+            getHrHiringQueue(),
+            getMyHiring(),
+          ]);
+
+        const combinedRequirements = [];
+
+        requirementResults.forEach(
+          (result) => {
             if (
-              silent
-            ) {
-              setRefreshing(
-                true
-              );
-            } else {
-              setLoading(
-                true
-              );
-            }
-
-            setError(
-              ""
-            );
-
-            /*
-             * Different users have different hiring access.
-             * We intentionally try both.
-             */
-
-            const requirementResults =
-              await Promise.allSettled([
-                getHrHiringQueue(),
-
-                getMyHiring(),
-              ]);
-
-            const combinedRequirements =
-              [];
-
-            requirementResults.forEach(
-              (
-                result
-              ) => {
-                if (
-                  result.status ===
-                    "fulfilled" &&
-                  Array.isArray(
-                    result.value
-                  )
-                ) {
-                  combinedRequirements.push(
-                    ...result.value
-                  );
-                }
-              }
-            );
-
-            const accessibleRequirements =
-              uniqueRequirements(
-                combinedRequirements
-              );
-
-            setRequirements(
-              accessibleRequirements
-            );
-
-            /*
-             * Current backend lists candidates by MPR,
-             * therefore load candidates for accessible MPRs.
-             */
-
-            const candidateResults =
-              await Promise.allSettled(
-                accessibleRequirements.map(
-                  (
-                    requirement
-                  ) =>
-                    getRequirementCandidates(
-                      getRecordId(
-                        requirement
-                      )
-                    )
-                )
-              );
-
-            const combinedCandidates =
-              [];
-
-            candidateResults.forEach(
-              (
-                result,
-                index
-              ) => {
-                if (
-                  result.status !==
-                    "fulfilled" ||
-                  !Array.isArray(
-                    result.value
-                  )
-                ) {
-                  return;
-                }
-
-                const sourceRequirement =
-                  accessibleRequirements[
-                    index
-                  ];
-
-                result.value.forEach(
-                  (
-                    candidate
-                  ) => {
-                    combinedCandidates.push({
-                      ...candidate,
-
-                      /*
-                       * Ensure requirement is still available
-                       * even if backend candidate populate is
-                       * minimal.
-                       */
-
-                      _requirement:
-                        sourceRequirement,
-                    });
-                  }
-                );
-              }
-            );
-
-            /*
-             * Candidate may appear through queue + My Hiring.
-             * De-duplicate by candidate ID.
-             */
-
-            const candidateMap =
-              new Map();
-
-            combinedCandidates.forEach(
-              (
-                candidate
-              ) => {
-                const id =
-                  getRecordId(
-                    candidate
-                  );
-
-                if (
-                  id
-                ) {
-                  candidateMap.set(
-                    String(
-                      id
-                    ),
-                    candidate
-                  );
-                }
-              }
-            );
-
-            setCandidates(
-              Array.from(
-                candidateMap.values()
-              ).sort(
-                (
-                  a,
-                  b
-                ) =>
-                  new Date(
-                    b?.updatedAt ||
-                      b?.createdAt ||
-                      0
-                  ).getTime() -
-                  new Date(
-                    a?.updatedAt ||
-                      a?.createdAt ||
-                      0
-                  ).getTime()
-              )
-            );
-
-            if (
-              accessibleRequirements.length ===
-                0 &&
-              requirementResults.every(
-                (
-                  result
-                ) =>
-                  result.status ===
-                  "rejected"
+              result.status ===
+                "fulfilled" &&
+              Array.isArray(
+                result.value
               )
             ) {
-              setError(
-                "No recruitment hiring data is accessible for your account."
+              combinedRequirements.push(
+                ...result.value
               );
-            }
-          } catch (
-            loadError
-          ) {
-            setError(
-              loadError?.response?.data
-                ?.message ||
-                loadError?.message ||
-                "Candidates could not be loaded."
-            );
-          } finally {
-            setLoading(
-              false
-            );
-
-            setRefreshing(
-              false
-            );
-          }
-        },
-        []
-      );
-
-    useEffect(() => {
-      loadCandidates();
-    }, [
-      loadCandidates,
-    ]);
-
-    /* =====================================================
-       METRICS
-    ===================================================== */
-
-    const metrics =
-      useMemo(() => {
-        const data = {
-          total:
-            candidates.length,
-
-          new: 0,
-
-          followUp: 0,
-
-          screening: 0,
-
-          shortlisted: 0,
-
-          interview: 0,
-
-          selected: 0,
-        };
-
-        candidates.forEach(
-          (
-            candidate
-          ) => {
-            const group =
-              candidateGroup(
-                candidate
-                  ?.status
-              );
-
-            if (
-              group ===
-                "NEW" ||
-              group ===
-                "CONTACT"
-            ) {
-              data.new +=
-                1;
-            }
-
-            if (
-              group ===
-              "FOLLOW_UP"
-            ) {
-              data.followUp +=
-                1;
-            }
-
-            if (
-              group ===
-              "SCREENING"
-            ) {
-              data.screening +=
-                1;
-            }
-
-            if (
-              group ===
-              "SHORTLISTED"
-            ) {
-              data.shortlisted +=
-                1;
-            }
-
-            if (
-              group ===
-              "INTERVIEW"
-            ) {
-              data.interview +=
-                1;
-            }
-
-            if (
-              group ===
-              "SELECTED"
-            ) {
-              data.selected +=
-                1;
             }
           }
         );
 
-        return data;
-      }, [
-        candidates,
-      ]);
-
-    /* =====================================================
-       FILTERED
-    ===================================================== */
-
-    const visibleCandidates =
-      useMemo(() => {
-        const keyword =
-          String(
-            search ||
-              ""
-          )
-            .trim()
-            .toLowerCase();
-
-        return candidates.filter(
-          (
-            candidate
-          ) => {
-            const group =
-              candidateGroup(
-                candidate?.status
-              );
-
-            if (
-              filter !==
-                "ALL" &&
-              group !==
-                filter
-            ) {
-              return false;
-            }
-
-            const requirement =
-              candidate
-                ?._requirement ||
-              candidate
-                ?.manpowerRequirement;
-
-            const candidateRequirementId =
-              getRecordId(
-                requirement
-              );
-
-            if (
-              requirementFilter !==
-                "ALL" &&
-              String(
-                candidateRequirementId
-              ) !==
-                String(
-                  requirementFilter
-                )
-            ) {
-              return false;
-            }
-
-            if (
-              !keyword
-            ) {
-              return true;
-            }
-
-            return [
-              candidate
-                ?.candidateNumber,
-
-              candidate
-                ?.fullName,
-
-              candidate
-                ?.mobile,
-
-              candidate
-                ?.email,
-
-              candidate
-                ?.currentCompany,
-
-              candidate
-                ?.currentDesignation,
-
-              requirement
-                ?.positionTitle,
-
-              requirement
-                ?.requestNumber,
-
-              candidate
-                ?.department
-                ?.name,
-            ]
-              .filter(
-                Boolean
-              )
-              .join(
-                " "
-              )
-              .toLowerCase()
-              .includes(
-                keyword
-              );
-          }
-        );
-      }, [
-        candidates,
-        filter,
-        search,
-        requirementFilter,
-      ]);
-
-    /* =====================================================
-       REQUIREMENT SELECT
-    ===================================================== */
-
-    const handleRequirementSelect =
-      (
-        requirement
-      ) => {
-        setSelectRequirementOpen(
-          false
-        );
-
-        setSelectedRequirement(
-          requirement
-        );
-      };
-
-    /* =====================================================
-       CREATED
-    ===================================================== */
-
-    const handleCandidateCreated =
-      async (
-        candidate
-      ) => {
-        setSelectedRequirement(
-          null
-        );
-
-        await loadCandidates(
-          true
-        );
-
-        const id =
-          getRecordId(
-            candidate
+        const accessibleRequirements =
+          uniqueRequirements(
+            combinedRequirements
           );
 
-        if (
-          id
-        ) {
-          navigate(
-            buildCandidateDetailUrl(
-              id
+        setRequirements(
+          accessibleRequirements
+        );
+
+        const candidateResults =
+          await Promise.allSettled(
+            accessibleRequirements.map(
+              (requirement) =>
+                getRequirementCandidates(
+                  getRecordId(
+                    requirement
+                  )
+                )
             )
           );
+
+        const combinedCandidates = [];
+
+        candidateResults.forEach(
+          (
+            result,
+            index
+          ) => {
+            if (
+              result.status !==
+                "fulfilled" ||
+              !Array.isArray(
+                result.value
+              )
+            ) {
+              return;
+            }
+
+            const sourceRequirement =
+              accessibleRequirements[
+                index
+              ];
+
+            result.value.forEach(
+              (candidate) => {
+                combinedCandidates.push({
+                  ...candidate,
+                  _requirement:
+                    sourceRequirement,
+                });
+              }
+            );
+          }
+        );
+
+        const candidateMap =
+          new Map();
+
+        combinedCandidates.forEach(
+          (candidate) => {
+            const id =
+              getRecordId(
+                candidate
+              );
+
+            if (id) {
+              candidateMap.set(
+                String(id),
+                candidate
+              );
+            }
+          }
+        );
+
+        const finalCandidates =
+          Array.from(
+            candidateMap.values()
+          ).sort(
+            (a, b) =>
+              new Date(
+                b?.updatedAt ||
+                  b?.createdAt ||
+                  0
+              ).getTime() -
+              new Date(
+                a?.updatedAt ||
+                  a?.createdAt ||
+                  0
+              ).getTime()
+          );
+
+        setCandidates(
+          finalCandidates
+        );
+
+        if (
+          accessibleRequirements.length ===
+            0 &&
+          requirementResults.every(
+            (result) =>
+              result.status ===
+              "rejected"
+          )
+        ) {
+          setError(
+            "No recruitment hiring data is accessible for your account."
+          );
         }
+      } catch (loadError) {
+        setError(
+          loadError?.response?.data
+            ?.message ||
+            loadError?.message ||
+            "Candidates could not be loaded."
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    loadCandidates();
+  }, [loadCandidates]);
+
+  /* =====================================================
+     SUMMARY
+  ===================================================== */
+
+  const summary = useMemo(
+    () => {
+      const data = {
+        total: candidates.length,
+        interview: 0,
+        selected: 0,
+        rejected: 0,
+        hold: 0,
       };
 
-    return (
-      <section className="se-candidates-page">
-        {/* =================================================
-            HEADER
-        ================================================== */}
+      candidates.forEach(
+        (candidate) => {
+          const group =
+            candidateGroup(
+              candidate?.status
+            );
 
-        <header className="se-candidates-head">
+          if (
+            group ===
+            "INTERVIEW"
+          ) {
+            data.interview += 1;
+          }
+
+          if (
+            group ===
+            "SELECTED"
+          ) {
+            data.selected += 1;
+          }
+
+          if (
+            group ===
+            "REJECTED"
+          ) {
+            data.rejected += 1;
+          }
+
+          if (
+            group ===
+            "HOLD"
+          ) {
+            data.hold += 1;
+          }
+        }
+      );
+
+      return data;
+    },
+    [candidates]
+  );
+
+  /* =====================================================
+     SEARCH
+  ===================================================== */
+
+  const visibleCandidates =
+    useMemo(() => {
+      const keyword =
+        String(search || "")
+          .trim()
+          .toLowerCase();
+
+      if (!keyword) {
+        return candidates;
+      }
+
+      return candidates.filter(
+        (candidate) => {
+          const requirement =
+            candidate?._requirement ||
+            candidate
+              ?.manpowerRequirement ||
+            {};
+
+          return [
+            candidate
+              ?.candidateNumber,
+
+            candidate
+              ?.fullName,
+
+            candidate
+              ?.mobile,
+
+            candidate
+              ?.phone,
+
+            candidate
+              ?.email,
+
+            candidate
+              ?.currentCompany,
+
+            candidate
+              ?.currentDesignation,
+
+            candidate
+              ?.status,
+
+            requirement
+              ?.positionTitle,
+
+            requirement
+              ?.requestNumber,
+
+            requirement
+              ?.department
+              ?.name,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase()
+            .includes(keyword);
+        }
+      );
+    }, [
+      candidates,
+      search,
+    ]);
+
+  /* =====================================================
+     REQUIREMENT SELECT
+  ===================================================== */
+
+  const handleRequirementSelect =
+    (requirement) => {
+      setSelectRequirementOpen(
+        false
+      );
+
+      setSelectedRequirement(
+        requirement
+      );
+    };
+
+  /* =====================================================
+     CANDIDATE CREATED
+  ===================================================== */
+
+  const handleCandidateCreated =
+    async (candidate) => {
+      setSelectedRequirement(
+        null
+      );
+
+      await loadCandidates(
+        true
+      );
+
+      const id =
+        getRecordId(
+          candidate
+        );
+
+      if (id) {
+        navigate(
+          buildCandidateDetailUrl(
+            id
+          )
+        );
+      }
+    };
+
+  /* =====================================================
+     PAGE
+  ===================================================== */
+
+  return (
+    <section className="se-candidates-page se-candidates-production">
+      {/* =================================================
+          TOP HEADER
+      ================================================== */}
+
+  <header className="se-candidates-command-header se-candidates-video-hero">
+
+  <img
+    className="se-candidates-hero-poster"
+    src={candidateManagementHeroPoster}
+    alt=""
+    aria-hidden="true"
+    decoding="async"
+    fetchPriority="high"
+  />
+
+  {heroVideoEnabled ? (
+    <video
+      className={`se-candidates-hero-video ${
+        heroVideoReady ? "is-ready" : ""
+      }`}
+      src={candidateManagementHero}
+      poster={candidateManagementHeroPoster}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      onCanPlay={() => setHeroVideoReady(true)}
+    />
+  ) : null}
+
+  <div className="se-candidates-hero-video-blend" />
+
+  <div className="se-candidates-command-copy">
+    <span className="se-candidates-command-label">
+      RECRUITMENT
+    </span>
+
+    <h1>
+      Candidate Management
+    </h1>
+
+    <p>
+      Search and manage every candidate from one place.
+    </p>
+  </div>
+
+  <div className="se-candidates-command-actions">
+    <button
+      type="button"
+      className="se-candidates-refresh-btn"
+      disabled={refreshing}
+      onClick={() => loadCandidates(true)}
+    >
+      <span className={refreshing ? "is-spinning" : ""}>
+        ↻
+      </span>
+
+      {refreshing ? "Refreshing" : "Refresh"}
+    </button>
+
+    <button
+      type="button"
+      className="se-candidates-add-btn"
+      onClick={() => setSelectRequirementOpen(true)}
+    >
+      <span>+</span>
+      Add Candidate
+    </button>
+  </div>
+
+</header>
+
+      {/* =================================================
+          SUMMARY
+      ================================================== */}
+
+      <div className="se-candidates-summary">
+        <div className="se-candidates-summary-card total">
+          <span className="summary-icon">
+            C
+          </span>
+
           <div>
-            <span>
-              CANDIDATES · TALENT PIPELINE
-            </span>
+            <small>
+              TOTAL CANDIDATES
+            </small>
 
-            <h1>
-              Candidates
-            </h1>
-
-            <p>
-              One drill-down view for every
-              candidate across your
-              accessible hiring
-              requirements.
-            </p>
+            <strong>
+              {summary.total}
+            </strong>
           </div>
-
-          <div className="se-candidates-head-actions">
-            <button
-              type="button"
-              className="refresh"
-              disabled={
-                refreshing
-              }
-              onClick={() =>
-                loadCandidates(
-                  true
-                )
-              }
-            >
-              ↻
-
-              <span>
-                {refreshing
-                  ? "Refreshing"
-                  : "Refresh"}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              className="add"
-              onClick={() =>
-                setSelectRequirementOpen(
-                  true
-                )
-              }
-            >
-              <span>
-                +
-              </span>
-
-              Add Candidate
-            </button>
-          </div>
-        </header>
-
-        {/* =================================================
-            METRICS
-        ================================================== */}
-
-        <div className="se-candidate-metrics">
-          <button
-            type="button"
-            className={
-              filter ===
-              "ALL"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setFilter(
-                "ALL"
-              )
-            }
-          >
-            <span className="icon total">
-              C
-            </span>
-
-            <div>
-              <strong>
-                {
-                  metrics.total
-                }
-              </strong>
-
-              <span>
-                Total
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={
-              filter ===
-              "NEW"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setFilter(
-                "NEW"
-              )
-            }
-          >
-            <span className="icon new">
-              +
-            </span>
-
-            <div>
-              <strong>
-                {
-                  metrics.new
-                }
-              </strong>
-
-              <span>
-                New / Contact
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={
-              filter ===
-              "FOLLOW_UP"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setFilter(
-                "FOLLOW_UP"
-              )
-            }
-          >
-            <span className="icon follow">
-              ↻
-            </span>
-
-            <div>
-              <strong>
-                {
-                  metrics.followUp
-                }
-              </strong>
-
-              <span>
-                Follow-ups
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={
-              filter ===
-              "SHORTLISTED"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setFilter(
-                "SHORTLISTED"
-              )
-            }
-          >
-            <span className="icon shortlisted">
-              ✓
-            </span>
-
-            <div>
-              <strong>
-                {
-                  metrics.shortlisted
-                }
-              </strong>
-
-              <span>
-                Shortlisted
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={
-              filter ===
-              "INTERVIEW"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setFilter(
-                "INTERVIEW"
-              )
-            }
-          >
-            <span className="icon interview">
-              I
-            </span>
-
-            <div>
-              <strong>
-                {
-                  metrics.interview
-                }
-              </strong>
-
-              <span>
-                Interview
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={
-              filter ===
-              "SELECTED"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setFilter(
-                "SELECTED"
-              )
-            }
-          >
-            <span className="icon selected">
-              ★
-            </span>
-
-            <div>
-              <strong>
-                {
-                  metrics.selected
-                }
-              </strong>
-
-              <span>
-                Selected
-              </span>
-            </div>
-          </button>
         </div>
 
-        {/* =================================================
-            FILTER BAR
-        ================================================== */}
+        <div className="se-candidates-summary-card interview">
+          <span className="summary-icon">
+            I
+          </span>
 
-        <div className="se-candidate-toolbar">
-          <div className="se-candidate-global-search">
+          <div>
+            <small>
+              INTERVIEW
+            </small>
+
+            <strong>
+              {summary.interview}
+            </strong>
+          </div>
+        </div>
+
+        <div className="se-candidates-summary-card selected">
+          <span className="summary-icon">
+            ✓
+          </span>
+
+          <div>
+            <small>
+              SELECTED
+            </small>
+
+            <strong>
+              {summary.selected}
+            </strong>
+          </div>
+        </div>
+
+        <div className="se-candidates-summary-card rejected">
+          <span className="summary-icon">
+            ×
+          </span>
+
+          <div>
+            <small>
+              REJECTED
+            </small>
+
+            <strong>
+              {summary.rejected}
+            </strong>
+          </div>
+        </div>
+
+        <div className="se-candidates-summary-card hold">
+          <span className="summary-icon">
+            !
+          </span>
+
+          <div>
+            <small>
+              ON HOLD
+            </small>
+
+            <strong>
+              {summary.hold}
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      {/* =================================================
+          SEARCH
+      ================================================== */}
+
+      <div className="se-candidates-search-section">
+        <div className="se-candidates-search-box">
+          <span className="se-candidates-search-icon">
+            ⌕
+          </span>
+
+          <input
+            type="search"
+            value={search}
+            onChange={(event) =>
+              setSearch(
+                event.target.value
+              )
+            }
+            placeholder="Search by candidate name, mobile, email, company, position or MPR number"
+          />
+
+          {search ? (
+            <button
+              type="button"
+              className="se-candidates-search-clear"
+              onClick={() =>
+                setSearch("")
+              }
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
+
+        <div className="se-candidates-result-count">
+          <strong>
+            {
+              visibleCandidates.length
+            }
+          </strong>
+
+          <span>
+            {visibleCandidates.length ===
+            1
+              ? "candidate"
+              : "candidates"}
+          </span>
+        </div>
+      </div>
+
+      {/* =================================================
+          STATUS GUIDE
+      ================================================== */}
+
+      <div className="se-candidates-status-guide">
+        <span className="guide-title">
+          ROW STATUS
+        </span>
+
+        <div>
+          <span className="guide-item selected">
+            <i />
+            Selected
+          </span>
+
+          <span className="guide-item rejected">
+            <i />
+            Rejected
+          </span>
+
+          <span className="guide-item hold">
+            <i />
+            On Hold
+          </span>
+
+          <span className="guide-item normal">
+            <i />
+            In Process
+          </span>
+        </div>
+      </div>
+
+      {/* =================================================
+          ERROR
+      ================================================== */}
+
+      {error ? (
+        <div className="se-candidate-global-error">
+          <span>!</span>
+
+          <p>{error}</p>
+        </div>
+      ) : null}
+
+      {/* =================================================
+          CANDIDATE TABLE
+      ================================================== */}
+
+      <article className="se-candidates-table-panel">
+        <div className="se-candidates-table-head">
+          <div>
             <span>
-              ⌕
+              CANDIDATES
             </span>
 
-            <input
-              type="search"
-              value={
-                search
-              }
-              onChange={(
-                event
-              ) =>
-                setSearch(
-                  event
-                    .target
-                    .value
-                )
-              }
-              placeholder="Search candidate, mobile, email, company, MPR..."
-            />
-
-            {search ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setSearch(
-                    ""
-                  )
-                }
-              >
-                ×
-              </button>
-            ) : null}
+            <strong>
+              Candidate List
+            </strong>
           </div>
 
-          <select
-            value={
-              requirementFilter
-            }
-            onChange={(
-              event
-            ) =>
-              setRequirementFilter(
-                event
-                  .target
-                  .value
-              )
-            }
-          >
-            <option value="ALL">
-              All Hiring Requirements
-            </option>
-
-            {requirements.map(
-              (
-                requirement
-              ) => (
-                <option
-                  key={
-                    getRecordId(
-                      requirement
-                    )
-                  }
-                  value={
-                    getRecordId(
-                      requirement
-                    )
-                  }
-                >
-                  {safeText(
-                    requirement
-                      ?.requestNumber,
-                    "MPR"
-                  )}
-
-                  {" — "}
-
-                  {safeText(
-                    requirement
-                      ?.positionTitle,
-                    "Position"
-                  )}
-                </option>
-              )
-            )}
-          </select>
-
-          <span className="se-candidate-visible-count">
+          <div className="se-candidates-table-head-count">
             <strong>
               {
                 visibleCandidates.length
               }
             </strong>
 
-            visible
-          </span>
-        </div>
-
-        {/* =================================================
-            STATUS TABS
-        ================================================== */}
-
-        <div className="se-candidate-status-tabs">
-          {FILTERS.map(
-            (
-              item
-            ) => (
-              <button
-                type="button"
-                key={
-                  item.key
-                }
-                className={
-                  filter ===
-                  item.key
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setFilter(
-                    item.key
-                  )
-                }
-              >
-                {
-                  item.label
-                }
-              </button>
-            )
-          )}
-        </div>
-
-        {error ? (
-          <div className="se-candidate-global-error">
             <span>
-              !
+              showing
             </span>
-
-            <p>
-              {
-                error
-              }
-            </p>
           </div>
-        ) : null}
+        </div>
 
-        {/* =================================================
-            TABLE
-        ================================================== */}
-
-        <article className="se-candidate-list-panel">
-          <div className="se-candidate-list-title">
-            <div>
-              <span>
-                TALENT DATABASE
-              </span>
-
-              <strong>
-                Candidate Pipeline
-              </strong>
-            </div>
-
-            <p>
-              Click any candidate for
-              complete recruitment history
-              and actions.
-            </p>
+        {loading ? (
+          <div className="se-candidate-list-loading">
+            <span />
+            <span />
+            <span />
+            <span />
           </div>
+        ) : visibleCandidates.length >
+          0 ? (
+          <div className="se-candidates-table-wrap">
+            <table className="se-candidates-main-table">
+              <thead>
+                <tr>
+                  <th>
+                    Candidate
+                  </th>
 
-          {loading ? (
-            <div className="se-candidate-list-loading">
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-          ) : visibleCandidates.length >
-            0 ? (
-            <div className="se-candidate-table-wrap">
-              <table className="se-candidate-table">
-                <thead>
-                  <tr>
-                    <th>
-                      Candidate
-                    </th>
+                  <th>
+                    Hiring For
+                  </th>
 
-                    <th>
-                      Hiring For
-                    </th>
+                  <th>
+                    Experience
+                  </th>
 
-                    <th>
-                      Experience
-                    </th>
+                  <th>
+                    Contact
+                  </th>
 
-                    <th>
-                      Contact
-                    </th>
+                  <th>
+                    Status
+                  </th>
 
-                    <th>
-                      Status
-                    </th>
+                  <th>
+                    Next Action
+                  </th>
 
-                    <th>
-                      Next Action
-                    </th>
+                  <th>
+                    Updated
+                  </th>
 
-                    <th>
-                      Updated
-                    </th>
+                  <th
+                    aria-label="Open candidate"
+                  />
+                </tr>
+              </thead>
 
-                    <th />
-                  </tr>
-                </thead>
+              <tbody>
+                {visibleCandidates.map(
+                  (candidate) => {
+                    const id =
+                      getRecordId(
+                        candidate
+                      );
 
-                <tbody>
-                  {visibleCandidates.map(
-                    (
+                    const requirement =
                       candidate
-                    ) => {
-                      const id =
-                        getRecordId(
-                          candidate
-                        );
+                        ?._requirement ||
+                      candidate
+                        ?.manpowerRequirement ||
+                      {};
 
-                      const requirement =
+                    const statusMeta =
+                      getCandidateStatusMeta(
                         candidate
-                          ?._requirement ||
+                          ?.status
+                      );
+
+                    const rowClass =
+                      getCandidateRowClass(
                         candidate
-                          ?.manpowerRequirement ||
-                        {};
+                          ?.status
+                      );
 
-                      const statusMeta =
-                        getCandidateStatusMeta(
-                          candidate
-                            ?.status
-                        );
+                    const group =
+                      candidateGroup(
+                        candidate
+                          ?.status
+                      );
 
-                      return (
-                        <tr
-                          key={
-                            id
-                          }
-                          onClick={() =>
+                    return (
+                      <tr
+                        key={id}
+                        className={
+                          rowClass
+                        }
+                        onClick={() => {
+                          if (id) {
                             navigate(
                               buildCandidateDetailUrl(
                                 id
                               )
-                            )
+                            );
                           }
-                        >
-                          <td>
-                            <div className="se-candidate-person">
-                              <span>
+                        }}
+                      >
+                        <td>
+                          <div className="se-candidates-person">
+                            <span className="se-candidates-avatar">
+                              {safeText(
+                                candidate
+                                  ?.fullName,
+                                "C"
+                              )
+                                .charAt(
+                                  0
+                                )
+                                .toUpperCase()}
+                            </span>
+
+                            <div>
+                              <strong>
                                 {safeText(
                                   candidate
                                     ?.fullName,
-                                  "C"
-                                )
-                                  .charAt(
-                                    0
-                                  )
-                                  .toUpperCase()}
-                              </span>
+                                  "Candidate"
+                                )}
+                              </strong>
 
-                              <div>
-                                <strong>
-                                  {safeText(
-                                    candidate
-                                      ?.fullName,
-                                    "Candidate"
-                                  )}
-                                </strong>
-
-                                <small>
-                                  {safeText(
-                                    candidate
-                                      ?.candidateNumber,
-                                    "Candidate"
-                                  )}
-
-                                  {" · "}
-
-                                  {safeText(
-                                    candidate
-                                      ?.currentDesignation,
-                                    "Designation not specified"
-                                  )}
-                                </small>
-                              </div>
+                              <small>
+                                {safeText(
+                                  candidate
+                                    ?.candidateNumber,
+                                  "Candidate"
+                                )}
+                              </small>
                             </div>
-                          </td>
+                          </div>
+                        </td>
 
-                          <td>
-                            <strong className="se-candidate-role">
+                        <td>
+                          <div className="se-candidates-role">
+                            <strong>
                               {safeText(
                                 requirement
                                   ?.positionTitle,
@@ -1365,46 +985,54 @@ const CandidatesPage =
                               )}
                             </strong>
 
-                            <small className="se-candidate-role-sub">
+                            <small>
                               {safeText(
                                 requirement
                                   ?.requestNumber,
                                 "MPR"
                               )}
                             </small>
-                          </td>
+                          </div>
+                        </td>
 
-                          <td>
+                        <td>
+                          <div className="se-candidates-experience">
                             <strong>
                               {candidate
                                 ?.totalExperienceYears ??
                                 "—"}
                             </strong>
 
-                            <small className="se-candidate-role-sub">
+                            <small>
                               years
                             </small>
-                          </td>
+                          </div>
+                        </td>
 
-                          <td>
-                            <strong className="se-candidate-contact">
+                        <td>
+                          <div className="se-candidates-contact">
+                            <strong>
                               {safeText(
                                 candidate
-                                  ?.mobile,
+                                  ?.mobile ||
+                                  candidate
+                                    ?.phone,
                                 "—"
                               )}
                             </strong>
 
-                            <small className="se-candidate-role-sub">
+                            <small>
                               {safeText(
                                 candidate
                                   ?.email,
-                                ""
+                                "Email not available"
                               )}
                             </small>
-                          </td>
+                          </div>
+                        </td>
 
-                          <td>
+                        <td>
+                          <div className="se-candidates-status-cell">
                             <RecruitmentStatusBadge
                               label={
                                 statusMeta.label
@@ -1413,101 +1041,119 @@ const CandidatesPage =
                                 statusMeta.tone
                               }
                             />
-                          </td>
 
-                          <td>
-                            <span className="se-candidate-next-action">
-                              {safeText(
+                            {group ===
+                            "SELECTED" ? (
+                              <small>
+                                Candidate selected
+                              </small>
+                            ) : null}
+
+                            {group ===
+                            "REJECTED" ? (
+                              <small>
+                                Candidate rejected
+                              </small>
+                            ) : null}
+
+                            {group ===
+                            "HOLD" ? (
+                              <small>
+                                Process on hold
+                              </small>
+                            ) : null}
+                          </div>
+                        </td>
+
+                        <td>
+                          <span className="se-candidates-next-action">
+                            {safeText(
+                              candidate
+                                ?.nextAction,
+                              "No action"
+                            ).replaceAll(
+                              "_",
+                              " "
+                            )}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="se-candidates-date">
+                            {formatRecruitmentDate(
+                              candidate
+                                ?.updatedAt ||
                                 candidate
-                                  ?.nextAction,
-                                "NONE"
-                              ).replaceAll(
-                                "_",
-                                " "
-                              )}
-                            </span>
-                          </td>
+                                  ?.createdAt
+                            )}
+                          </span>
+                        </td>
 
-                          <td>
-                            <span className="se-candidate-date">
-                              {formatRecruitmentDate(
-                                candidate
-                                  ?.updatedAt ||
-                                  candidate
-                                    ?.createdAt
-                              )}
-                            </span>
-                          </td>
+                        <td>
+                          <span className="se-candidates-open">
+                            →
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  }
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <RecruitmentEmptyState
+            icon="C"
+            title="No candidates found"
+            description={
+              search
+                ? "No candidate matches your search."
+                : "No candidates are available yet."
+            }
+          />
+        )}
+      </article>
 
-                          <td>
-                            <span className="se-candidate-table-arrow">
-                              →
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    }
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <RecruitmentEmptyState
-              icon="C"
-              title="No candidates found"
-              description={
-                search ||
-                filter !==
-                  "ALL"
-                  ? "No candidates match the current search or filter."
-                  : "Add the first candidate against an active hiring requirement."
-              }
-            />
-          )}
-        </article>
+      {/* =================================================
+          REQUIREMENT SELECT
+      ================================================== */}
 
-        {/* =================================================
-            SELECT REQUIREMENT
-        ================================================== */}
+      <RequirementSelectModal
+        open={
+          selectRequirementOpen
+        }
+        onClose={() =>
+          setSelectRequirementOpen(
+            false
+          )
+        }
+        onSelect={
+          handleRequirementSelect
+        }
+      />
 
-        <RequirementSelectModal
-          open={
-            selectRequirementOpen
-          }
-          onClose={() =>
-            setSelectRequirementOpen(
-              false
-            )
-          }
-          onSelect={
-            handleRequirementSelect
-          }
-        />
+      {/* =================================================
+          ADD CANDIDATE DRAWER
+      ================================================== */}
 
-        {/* =================================================
-            EXISTING STEP 6 DRAWER
-        ================================================== */}
-
-        <AddCandidateDrawer
-          open={
-            Boolean(
-              selectedRequirement
-            )
-          }
-          requirement={
-            selectedRequirement
-          }
-          onClose={() =>
-            setSelectedRequirement(
-              null
-            )
-          }
-          onCreated={
-            handleCandidateCreated
-          }
-        />
-      </section>
-    );
-  };
+      <AddCandidateDrawer
+        open={Boolean(
+          selectedRequirement
+        )}
+        requirement={
+          selectedRequirement
+        }
+        onClose={() =>
+          setSelectedRequirement(
+            null
+          )
+        }
+        onCreated={
+          handleCandidateCreated
+        }
+      />
+    </section>
+  );
+};
 
 export default CandidatesPage;

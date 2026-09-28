@@ -19,7 +19,7 @@ function LeaveRequestList({
 }) {
   if (!requests.length) {
     return (
-      <section className="se-leave-panel">
+      <section className="se-leave-panel se-leave-panel--table">
         <LeaveEmptyState
           title="No leave requests"
           description="Your leave requests will appear here after you submit them."
@@ -31,162 +31,184 @@ function LeaveRequestList({
   }
 
   return (
-    <section className="se-leave-panel">
-      <div className="se-leave-panel-head">
+    <section className="se-leave-panel se-leave-panel--table">
+      <div className="se-leave-table-section-head">
         <div>
           <span className="se-leave-section-label">
-            REQUESTS
+            REQUEST HISTORY
           </span>
 
-          <h2>
-            My leave requests
-          </h2>
+          <h2>My leave requests</h2>
         </div>
 
-        <span className="se-leave-record-count">
-          {requests.length} records
-        </span>
+        <div className="se-leave-table-head-actions">
+          <div className="se-leave-table-head-count">
+            <strong>{requests.length}</strong>
+            <span>Records</span>
+          </div>
+
+          <button
+            type="button"
+            className="se-leave-pro-head-action"
+            onClick={onApply}
+          >
+            <span>＋</span>
+            Apply Leave
+          </button>
+        </div>
       </div>
 
-      <div className="se-leave-table-wrap">
-        <table className="se-leave-table">
+      <div className="se-leave-pro-table-wrap">
+        <table className="se-leave-pro-table">
           <thead>
             <tr>
-              <th>
-                Request
-              </th>
-
-              <th>
-                Leave
-              </th>
-
-              <th>
-                Dates
-              </th>
-
-              <th>
-                Days
-              </th>
-
-              <th>
-                Status
-              </th>
-
-              <th className="se-leave-table-action">
+              <th>Request ID</th>
+              <th>Leave Type</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th className="se-leave-pro-action-head">
                 Action
               </th>
             </tr>
           </thead>
 
           <tbody>
-            {requests.map(
-              (request) => (
-                <tr
-                  key={
-                    request._id
-                  }
-                >
-                  <td>
+            {requests.map((request) => (
+              <tr
+                key={request._id}
+                className="se-leave-pro-clickable-row"
+                onClick={() => onOpen(request)}
+              >
+                <td>
+                  <button
+                    type="button"
+                    className="se-leave-pro-request-number"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onOpen(request);
+                    }}
+                  >
+                    {request.requestNumber ||
+                      "Leave Request"}
+                  </button>
+                </td>
+
+                <td>
+                  <div className="se-leave-pro-leave-type">
+                    <span className="se-leave-pro-type-code">
+                      {getLeaveTypeCode(
+                        request
+                      )}
+                    </span>
+
+                    <strong>
+                      {getLeaveTypeName(
+                        request
+                      )}
+                    </strong>
+                  </div>
+                </td>
+
+                <td>
+                  <strong className="se-leave-pro-date">
+                    {formatLeaveDate(
+                      request.fromDate
+                    )}
+                  </strong>
+                </td>
+
+                <td>
+                  <strong className="se-leave-pro-date">
+                    {formatLeaveDate(
+                      request.toDate
+                    )}
+                  </strong>
+                </td>
+
+                <td>
+                  <div className="se-leave-pro-duration">
+                    <strong>
+                      {formatDays(
+                        request.totalDays
+                      )}
+                    </strong>
+
+                    <span>
+                      {Number(
+                        request.totalDays
+                      ) === 1
+                        ? "day"
+                        : "days"}
+                    </span>
+                  </div>
+                </td>
+
+                <td>
+                  <span
+                    className={`se-leave-pro-status se-leave-pro-status--${String(
+                      request.status || ""
+                    ).toLowerCase()}`}
+                  >
+                    <i />
+
+                    {formatLeaveStatus(
+                      request.status
+                    )}
+                  </span>
+                </td>
+
+                <td className="se-leave-pro-action-cell">
+                  <div className="se-leave-pro-row-actions">
                     <button
                       type="button"
-                      className="se-leave-request-link"
-                      onClick={() =>
-                        onOpen(
-                          request
-                        )
-                      }
+                      className="se-leave-pro-view-btn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onOpen(request);
+                      }}
                     >
-                      {request.requestNumber ||
-                        "Leave Request"}
+                      View
+                      <span>→</span>
                     </button>
-                  </td>
 
-                  <td>
-                    <div className="se-leave-table-leave">
-                      <span className="se-leave-type-badge se-leave-type-badge--small">
-                        {getLeaveTypeCode(
-                          request
-                        )}
-                      </span>
-
-                      <strong>
-                        {getLeaveTypeName(
-                          request
-                        )}
-                      </strong>
-                    </div>
-                  </td>
-
-                  <td>
-                    <span className="se-leave-date-range">
-                      {formatLeaveDate(
-                        request.fromDate
-                      )}
-
-                      <small>
-                        to
-                      </small>
-
-                      {formatLeaveDate(
-                        request.toDate
-                      )}
-                    </span>
-                  </td>
-
-                  <td>
-                    {formatDays(
-                      request.totalDays
-                    )}
-                  </td>
-
-                  <td>
-                    <span
-                      className={`se-leave-status se-leave-status--${String(
-                        request.status ||
-                          ""
-                      ).toLowerCase()}`}
-                    >
-                      {formatLeaveStatus(
-                        request.status
-                      )}
-                    </span>
-                  </td>
-
-                  <td className="se-leave-table-action">
-                    <div className="se-leave-row-actions">
+                    {canCancelLeave(
+                      request
+                    ) ? (
                       <button
                         type="button"
-                        onClick={() =>
-                          onOpen(
-                            request
-                          )
-                        }
-                      >
-                        View
-                      </button>
+                        className="se-leave-pro-cancel-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
 
-                      {canCancelLeave(
-                        request
-                      ) ? (
-                        <button
-                          type="button"
-                          className="is-danger"
-                          onClick={() =>
-                            onCancel(
-                              request
-                            )
-                          }
-                        >
-                          Cancel
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              )
-            )}
+                          onCancel(
+                            request
+                          );
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    ) : null}
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="se-leave-table-footer">
+        <span>
+          Showing {requests.length}{" "}
+          {requests.length === 1
+            ? "request"
+            : "requests"}
+        </span>
+
+        <span>
+          Select any row to drill down
+        </span>
       </div>
     </section>
   );

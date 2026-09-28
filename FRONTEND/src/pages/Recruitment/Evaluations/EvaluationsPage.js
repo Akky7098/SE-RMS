@@ -6,60 +6,93 @@ import React, {
 } from "react";
 
 import {
-  getEvaluationSummary,
   getEvaluations,
 } from "../../../services/evaluationService";
 
 import "./Evaluations.css";
 
+import evaluationHeroVideo from "../evaluation-hero.mp4";
+import evaluationHeroPoster from "../evaluation-hero-poster.webp";
+
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
+const PAGE_SIZE = 50;
+
+
 /* =========================================================
    HELPERS
 ========================================================= */
 
-const getCandidateName = (
-  record
-) =>
+const normalizeId = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return String(
+    value?._id ||
+      value?.id ||
+      value ||
+      ""
+  );
+};
+
+
+const getCandidateId = (record) =>
+  normalizeId(
+    record?.candidate?._id ||
+      record?.candidate
+  );
+
+
+const getCandidateName = (record) =>
   record?.candidate?.fullName ||
   "Candidate";
 
-const getCandidateInitial = (
-  record
-) =>
+
+const getCandidateNumber = (record) =>
+  record?.candidate?.candidateNumber ||
+  "—";
+
+
+const getCandidateInitial = (record) =>
   getCandidateName(record)
     .trim()
     .charAt(0)
-    .toUpperCase() ||
-  "C";
+    .toUpperCase() || "C";
 
-const getPosition = (
-  record
-) =>
-  record?.candidate
-    ?.positionTitle ||
-  record?.interview
-    ?.positionTitle ||
-  record?.manpowerRequirement
-    ?.positionTitle ||
+
+const getPosition = (record) =>
+  record?.candidate?.positionTitle ||
+  record?.interview?.positionTitle ||
+  record?.manpowerRequirement?.positionTitle ||
   "—";
 
-const getEvaluatorName = (
-  record
-) =>
-  record?.evaluatedBy
-    ?.displayName ||
-  record?.interviewer
-    ?.displayName ||
+
+const getEvaluatorName = (record) =>
+  record?.evaluatedBy?.displayName ||
+  record?.interviewer?.displayName ||
   "—";
 
-const formatDate = (
-  value
-) => {
+
+const getRoundName = (record) =>
+  record?.interview?.roundName ||
+  record?.roundName ||
+  "Interview";
+
+
+const formatDate = (value) => {
   if (!value) {
     return "—";
   }
 
-  const date =
-    new Date(value);
+  const date = new Date(value);
 
   if (
     Number.isNaN(
@@ -79,21 +112,13 @@ const formatDate = (
   ).format(date);
 };
 
-const recommendationLabel = (
-  value
-) => {
+
+const recommendationLabel = (value) => {
   const map = {
-    STRONG_HIRE:
-      "Strong Hire",
-
-    HIRE:
-      "Hire",
-
-    HOLD:
-      "Hold",
-
-    REJECT:
-      "Reject",
+    STRONG_HIRE: "Strong Hire",
+    HIRE: "Hire",
+    HOLD: "Hold",
+    REJECT: "Reject",
   };
 
   return (
@@ -103,18 +128,12 @@ const recommendationLabel = (
   );
 };
 
-const decisionLabel = (
-  value
-) => {
+
+const decisionLabel = (value) => {
   const map = {
-    SELECTED:
-      "Selected",
-
-    HOLD:
-      "Hold",
-
-    REJECTED:
-      "Rejected",
+    SELECTED: "Selected",
+    HOLD: "Hold",
+    REJECTED: "Rejected",
   };
 
   return (
@@ -123,187 +142,620 @@ const decisionLabel = (
     "—"
   );
 };
+
+
+const getEvaluationTime = (record) => {
+  const value =
+    record?.evaluatedAt ||
+    record?.updatedAt ||
+    record?.createdAt;
+
+  const date =
+    value
+      ? new Date(value)
+      : null;
+
+  if (
+    !date ||
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return 0;
+  }
+
+  return date.getTime();
+};
+
+
+/* =========================================================
+   GROUP EVALUATIONS BY CANDIDATE
+
+   One candidate = one row.
+
+   All interview rounds remain inside evaluations[] and are
+   available when the candidate is opened.
+========================================================= */
+
+const groupEvaluationsByCandidate = (
+  records
+) => {
+  const map = new Map();
+
+  for (const record of records) {
+    const candidateId =
+      getCandidateId(record);
+
+    /*
+     * Defensive fallback:
+     * never accidentally merge unrelated orphan evaluations.
+     */
+    const key =
+      candidateId ||
+      `evaluation:${normalizeId(
+        record?._id
+      )}`;
+
+    if (!map.has(key)) {
+      map.set(
+        key,
+        []
+      );
+    }
+
+    map
+      .get(key)
+      .push(record);
+  }
+
+  return Array.from(
+    map.entries()
+  ).map(
+    ([
+      key,
+      evaluations,
+    ]) => {
+      const sorted =
+        [...evaluations].sort(
+          (
+            first,
+            second
+          ) =>
+            getEvaluationTime(
+              second
+            ) -
+            getEvaluationTime(
+              first
+            )
+        );
+
+      const latest =
+        sorted[0];
+
+      const decision =
+        latest?.finalDecision ||
+        "";
+
+      const averageRating =
+        sorted.length
+          ? sorted.reduce(
+              (
+                total,
+                item
+              ) =>
+                total +
+                Number(
+                  item?.overallRating ||
+                    0
+                ),
+              0
+            ) /
+            sorted.length
+          : 0;
+
+      return {
+        key,
+
+        candidateId:
+          getCandidateId(
+            latest
+          ),
+
+        candidate:
+          latest?.candidate ||
+          {},
+
+        latest,
+
+        evaluations:
+          sorted,
+
+        evaluationCount:
+          sorted.length,
+
+        decision,
+
+        averageRating,
+      };
+    }
+  );
+};
+
+
+/* =========================================================
+   PAGE NUMBER GENERATOR
+
+   Example:
+   1 2 3 4 ... 10
+   1 ... 4 5 6 ... 10
+========================================================= */
+
+const getPaginationItems = (
+  currentPage,
+  totalPages
+) => {
+  if (totalPages <= 7) {
+    return Array.from(
+      {
+        length: totalPages,
+      },
+      (
+        _,
+        index
+      ) => index + 1
+    );
+  }
+
+  if (currentPage <= 4) {
+    return [
+      1,
+      2,
+      3,
+      4,
+      5,
+      "...",
+      totalPages,
+    ];
+  }
+
+  if (
+    currentPage >=
+    totalPages - 3
+  ) {
+    return [
+      1,
+      "...",
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ];
+  }
+
+  return [
+    1,
+    "...",
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    "...",
+    totalPages,
+  ];
+};
+
 
 /* =========================================================
    PAGE
 ========================================================= */
 
 function EvaluationsPage() {
-  const [
-    summary,
-    setSummary,
-  ] =
-    useState({
-      total: 0,
-      selected: 0,
-      hold: 0,
-      rejected: 0,
-    });
+  const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
+  const [heroVideoReady, setHeroVideoReady] = useState(false);
 
   const [
     records,
     setRecords,
-  ] =
-    useState([]);
+  ] = useState([]);
 
   const [
     filter,
     setFilter,
-  ] =
-    useState(
-      "ALL"
-    );
+  ] = useState("ALL");
 
   const [
     search,
     setSearch,
-  ] =
-    useState("");
+  ] = useState("");
 
   const [
     loading,
     setLoading,
-  ] =
-    useState(true);
+  ] = useState(true);
 
   const [
     error,
     setError,
-  ] =
-    useState("");
+  ] = useState("");
 
   const [
-    refreshing,
-    setRefreshing,
-  ] =
-    useState(false);
+    currentPage,
+    setCurrentPage,
+  ] = useState(1);
 
-  /* =====================================================
+  useEffect(() => {
+  let timerId = null;
+  let idleId = null;
+
+  const enableVideo = () => {
+    setHeroVideoEnabled(true);
+  };
+
+  if ("requestIdleCallback" in window) {
+    idleId = window.requestIdleCallback(enableVideo, {
+      timeout: 1800,
+    });
+  } else {
+    timerId = window.setTimeout(enableVideo, 700);
+  }
+
+  return () => {
+    if (
+      idleId !== null &&
+      "cancelIdleCallback" in window
+    ) {
+      window.cancelIdleCallback(idleId);
+    }
+
+    if (timerId !== null) {
+      window.clearTimeout(timerId);
+    }
+  };
+}, []);
+
+
+  /* =======================================================
      LOAD
-  ===================================================== */
+
+     Summary API intentionally removed.
+
+     Candidate summary is calculated from the same grouped
+     records displayed by this screen, preventing evaluation
+     rounds from being counted as separate candidates.
+  ======================================================= */
 
   const loadData =
     useCallback(
-      async (
-        silent = false
-      ) => {
+      async () => {
         try {
-          if (!silent) {
-            setLoading(
-              true
-            );
-          } else {
-            setRefreshing(
-              true
-            );
-          }
-
+          setLoading(true);
           setError("");
 
-          const [
-            summaryData,
-            evaluationData,
-          ] =
-            await Promise.all([
-              getEvaluationSummary(),
+          const evaluationData =
+            await getEvaluations({
+              decision: "ALL",
+              search: "",
+              page: 1,
 
-              getEvaluations({
-                decision:
-                  filter,
-
-                search:
-                  search.trim(),
-
-                page: 1,
-
-                limit: 100,
-              }),
-            ]);
-
-          setSummary({
-            total:
-              summaryData
-                ?.total ||
-              0,
-
-            selected:
-              summaryData
-                ?.selected ||
-              0,
-
-            hold:
-              summaryData
-                ?.hold ||
-              0,
-
-            rejected:
-              summaryData
-                ?.rejected ||
-              0,
-          });
+              /*
+               * We need all evaluation rounds before grouping
+               * by candidate.
+               *
+               * Pagination shown below is candidate-level.
+               */
+              limit: 500,
+            });
 
           setRecords(
             Array.isArray(
-              evaluationData
-                ?.records
+              evaluationData?.records
             )
-              ? evaluationData
-                  .records
+              ? evaluationData.records
               : []
           );
-        } catch (
-          err
-        ) {
+        } catch (err) {
           setError(
-            err?.response
-              ?.data
+            err?.response?.data
               ?.message ||
-            err?.message ||
-            "Evaluations could not be loaded"
+              err?.message ||
+              "Evaluations could not be loaded"
           );
         } finally {
-          setLoading(
-            false
-          );
-
-          setRefreshing(
-            false
-          );
+          setLoading(false);
         }
       },
+      []
+    );
+
+
+  useEffect(
+    () => {
+      loadData();
+    },
+    [loadData]
+  );
+
+
+  /* =======================================================
+     GROUPED CANDIDATES
+  ======================================================= */
+
+  const candidates =
+    useMemo(
+      () =>
+        groupEvaluationsByCandidate(
+          records
+        ),
+      [records]
+    );
+
+
+  /* =======================================================
+     CANDIDATE-LEVEL SUMMARY
+  ======================================================= */
+
+  const candidateSummary =
+    useMemo(
+      () => {
+        const result = {
+          total:
+            candidates.length,
+
+          selected: 0,
+
+          hold: 0,
+
+          rejected: 0,
+        };
+
+        for (
+          const item of candidates
+        ) {
+          if (
+            item.decision ===
+            "SELECTED"
+          ) {
+            result.selected += 1;
+          }
+
+          if (
+            item.decision ===
+            "HOLD"
+          ) {
+            result.hold += 1;
+          }
+
+          if (
+            item.decision ===
+            "REJECTED"
+          ) {
+            result.rejected += 1;
+          }
+        }
+
+        return result;
+      },
+      [candidates]
+    );
+
+
+  /* =======================================================
+     FILTERED CANDIDATES
+  ======================================================= */
+
+  const visibleCandidates =
+    useMemo(
+      () => {
+        const term =
+          search
+            .trim()
+            .toLowerCase();
+
+        return candidates.filter(
+          (item) => {
+            if (
+              filter !==
+                "ALL" &&
+              item.decision !==
+                filter
+            ) {
+              return false;
+            }
+
+            if (!term) {
+              return true;
+            }
+
+            const latest =
+              item.latest;
+
+            const searchable =
+              [
+                getCandidateName(
+                  latest
+                ),
+
+                getCandidateNumber(
+                  latest
+                ),
+
+                getPosition(
+                  latest
+                ),
+
+                item.decision,
+
+                decisionLabel(
+                  item.decision
+                ),
+
+                ...item.evaluations.map(
+                  (
+                    evaluation
+                  ) =>
+                    [
+                      getRoundName(
+                        evaluation
+                      ),
+
+                      getEvaluatorName(
+                        evaluation
+                      ),
+
+                      recommendationLabel(
+                        evaluation
+                          ?.recommendation
+                      ),
+                    ].join(" ")
+                ),
+              ]
+                .join(" ")
+                .toLowerCase();
+
+            return searchable.includes(
+              term
+            );
+          }
+        );
+      },
       [
+        candidates,
         filter,
         search,
       ]
     );
 
+
+  /* =======================================================
+     RESET PAGINATION WHEN FILTER/SEARCH CHANGES
+  ======================================================= */
+
   useEffect(
     () => {
-      const timer =
-        window.setTimeout(
-          () => {
-            loadData();
-          },
-          search
-            ? 250
-            : 0
-        );
-
-      return () =>
-        window.clearTimeout(
-          timer
-        );
+      setCurrentPage(1);
     },
     [
-      loadData,
-      search,
       filter,
+      search,
     ]
   );
 
-  /* =====================================================
+
+  /* =======================================================
+     PAGINATION
+  ======================================================= */
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        visibleCandidates.length /
+          PAGE_SIZE
+      )
+    );
+
+
+  useEffect(
+    () => {
+      if (
+        currentPage >
+        totalPages
+      ) {
+        setCurrentPage(
+          totalPages
+        );
+      }
+    },
+    [
+      currentPage,
+      totalPages,
+    ]
+  );
+
+
+  const paginatedCandidates =
+    useMemo(
+      () => {
+        const start =
+          (currentPage - 1) *
+          PAGE_SIZE;
+
+        return visibleCandidates.slice(
+          start,
+          start + PAGE_SIZE
+        );
+      },
+      [
+        visibleCandidates,
+        currentPage,
+      ]
+    );
+
+
+  const paginationItems =
+    useMemo(
+      () =>
+        getPaginationItems(
+          currentPage,
+          totalPages
+        ),
+      [
+        currentPage,
+        totalPages,
+      ]
+    );
+
+
+  const showingFrom =
+    visibleCandidates.length === 0
+      ? 0
+      : (currentPage - 1) *
+          PAGE_SIZE +
+        1;
+
+
+  const showingTo =
+    Math.min(
+      currentPage *
+        PAGE_SIZE,
+      visibleCandidates.length
+    );
+
+
+  const changePage = (
+    page
+  ) => {
+    if (
+      page < 1 ||
+      page > totalPages ||
+      page === currentPage
+    ) {
+      return;
+    }
+
+    setCurrentPage(page);
+
+    window.requestAnimationFrame(
+      () => {
+        const table =
+          document.querySelector(
+            ".eval-table-card"
+          );
+
+        if (table) {
+          table.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }
+    );
+  };
+
+
+  /* =======================================================
      FILTER CONFIG
-  ===================================================== */
+  ======================================================= */
 
   const filters =
     useMemo(
@@ -312,124 +764,172 @@ function EvaluationsPage() {
           key: "ALL",
           label: "All",
           count:
-            summary.total,
+            candidateSummary.total,
         },
 
         {
-          key:
-            "SELECTED",
-          label:
-            "Selected",
+          key: "SELECTED",
+          label: "Selected",
           count:
-            summary.selected,
+            candidateSummary.selected,
         },
 
         {
           key: "HOLD",
           label: "Hold",
           count:
-            summary.hold,
+            candidateSummary.hold,
         },
 
         {
-          key:
-            "REJECTED",
-          label:
-            "Rejected",
+          key: "REJECTED",
+          label: "Rejected",
           count:
-            summary.rejected,
+            candidateSummary.rejected,
         },
       ],
-      [summary]
+      [candidateSummary]
     );
 
-  /* =====================================================
+
+  /* =======================================================
      NAVIGATION
-  ===================================================== */
+  ======================================================= */
 
-  const openEvaluation =
-    (
+  const openCandidate = (
+    candidateGroup
+  ) => {
+    const evaluationId =
+      candidateGroup
+        ?.latest
+        ?._id;
+
+    if (!evaluationId) {
+      return;
+    }
+
+    const url =
+      new URL(
+        window.location.href
+      );
+
+    url.searchParams.set(
+      "app",
+      "recruitment"
+    );
+
+    url.searchParams.set(
+      "page",
+      "evaluation"
+    );
+
+    url.searchParams.set(
+      "id",
       evaluationId
-    ) => {
-      if (!evaluationId) {
-        return;
-      }
+    );
 
-      const url =
-        new URL(
-          window.location.href
-        );
-
+    if (
+      candidateGroup
+        ?.candidateId
+    ) {
       url.searchParams.set(
-        "app",
-        "recruitment"
+        "candidateId",
+        candidateGroup
+          .candidateId
       );
-
-      url.searchParams.set(
-        "page",
-        "evaluation"
+    } else {
+      url.searchParams.delete(
+        "candidateId"
       );
+    }
 
-      url.searchParams.set(
-        "id",
-        evaluationId
-      );
+    window.history.pushState(
+      {},
+      "",
+      url
+    );
 
-      window.history.pushState(
-        {},
-        "",
-        url
-      );
+    window.dispatchEvent(
+      new PopStateEvent(
+        "popstate"
+      )
+    );
+  };
 
-      window.dispatchEvent(
-        new PopStateEvent(
-          "popstate"
-        )
-      );
-    };
 
-  /* =====================================================
+  /* =======================================================
      RENDER
-  ===================================================== */
+  ======================================================= */
 
   return (
-    <div className="eval-page">
-      <section className="eval-heading-row">
-        <div>
-          <div className="eval-eyebrow">
-            Interviews · Evaluations
-          </div>
+    <div className="eval-page eval-page--workspace">
 
-          <h1>
-            Evaluations
-          </h1>
+      {/* ===================================================
+          PAGE BANNER
+      ==================================================== */}
 
-          <p>
-            Review interview outcomes,
-            hiring decisions and
-            candidate progression.
-          </p>
-        </div>
+     <section className="eval-workspace-banner eval-workspace-video-hero">
+  <img
+    className="eval-workspace-hero-poster"
+    src={evaluationHeroPoster}
+    alt=""
+    aria-hidden="true"
+    decoding="async"
+    fetchPriority="high"
+  />
 
-        <button
-          type="button"
-          className="eval-refresh-button"
-          onClick={() =>
-            loadData(true)
-          }
-          disabled={
-            refreshing
-          }
-        >
-          {refreshing
-            ? "Refreshing..."
-            : "↻ Refresh"}
-        </button>
-      </section>
+  {heroVideoEnabled ? (
+    <video
+      className={`eval-workspace-hero-video ${
+        heroVideoReady ? "is-ready" : ""
+      }`}
+      src={evaluationHeroVideo}
+      poster={evaluationHeroPoster}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      aria-hidden="true"
+      onCanPlay={() => setHeroVideoReady(true)}
+    />
+  ) : null}
 
-      {/* =================================================
+  <div
+    className="eval-workspace-hero-overlay"
+    aria-hidden="true"
+  />
+
+  <div className="eval-workspace-banner-copy">
+    <span className="eval-workspace-eyebrow">
+      Recruitment
+    </span>
+
+    <h1>
+      Evaluation Sheet
+    </h1>
+
+    <p>
+      Candidate evaluation, interview rounds
+      and final hiring decisions
+    </p>
+  </div>
+
+  <div className="eval-workspace-banner-stat">
+    <strong>
+      {candidateSummary.total}
+    </strong>
+
+    <span>
+      Total Candidates
+    </span>
+  </div>
+</section>
+
+
+      {/* ===================================================
           SUMMARY
-      ================================================== */}
+      ==================================================== */}
 
       <section className="eval-summary-grid">
         <article className="eval-summary-card eval-summary-card--total">
@@ -438,15 +938,18 @@ function EvaluationsPage() {
           </div>
 
           <div>
-            <strong>
-              {summary.total}
-            </strong>
-
             <span>
               Evaluated
             </span>
+
+            <strong>
+              {
+                candidateSummary.total
+              }
+            </strong>
           </div>
         </article>
+
 
         <article className="eval-summary-card eval-summary-card--selected">
           <div className="eval-summary-icon">
@@ -454,15 +957,18 @@ function EvaluationsPage() {
           </div>
 
           <div>
-            <strong>
-              {summary.selected}
-            </strong>
-
             <span>
               Selected
             </span>
+
+            <strong>
+              {
+                candidateSummary.selected
+              }
+            </strong>
           </div>
         </article>
+
 
         <article className="eval-summary-card eval-summary-card--hold">
           <div className="eval-summary-icon">
@@ -470,15 +976,18 @@ function EvaluationsPage() {
           </div>
 
           <div>
-            <strong>
-              {summary.hold}
-            </strong>
-
             <span>
               Hold
             </span>
+
+            <strong>
+              {
+                candidateSummary.hold
+              }
+            </strong>
           </div>
         </article>
+
 
         <article className="eval-summary-card eval-summary-card--rejected">
           <div className="eval-summary-icon">
@@ -486,20 +995,23 @@ function EvaluationsPage() {
           </div>
 
           <div>
-            <strong>
-              {summary.rejected}
-            </strong>
-
             <span>
               Rejected
             </span>
+
+            <strong>
+              {
+                candidateSummary.rejected
+              }
+            </strong>
           </div>
         </article>
       </section>
 
-      {/* =================================================
-          FILTER BAR
-      ================================================== */}
+
+      {/* ===================================================
+          FILTER + SEARCH
+      ==================================================== */}
 
       <section className="eval-filter-shell">
         <div className="eval-filter-tabs">
@@ -534,32 +1046,47 @@ function EvaluationsPage() {
           )}
         </div>
 
+
         <div className="eval-search">
-          <span>
+          <span
+            className="eval-search-icon"
+            aria-hidden="true"
+          >
             ⌕
           </span>
 
           <input
-            value={
-              search
-            }
+            value={search}
             onChange={(
               event
             ) =>
               setSearch(
-                event
-                  .target
-                  .value
+                event.target.value
               )
             }
-            placeholder="Search candidate, position or evaluation..."
+            placeholder="Search candidate or position"
+            aria-label="Search evaluations"
           />
+
+          {search ? (
+            <button
+              type="button"
+              className="eval-search-clear"
+              onClick={() =>
+                setSearch("")
+              }
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          ) : null}
         </div>
       </section>
 
-      {/* =================================================
+
+      {/* ===================================================
           ERROR
-      ================================================== */}
+      ==================================================== */}
 
       {error ? (
         <div className="eval-error-box">
@@ -573,34 +1100,17 @@ function EvaluationsPage() {
         </div>
       ) : null}
 
-      {/* =================================================
-          TABLE
-      ================================================== */}
 
-      <section className="eval-register-card">
-        <div className="eval-register-header">
-          <div>
-            <span>
-              EVALUATION REGISTER
-            </span>
+      {/* ===================================================
+          CANDIDATE TABLE
+      ==================================================== */}
 
-            <h2>
-              Candidate Decisions
-            </h2>
-          </div>
-
-          <div className="eval-register-count">
-            {records.length}
-            {" "}
-            visible
-          </div>
-        </div>
-
+      <section className="eval-table-card">
         {loading ? (
           <div className="eval-loading">
             Loading evaluations...
           </div>
-        ) : records.length ===
+        ) : visibleCandidates.length ===
           0 ? (
           <div className="eval-empty">
             <div className="eval-empty-icon">
@@ -612,190 +1122,376 @@ function EvaluationsPage() {
             </strong>
 
             <span>
-              Try another decision
-              filter or search term.
+              Try changing your
+              search or decision filter.
             </span>
           </div>
         ) : (
-          <div className="eval-table-wrap">
-            <table className="eval-table">
-              <thead>
-                <tr>
-                  <th>
-                    Candidate
-                  </th>
+          <>
+            <div className="eval-table-wrap">
+              <table className="eval-table">
+                <thead>
+                  <tr>
+                    <th>
+                      Candidate
+                    </th>
 
-                  <th>
-                    Position
-                  </th>
+                    <th>
+                      Position
+                    </th>
 
-                  <th>
-                    Rating
-                  </th>
+                    <th>
+                      Rounds
+                    </th>
 
-                  <th>
-                    Recommendation
-                  </th>
+                    <th>
+                      Rating
+                    </th>
 
-                  <th>
-                    Decision
-                  </th>
+                    <th>
+                      Recommendation
+                    </th>
 
-                  <th>
-                    Evaluated By
-                  </th>
+                    <th>
+                      Decision
+                    </th>
 
-                  <th>
-                    Date
-                  </th>
+                    <th>
+                      Last Evaluated
+                    </th>
 
-                  <th />
-                </tr>
-              </thead>
+                    <th
+                      aria-label="Open"
+                    />
+                  </tr>
+                </thead>
 
-              <tbody>
-                {records.map(
-                  (
-                    record
-                  ) => {
-                    const decision =
-                      record
-                        ?.finalDecision ||
-                      "";
+                <tbody>
+                  {paginatedCandidates.map(
+                    (
+                      candidateGroup
+                    ) => {
+                      const {
+                        latest,
+                        decision,
+                        evaluationCount,
+                        averageRating,
+                      } =
+                        candidateGroup;
 
-                    const rowClass =
-                      `eval-table-row eval-table-row--${decision.toLowerCase()}`;
+                      const rowClass =
+                        [
+                          "eval-table-row",
 
-                    return (
-                      <tr
-                        key={
-                          record._id
-                        }
-                        className={
-                          rowClass
-                        }
-                        onClick={() =>
-                          openEvaluation(
-                            record._id
+                          decision
+                            ? `eval-table-row--${decision.toLowerCase()}`
+                            : "",
+                        ]
+                          .filter(
+                            Boolean
                           )
-                        }
-                      >
-                        <td>
-                          <div className="eval-candidate-cell">
-                            <div className="eval-avatar">
-                              {getCandidateInitial(
-                                record
-                              )}
-                            </div>
+                          .join(
+                            " "
+                          );
 
-                            <div>
-                              <strong className="eval-candidate-name">
-                                {getCandidateName(
-                                  record
+                      return (
+                        <tr
+                          key={
+                            candidateGroup.key
+                          }
+                          className={
+                            rowClass
+                          }
+                          onClick={() =>
+                            openCandidate(
+                              candidateGroup
+                            )
+                          }
+                        >
+                          <td>
+                            <div className="eval-candidate-cell">
+                              <div className="eval-avatar">
+                                {getCandidateInitial(
+                                  latest
+                                )}
+                              </div>
+
+                              <div className="eval-candidate-copy">
+                                <strong className="eval-candidate-name">
+                                  {getCandidateName(
+                                    latest
+                                  )}
+                                </strong>
+
+                                <span>
+                                  {getCandidateNumber(
+                                    latest
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+
+                          <td>
+                            <strong className="eval-position-name">
+                              {getPosition(
+                                latest
+                              )}
+                            </strong>
+                          </td>
+
+
+                          <td>
+                            <div className="eval-round-count">
+                              <strong>
+                                {
+                                  evaluationCount
+                                }
+                              </strong>
+
+                              <span>
+                                {evaluationCount ===
+                                1
+                                  ? "Round"
+                                  : "Rounds"}
+                              </span>
+                            </div>
+                          </td>
+
+
+                          <td>
+                            <div className="eval-rating">
+                              <strong>
+                                {Number(
+                                  averageRating ||
+                                    0
+                                ).toFixed(
+                                  1
                                 )}
                               </strong>
 
                               <span>
-                                {record
-                                  ?.candidate
-                                  ?.candidateNumber ||
-                                  record
-                                    ?.interview
-                                    ?.interviewNumber ||
-                                  "—"}
+                                /5
                               </span>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td>
-                          <strong className="eval-position-name">
-                            {getPosition(
-                              record
-                            )}
-                          </strong>
-                        </td>
 
-                        <td>
-                          <div className="eval-rating">
-                            <strong>
-                              {Number(
-                                record
-                                  ?.overallRating ||
-                                  0
-                              ).toFixed(
-                                1
+                          <td>
+                            <span className="eval-recommendation">
+                              {recommendationLabel(
+                                latest
+                                  ?.recommendation
                               )}
-                            </strong>
-
-                            <span>
-                              / 5
                             </span>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td>
-                          <span className="eval-recommendation">
-                            {recommendationLabel(
-                              record
-                                ?.recommendation
-                            )}
-                          </span>
-                        </td>
 
-                        <td>
-                          <span
-                            className={
-                              `eval-decision eval-decision--${decision.toLowerCase()}`
-                            }
-                          >
-                            {decisionLabel(
-                              decision
-                            )}
-                          </span>
-                        </td>
+                          <td>
+                            <span
+                              className={
+                                [
+                                  "eval-decision",
 
-                        <td>
-                          {getEvaluatorName(
-                            record
-                          )}
-                        </td>
+                                  decision
+                                    ? `eval-decision--${decision.toLowerCase()}`
+                                    : "",
+                                ]
+                                  .filter(
+                                    Boolean
+                                  )
+                                  .join(
+                                    " "
+                                  )
+                              }
+                            >
+                              {decisionLabel(
+                                decision
+                              )}
+                            </span>
+                          </td>
 
-                        <td>
-                          {formatDate(
-                            record
-                              ?.evaluatedAt
-                          )}
-                        </td>
 
-                        <td>
-                          <button
-                            type="button"
-                            className="eval-row-open"
-                            onClick={(
-                              event
-                            ) => {
-                              event.stopPropagation();
+                          <td>
+                            <div className="eval-date-cell">
+                              <strong>
+                                {formatDate(
+                                  latest
+                                    ?.evaluatedAt
+                                )}
+                              </strong>
 
-                              openEvaluation(
-                                record._id
-                              );
-                            }}
-                          >
-                            →
-                          </button>
-                        </td>
-                      </tr>
-                    );
+                              <span>
+                                {getEvaluatorName(
+                                  latest
+                                )}
+                              </span>
+                            </div>
+                          </td>
+
+
+                          <td className="eval-open-cell">
+                            <button
+                              type="button"
+                              className="eval-row-open"
+                              onClick={(
+                                event
+                              ) => {
+                                event.stopPropagation();
+
+                                openCandidate(
+                                  candidateGroup
+                                );
+                              }}
+                              aria-label={`Open ${getCandidateName(
+                                latest
+                              )} evaluations`}
+                            >
+                              →
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+
+            {/* =============================================
+                PAGINATION
+            ============================================== */}
+
+            <div className="eval-pagination">
+              <div className="eval-pagination-info">
+                <span>
+                  Showing
+                </span>
+
+                <strong>
+                  {showingFrom}
+                  –
+                  {showingTo}
+                </strong>
+
+                <span>
+                  of
+                </span>
+
+                <strong>
+                  {
+                    visibleCandidates.length
                   }
-                )}
-              </tbody>
-            </table>
-          </div>
+                </strong>
+
+                <span>
+                  candidates
+                </span>
+
+                <span className="eval-pagination-size">
+                  50 per page
+                </span>
+              </div>
+
+
+              <div className="eval-pagination-controls">
+                <button
+                  type="button"
+                  className="eval-pagination-nav"
+                  disabled={
+                    currentPage === 1
+                  }
+                  onClick={() =>
+                    changePage(
+                      currentPage -
+                        1
+                    )
+                  }
+                >
+                  <span aria-hidden="true">
+                    ←
+                  </span>
+
+                  Previous
+                </button>
+
+
+                <div className="eval-pagination-pages">
+                  {paginationItems.map(
+                    (
+                      item,
+                      index
+                    ) =>
+                      item ===
+                      "..." ? (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="eval-pagination-ellipsis"
+                        >
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={
+                            item
+                          }
+                          type="button"
+                          className={
+                            currentPage ===
+                            item
+                              ? "eval-pagination-page is-active"
+                              : "eval-pagination-page"
+                          }
+                          onClick={() =>
+                            changePage(
+                              item
+                            )
+                          }
+                          aria-label={`Go to page ${item}`}
+                          aria-current={
+                            currentPage ===
+                            item
+                              ? "page"
+                              : undefined
+                          }
+                        >
+                          {item}
+                        </button>
+                      )
+                  )}
+                </div>
+
+
+                <button
+                  type="button"
+                  className="eval-pagination-nav"
+                  disabled={
+                    currentPage ===
+                    totalPages
+                  }
+                  onClick={() =>
+                    changePage(
+                      currentPage +
+                        1
+                    )
+                  }
+                >
+                  Next
+
+                  <span aria-hidden="true">
+                    →
+                  </span>
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </section>
     </div>
   );
 }
+
 
 export default EvaluationsPage;

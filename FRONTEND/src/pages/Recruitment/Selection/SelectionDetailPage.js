@@ -2030,19 +2030,15 @@ function SelectionDetailPage() {
 
             <div>
 
-              <span className="selection-card-eyebrow">
-                PERMANENT CANDIDATE DOSSIER
-              </span>
+  <span className="selection-card-eyebrow">
+    CANDIDATE DOCUMENTS
+  </span>
 
-              <h2>
-                Document Center
-              </h2>
+  <h2>
+    Document Center
+  </h2>
 
-              <p>
-                LOI, candidate information and submitted employment documents remain attached to this selection record.
-              </p>
-
-            </div>
+</div>
 
             <div className="selection-document-count">
 
@@ -2131,9 +2127,9 @@ function SelectionDetailPage() {
                   Candidate Information
                 </strong>
 
-                <small>
-                  Personal, employment and bank information submitted by the candidate
-                </small>
+               <small>
+  Candidate profile information
+</small>
 
               </div>
 
@@ -2994,9 +2990,7 @@ const active =
               "No Action"}
           </strong>
 
-          <p>
-            Controlled by SE-RMS workflow.
-          </p>
+         
 
         </article>
 

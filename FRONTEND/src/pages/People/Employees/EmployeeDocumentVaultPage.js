@@ -29,8 +29,7 @@ import "./Employees.css";
    CONSTANTS
 ========================================================= */
 
-const MAX_FILE_SIZE =
-  15 * 1024 * 1024;
+const MAX_FILE_SIZE = 15 * 1024 * 1024;
 
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -97,349 +96,271 @@ const DOCUMENT_TYPES = [
    HELPERS
 ========================================================= */
 
-const extractDocuments =
-  (
-    value
-  ) => {
-    if (
-      Array.isArray(
-        value
-      )
-    ) {
-      return value;
-    }
+const extractDocuments = (value) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
 
-    if (
-      Array.isArray(
-        value?.documents
-      )
-    ) {
-      return value.documents;
-    }
+  if (Array.isArray(value?.documents)) {
+    return value.documents;
+  }
 
-    if (
-      Array.isArray(
-        value?.items
-      )
-    ) {
-      return value.items;
-    }
+  if (Array.isArray(value?.items)) {
+    return value.items;
+  }
 
-    if (
-      Array.isArray(
-        value?.data
-      )
-    ) {
-      return value.data;
-    }
+  if (Array.isArray(value?.data)) {
+    return value.data;
+  }
 
-    if (
-      Array.isArray(
-        value?.vault?.documents
-      )
-    ) {
-      return value.vault.documents;
-    }
+  if (Array.isArray(value?.vault?.documents)) {
+    return value.vault.documents;
+  }
 
-    return [];
-  };
+  return [];
+};
 
-const documentId =
-  (
-    document
-  ) =>
-    document?._id ||
-    document?.id ||
-    document?.documentId ||
-    "";
+const documentId = (document) =>
+  document?._id ||
+  document?.id ||
+  document?.documentId ||
+  "";
 
-const documentName =
-  (
-    document
-  ) =>
-    document?.label ||
-    document?.name ||
-    document?.documentName ||
-    document?.fileName ||
-    document?.originalName ||
-    "Employee Document";
+const documentName = (document) =>
+  document?.label ||
+  document?.name ||
+  document?.documentName ||
+  document?.fileName ||
+  document?.originalName ||
+  "Employee Document";
 
-const pretty =
-  (
-    value
-  ) =>
-    String(
-      value ||
-      ""
-    )
-      .replace(
-        /_/g,
-        " "
-      )
-      .toLowerCase()
-      .replace(
-        /\b\w/g,
-        (
-          character
-        ) =>
-          character.toUpperCase()
-      );
-
-const formatDate =
-  (
-    value
-  ) => {
-    if (
-      !value
-    ) {
-      return "—";
-    }
-
-    const date =
-      new Date(
-        value
-      );
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return "—";
-    }
-
-    return date.toLocaleDateString(
-      "en-IN",
-      {
-        day:
-          "2-digit",
-
-        month:
-          "short",
-
-        year:
-          "numeric",
-      }
+const pretty = (value) =>
+  String(value || "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (character) =>
+      character.toUpperCase()
     );
-  };
 
-const formatBytes =
-  (
-    bytes
-  ) => {
-    const size =
-      Number(
-        bytes
-      );
+const formatDate = (value) => {
+  if (!value) {
+    return "—";
+  }
 
-    if (
-      !Number.isFinite(
-        size
-      ) ||
-      size <= 0
-    ) {
-      return "";
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleDateString(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     }
+  );
+};
 
-    if (
-      size <
-      1024 * 1024
-    ) {
-      return `${(
-        size / 1024
-      ).toFixed(
-        0
-      )} KB`;
-    }
+const formatBytes = (bytes) => {
+  const size = Number(bytes);
 
+  if (
+    !Number.isFinite(size) ||
+    size <= 0
+  ) {
+    return "";
+  }
+
+  if (size < 1024 * 1024) {
     return `${(
-      size /
-      1024 /
-      1024
-    ).toFixed(
-      2
-    )} MB`;
-  };
+      size / 1024
+    ).toFixed(0)} KB`;
+  }
 
-const getErrorMessage =
-  (
-    error,
-    fallback
-  ) =>
-    error?.response?.data?.message ||
-    error?.message ||
-    fallback;
+  return `${(
+    size /
+    1024 /
+    1024
+  ).toFixed(2)} MB`;
+};
+
+const getErrorMessage = (
+  error,
+  fallback
+) =>
+  error?.response?.data?.message ||
+  error?.message ||
+  fallback;
+
+const getFileType = (document) => {
+  const mimeType = String(
+    document?.mimeType ||
+      document?.contentType ||
+      ""
+  ).toLowerCase();
+
+  const fileName = String(
+    document?.fileName ||
+      document?.originalName ||
+      document?.name ||
+      ""
+  ).toLowerCase();
+
+  if (
+    mimeType.includes("pdf") ||
+    fileName.endsWith(".pdf")
+  ) {
+    return "PDF";
+  }
+
+  if (
+    mimeType.includes("image") ||
+    /\.(jpg|jpeg|png)$/i.test(fileName)
+  ) {
+    return "IMG";
+  }
+
+  return "DOC";
+};
+
+const getDepartmentName = (employee) => {
+  if (!employee) {
+    return "";
+  }
+
+  if (
+    typeof employee.department ===
+    "string"
+  ) {
+    return employee.department;
+  }
+
+  return (
+    employee?.department?.name ||
+    employee?.departmentName ||
+    ""
+  );
+};
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 function EmployeeDocumentVaultPage() {
-  const {
-    employeeId,
-  } =
-    useParams();
+  const { employeeId } = useParams();
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const fileInputRef =
-    useRef(
-      null
-    );
+  const fileInputRef = useRef(null);
 
   const [
     employee,
     setEmployee,
-  ] =
-    useState(
-      null
-    );
+  ] = useState(null);
 
   const [
     documents,
     setDocuments,
-  ] =
-    useState(
-      []
-    );
+  ] = useState([]);
 
   const [
     loading,
     setLoading,
-  ] =
-    useState(
-      true
-    );
+  ] = useState(true);
 
   const [
     busy,
     setBusy,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
   const [
     error,
     setError,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
   const [
     success,
     setSuccess,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
   const [
     selected,
     setSelected,
-  ] =
-    useState(
-      []
-    );
+  ] = useState([]);
 
   const [
     showUpload,
     setShowUpload,
-  ] =
-    useState(
-      false
-    );
+  ] = useState(false);
 
   const [
     uploadForm,
     setUploadForm,
-  ] =
-    useState({
-      title:
-        "",
+  ] = useState({
+    title: "",
+    documentType: "OTHER",
 
-      documentType:
-        "OTHER",
+    // Keep this internally.
+    // It is no longer shown to the user.
+    category: "EMPLOYEE_DOCUMENT",
 
-      category:
-        "EMPLOYEE_DOCUMENT",
-
-      description:
-        "",
-
-      file:
-        null,
-    });
+    description: "",
+    file: null,
+  });
 
   /* =====================================================
      LOAD
   ===================================================== */
 
-  const load =
-    useCallback(
-      async () => {
-        try {
-          setLoading(
-            true
-          );
+  const load = useCallback(
+    async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-          setError(
-            ""
-          );
+        const [
+          employeeResult,
+          vaultResult,
+        ] = await Promise.all([
+          getEmployeeById(
+            employeeId
+          ),
 
-          const [
-            employeeResult,
-            vaultResult,
-          ] =
-            await Promise.all([
-              getEmployeeById(
-                employeeId
-              ),
+          getEmployeeDocuments(
+            employeeId
+          ),
+        ]);
 
-              getEmployeeDocuments(
-                employeeId
-              ),
-            ]);
+        setEmployee(
+          employeeResult
+        );
 
-          setEmployee(
-            employeeResult
-          );
-
-          setDocuments(
-            extractDocuments(
-              vaultResult
-            )
-          );
-        } catch (
-          requestError
-        ) {
-          setError(
-            getErrorMessage(
-              requestError,
-              "Employee Document Vault could not be loaded."
-            )
-          );
-        } finally {
-          setLoading(
-            false
-          );
-        }
-      },
-      [
-        employeeId,
-      ]
-    );
-
-  useEffect(
-    () => {
-      load();
+        setDocuments(
+          extractDocuments(
+            vaultResult
+          )
+        );
+      } catch (
+        requestError
+      ) {
+        setError(
+          getErrorMessage(
+            requestError,
+            "Employee documents could not be loaded."
+          )
+        );
+      } finally {
+        setLoading(false);
+      }
     },
-    [
-      load,
-    ]
+    [employeeId]
   );
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   /* =====================================================
      ACTIVE DOCUMENTS
@@ -449,9 +370,7 @@ function EmployeeDocumentVaultPage() {
     useMemo(
       () =>
         documents.filter(
-          (
-            document
-          ) =>
+          (document) =>
             ![
               "DELETED",
               "REMOVED",
@@ -459,13 +378,11 @@ function EmployeeDocumentVaultPage() {
             ].includes(
               String(
                 document?.status ||
-                ""
+                  ""
               ).toUpperCase()
             )
         ),
-      [
-        documents,
-      ]
+      [documents]
     );
 
   /* =====================================================
@@ -476,12 +393,9 @@ function EmployeeDocumentVaultPage() {
     selected.length;
 
   const allSelected =
-    activeDocuments.length >
-      0 &&
+    activeDocuments.length > 0 &&
     activeDocuments.every(
-      (
-        document
-      ) =>
+      (document) =>
         selected.includes(
           String(
             documentId(
@@ -491,88 +405,64 @@ function EmployeeDocumentVaultPage() {
         )
     );
 
-  const toggleDocument =
-    (
-      id
-    ) => {
-      const safeId =
-        String(
-          id
-        );
+  const toggleDocument = (
+    id
+  ) => {
+    const safeId =
+      String(id);
 
-      if (
-        !safeId
-      ) {
-        return;
-      }
+    if (!safeId) {
+      return;
+    }
 
-      setSelected(
-        (
-          current
-        ) =>
-          current.includes(
-            safeId
-          )
-            ? current.filter(
-                (
-                  value
-                ) =>
-                  value !==
-                  safeId
-              )
-            : [
-                ...current,
-                safeId,
-              ]
-      );
-    };
+    setSelected(
+      (current) =>
+        current.includes(
+          safeId
+        )
+          ? current.filter(
+              (value) =>
+                value !==
+                safeId
+            )
+          : [
+              ...current,
+              safeId,
+            ]
+    );
+  };
 
-  const toggleAll =
-    () => {
-      if (
-        allSelected
-      ) {
-        setSelected(
-          []
-        );
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelected([]);
+      return;
+    }
 
-        return;
-      }
-
-      setSelected(
-        activeDocuments
-          .map(
-            (
+    setSelected(
+      activeDocuments
+        .map((document) =>
+          String(
+            documentId(
               document
-            ) =>
-              String(
-                documentId(
-                  document
-                )
-              )
+            )
           )
-          .filter(
-            Boolean
-          )
-      );
-    };
+        )
+        .filter(Boolean)
+    );
+  };
 
   /* =====================================================
-     OPEN
+     OPEN DOCUMENT
   ===================================================== */
 
   const handleOpen =
-    async (
-      document
-    ) => {
+    async (document) => {
       const id =
         documentId(
           document
         );
 
-      if (
-        !id
-      ) {
+      if (!id) {
         setError(
           "Document ID is unavailable."
         );
@@ -585,9 +475,7 @@ function EmployeeDocumentVaultPage() {
           `OPEN:${id}`
         );
 
-        setError(
-          ""
-        );
+        setError("");
 
         await openEmployeeDocument(
           employeeId,
@@ -603,28 +491,22 @@ function EmployeeDocumentVaultPage() {
           )
         );
       } finally {
-        setBusy(
-          ""
-        );
+        setBusy("");
       }
     };
 
   /* =====================================================
-     DELETE
+     DELETE DOCUMENT
   ===================================================== */
 
   const handleDelete =
-    async (
-      document
-    ) => {
+    async (document) => {
       const id =
         documentId(
           document
         );
 
-      if (
-        !id
-      ) {
+      if (!id) {
         return;
       }
 
@@ -635,9 +517,7 @@ function EmployeeDocumentVaultPage() {
           )}" from the employee record?`
         );
 
-      if (
-        !confirmed
-      ) {
+      if (!confirmed) {
         return;
       }
 
@@ -646,13 +526,8 @@ function EmployeeDocumentVaultPage() {
           `DELETE:${id}`
         );
 
-        setError(
-          ""
-        );
-
-        setSuccess(
-          ""
-        );
+        setError("");
+        setSuccess("");
 
         await deleteEmployeeDocument(
           employeeId,
@@ -660,17 +535,11 @@ function EmployeeDocumentVaultPage() {
         );
 
         setSelected(
-          (
-            current
-          ) =>
+          (current) =>
             current.filter(
-              (
-                value
-              ) =>
+              (value) =>
                 value !==
-                String(
-                  id
-                )
+                String(id)
             )
         );
 
@@ -689,73 +558,118 @@ function EmployeeDocumentVaultPage() {
           )
         );
       } finally {
-        setBusy(
-          ""
-        );
+        setBusy("");
       }
     };
 
   /* =====================================================
-     FILE
+     FILE SELECTION
   ===================================================== */
 
-  const selectFile =
-    (
-      file
-    ) => {
-      setError(
-        ""
-      );
+  const selectFile = (
+    file
+  ) => {
+    setError("");
 
-      if (
-        !file
-      ) {
-        setUploadForm(
-          (
-            current
-          ) => ({
-            ...current,
-
-            file:
-              null,
-          })
-        );
-
-        return;
-      }
-
-      if (
-        !ALLOWED_TYPES.includes(
-          file.type
-        )
-      ) {
-        setError(
-          "Only PDF, JPG and PNG documents are allowed."
-        );
-
-        return;
-      }
-
-      if (
-        file.size >
-        MAX_FILE_SIZE
-      ) {
-        setError(
-          "Document must be 15 MB or smaller."
-        );
-
-        return;
-      }
-
+    if (!file) {
       setUploadForm(
-        (
-          current
-        ) => ({
+        (current) => ({
           ...current,
-
-          file,
+          file: null,
         })
       );
+
+      return;
+    }
+
+    if (
+      !ALLOWED_TYPES.includes(
+        file.type
+      )
+    ) {
+      setError(
+        "Only PDF, JPG and PNG documents are allowed."
+      );
+
+      return;
+    }
+
+    if (
+      file.size >
+      MAX_FILE_SIZE
+    ) {
+      setError(
+        "Document must be 15 MB or smaller."
+      );
+
+      return;
+    }
+
+    setUploadForm(
+      (current) => ({
+        ...current,
+        file,
+      })
+    );
+  };
+
+  /* =====================================================
+     OPEN UPLOAD MODAL
+  ===================================================== */
+
+  const openUploadModal =
+    () => {
+      setError("");
+      setSuccess("");
+
+      setUploadForm({
+        title: "",
+        documentType:
+          "OTHER",
+        category:
+          "EMPLOYEE_DOCUMENT",
+        description: "",
+        file: null,
+      });
+
+      if (
+        fileInputRef.current
+      ) {
+        fileInputRef.current.value =
+          "";
+      }
+
+      setShowUpload(true);
+    };
+
+  const closeUploadModal =
+    () => {
+      if (
+        busy === "UPLOAD"
+      ) {
+        return;
+      }
+
+      setShowUpload(false);
+
+      setError("");
+
+      setUploadForm({
+        title: "",
+        documentType:
+          "OTHER",
+        category:
+          "EMPLOYEE_DOCUMENT",
+        description: "",
+        file: null,
+      });
+
+      if (
+        fileInputRef.current
+      ) {
+        fileInputRef.current.value =
+          "";
+      }
     };
 
   /* =====================================================
@@ -763,18 +677,13 @@ function EmployeeDocumentVaultPage() {
   ===================================================== */
 
   const handleUpload =
-    async (
-      event
-    ) => {
+    async (event) => {
       event.preventDefault();
 
       const title =
-        uploadForm.title
-          .trim();
+        uploadForm.title.trim();
 
-      if (
-        !title
-      ) {
+      if (!title) {
         setError(
           "Please enter the document title."
         );
@@ -793,17 +702,10 @@ function EmployeeDocumentVaultPage() {
       }
 
       try {
-        setBusy(
-          "UPLOAD"
-        );
+        setBusy("UPLOAD");
 
-        setError(
-          ""
-        );
-
-        setSuccess(
-          ""
-        );
+        setError("");
+        setSuccess("");
 
         await uploadEmployeeDocument(
           employeeId,
@@ -821,8 +723,7 @@ function EmployeeDocumentVaultPage() {
               title,
 
             description:
-              uploadForm.description
-                .trim(),
+              uploadForm.description.trim(),
           }
         );
 
@@ -831,24 +732,24 @@ function EmployeeDocumentVaultPage() {
         );
 
         setUploadForm({
-          title:
-            "",
-
+          title: "",
           documentType:
             "OTHER",
-
           category:
             "EMPLOYEE_DOCUMENT",
-
-          description:
-            "",
-
-          file:
-            null,
+          description: "",
+          file: null,
         });
 
+        if (
+          fileInputRef.current
+        ) {
+          fileInputRef.current.value =
+            "";
+        }
+
         setSuccess(
-          "Employee document uploaded successfully."
+          "Document uploaded successfully."
         );
 
         await load();
@@ -858,18 +759,16 @@ function EmployeeDocumentVaultPage() {
         setError(
           getErrorMessage(
             requestError,
-            "Employee document could not be uploaded."
+            "Document could not be uploaded."
           )
         );
       } finally {
-        setBusy(
-          ""
-        );
+        setBusy("");
       }
     };
 
   /* =====================================================
-     MERGE
+     CREATE MASTER PDF
   ===================================================== */
 
   const handleGenerateMasterFile =
@@ -879,24 +778,17 @@ function EmployeeDocumentVaultPage() {
         0
       ) {
         setError(
-          "Select at least one document to create the Employee Master File."
+          "Select at least one document to create the Master PDF."
         );
 
         return;
       }
 
       try {
-        setBusy(
-          "MERGE"
-        );
+        setBusy("MERGE");
 
-        setError(
-          ""
-        );
-
-        setSuccess(
-          ""
-        );
+        setError("");
+        setSuccess("");
 
         await generateEmployeeDocumentBundle(
           employeeId,
@@ -909,12 +801,10 @@ function EmployeeDocumentVaultPage() {
           }
         );
 
-        setSelected(
-          []
-        );
+        setSelected([]);
 
         setSuccess(
-          "Employee Master File generated successfully."
+          "Master PDF generated successfully."
         );
 
         await load();
@@ -924,13 +814,11 @@ function EmployeeDocumentVaultPage() {
         setError(
           getErrorMessage(
             requestError,
-            "Employee Master File could not be generated."
+            "Master PDF could not be generated."
           )
         );
       } finally {
-        setBusy(
-          ""
-        );
+        setBusy("");
       }
     };
 
@@ -938,19 +826,28 @@ function EmployeeDocumentVaultPage() {
      LOADING
   ===================================================== */
 
-  if (
-    loading
-  ) {
+  if (loading) {
     return (
       <div className="employee-vault-page">
-
         <div className="employee-vault-loading">
-          Loading Employee Document Vault...
-        </div>
+          <span className="employee-vault-loading-spinner" />
 
+          <strong>
+            Loading documents
+          </strong>
+
+          <small>
+            Please wait...
+          </small>
+        </div>
       </div>
     );
   }
+
+  const departmentName =
+    getDepartmentName(
+      employee
+    );
 
   /* =====================================================
      UI
@@ -959,9 +856,9 @@ function EmployeeDocumentVaultPage() {
   return (
     <div className="employee-vault-page">
 
-      {/* =================================================
+      {/* ===============================================
           TOP BAR
-      ================================================== */}
+      ================================================ */}
 
       <div className="employee-vault-topbar">
 
@@ -974,218 +871,219 @@ function EmployeeDocumentVaultPage() {
             )
           }
         >
-          ← Employee Profile
+          <span>
+            ←
+          </span>
+
+          Employee Profile
         </button>
 
       </div>
 
-      {/* =================================================
+      {/* ===============================================
           HERO
-      ================================================== */}
+      ================================================ */}
 
       <section className="employee-vault-hero">
 
-        <div>
+        <div className="employee-vault-hero-content">
 
           <span className="employee-vault-eyebrow">
-            EMPLOYEE RECORD
+            DOCUMENTS
           </span>
 
           <h1>
-            Document Vault
-          </h1>
-
-          <p>
-            Permanent employee documents,
-            recruitment records, HR forms and
-            generated employee files.
-          </p>
-
-        </div>
-
-        <div className="employee-vault-employee">
-
-          <span>
-            EMPLOYEE
-          </span>
-
-          <strong>
             {employee?.fullName ||
               "Employee"}
-          </strong>
+          </h1>
 
-          <small>
-            {employee?.employeeCode ||
-              "Employee ID pending"}
-          </small>
+          <div className="employee-vault-identity">
+
+            <span>
+              {employee?.employeeCode ||
+                "Employee ID pending"}
+            </span>
+
+            {departmentName ? (
+              <>
+                <i />
+                <span>
+                  {departmentName}
+                </span>
+              </>
+            ) : null}
+
+          </div>
 
         </div>
+
+        <button
+          type="button"
+          className="employee-vault-primary employee-vault-upload-top"
+          onClick={
+            openUploadModal
+          }
+        >
+          <span className="employee-vault-button-plus">
+            +
+          </span>
+
+          Upload Document
+        </button>
 
       </section>
 
-      {/* =================================================
-          STATS
-      ================================================== */}
-
-      <section className="employee-vault-stats">
-
-        <div>
-
-          <span>
-            TOTAL DOCUMENTS
-          </span>
-
-          <strong>
-            {activeDocuments.length}
-          </strong>
-
-          <small>
-            Active employee records
-          </small>
-
-        </div>
-
-        <div>
-
-          <span>
-            SELECTED
-          </span>
-
-          <strong>
-            {selectedCount}
-          </strong>
-
-          <small>
-            For Master File
-          </small>
-
-        </div>
-
-        <div>
-
-          <span>
-            EMPLOYEE ID
-          </span>
-
-          <strong>
-            {employee?.employeeCode ||
-              "Pending"}
-          </strong>
-
-          <small>
-            Permanent record
-          </small>
-
-        </div>
-
-      </section>
-
-      {/* =================================================
+      {/* ===============================================
           ALERTS
-      ================================================== */}
+      ================================================ */}
 
       {error ? (
         <div className="employee-vault-alert is-error">
-          {error}
+
+          <span className="employee-vault-alert-icon">
+            !
+          </span>
+
+          <span>
+            {error}
+          </span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setError("")
+            }
+          >
+            ×
+          </button>
+
         </div>
       ) : null}
 
       {success ? (
         <div className="employee-vault-alert is-success">
-          {success}
+
+          <span className="employee-vault-alert-icon">
+            ✓
+          </span>
+
+          <span>
+            {success}
+          </span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setSuccess("")
+            }
+          >
+            ×
+          </button>
+
         </div>
       ) : null}
 
-      {/* =================================================
-          TOOLBAR
-      ================================================== */}
+      {/* ===============================================
+          DOCUMENT WORKSPACE
+      ================================================ */}
 
-      <section className="employee-vault-toolbar">
+      <section className="employee-vault-workspace">
 
-        <div>
+        <div className="employee-vault-workspace-header">
 
-          <span className="employee-vault-eyebrow">
-            DOCUMENT REGISTER
-          </span>
+          <div className="employee-vault-workspace-title">
 
-          <h2>
-            Employee Documents
-          </h2>
+            <div>
+              <h2>
+                Employee Documents
+              </h2>
 
-          <p>
-            Select documents to create one
-            consolidated Employee Master PDF.
-          </p>
+              <div className="employee-vault-counts">
+
+                <span>
+                  <strong>
+                    {activeDocuments.length}
+                  </strong>
+
+                  {activeDocuments.length ===
+                  1
+                    ? " Document"
+                    : " Documents"}
+                </span>
+
+                <i />
+
+                <span
+                  className={
+                    selectedCount
+                      ? "has-selection"
+                      : ""
+                  }
+                >
+                  <strong>
+                    {selectedCount}
+                  </strong>{" "}
+                  Selected
+                </span>
+
+              </div>
+            </div>
+
+          </div>
+
+          <div className="employee-vault-toolbar-actions">
+
+            <button
+              type="button"
+              className="employee-vault-secondary"
+              disabled={
+                !activeDocuments.length
+              }
+              onClick={
+                toggleAll
+              }
+            >
+              <span className="employee-vault-select-icon">
+                ✓
+              </span>
+
+              {allSelected
+                ? "Clear Selection"
+                : "Select All"}
+            </button>
+
+            <button
+              type="button"
+              className="employee-vault-master-button"
+              disabled={
+                !selected.length ||
+                busy === "MERGE"
+              }
+              onClick={
+                handleGenerateMasterFile
+              }
+            >
+              <span className="employee-vault-pdf-icon">
+                PDF
+              </span>
+
+              {busy ===
+              "MERGE"
+                ? "Creating..."
+                : `Create Master PDF (${selectedCount})`}
+            </button>
+
+          </div>
 
         </div>
 
-        <div className="employee-vault-toolbar-actions">
-
-          <button
-            type="button"
-            className="employee-vault-secondary"
-            disabled={
-              !activeDocuments.length
-            }
-            onClick={
-              toggleAll
-            }
-          >
-            {allSelected
-              ? "Clear Selection"
-              : "Select All"}
-          </button>
-
-          <button
-            type="button"
-            className="employee-vault-secondary"
-            disabled={
-              !selected.length ||
-              busy ===
-                "MERGE"
-            }
-            onClick={
-              handleGenerateMasterFile
-            }
-          >
-            {busy ===
-            "MERGE"
-              ? "Generating..."
-              : `Create Master PDF (${selectedCount})`}
-          </button>
-
-          <button
-            type="button"
-            className="employee-vault-primary"
-            onClick={() => {
-              setError(
-                ""
-              );
-
-              setSuccess(
-                ""
-              );
-
-              setShowUpload(
-                true
-              );
-            }}
-          >
-            + Upload Document
-          </button>
-
-        </div>
-
-      </section>
-
-      {/* =================================================
-          DOCUMENTS
-      ================================================== */}
-
-      <section className="employee-vault-register">
+        {/* =============================================
+            DOCUMENT CARDS
+        ============================================== */}
 
         {activeDocuments.length ? (
-          <div className="employee-vault-list">
+
+          <div className="employee-vault-grid">
 
             {activeDocuments.map(
               (
@@ -1204,33 +1102,27 @@ function EmployeeDocumentVaultPage() {
                     id
                   );
 
-                const source =
-                  document?.source ||
-                  document?.uploadedByType ||
-                  "HR";
-
                 const type =
                   document?.documentType ||
                   document?.category ||
                   "DOCUMENT";
 
-                const mimeType =
-                  String(
-                    document?.mimeType ||
-                    document?.contentType ||
-                    ""
+                const fileType =
+                  getFileType(
+                    document
                   );
 
-                const fileType =
-                  mimeType.includes(
-                    "pdf"
-                  )
-                    ? "PDF"
-                    : mimeType.includes(
-                        "image"
-                      )
-                    ? "IMG"
-                    : "DOC";
+                const size =
+                  formatBytes(
+                    document?.size ||
+                      document?.fileSize
+                  );
+
+                const addedDate =
+                  formatDate(
+                    document?.uploadedAt ||
+                      document?.createdAt
+                  );
 
                 return (
                   <article
@@ -1238,100 +1130,125 @@ function EmployeeDocumentVaultPage() {
                       id ||
                       index
                     }
-                    className={`employee-vault-document ${
+                    className={`employee-vault-card ${
                       checked
                         ? "is-selected"
                         : ""
                     }`}
                   >
 
-                    <label className="employee-vault-check">
+                    {/* CARD TOP */}
 
-                      <input
-                        type="checkbox"
-                        checked={
-                          checked
-                        }
-                        onChange={() =>
-                          toggleDocument(
-                            id
-                          )
-                        }
-                      />
+                    <div className="employee-vault-card-top">
 
-                      <span />
+                      <label className="employee-vault-card-check">
 
-                    </label>
+                        <input
+                          type="checkbox"
+                          checked={
+                            checked
+                          }
+                          onChange={() =>
+                            toggleDocument(
+                              id
+                            )
+                          }
+                        />
 
-                    <div className="employee-vault-file-icon">
-                      {fileType}
+                        <span />
+
+                      </label>
+
+                      <span
+                        className={`employee-vault-card-file-badge is-${fileType.toLowerCase()}`}
+                      >
+                        {fileType}
+                      </span>
+
                     </div>
 
-                    <div className="employee-vault-document-main">
+                    {/* ICON */}
+
+                    <div
+                      className={`employee-vault-card-icon is-${fileType.toLowerCase()}`}
+                    >
+                      <span className="employee-vault-card-icon-fold" />
 
                       <strong>
-                        {documentName(
-                          document
-                        )}
+                        {fileType}
                       </strong>
+                    </div>
 
-                      <span>
+                    {/* CONTENT */}
+
+                    <div className="employee-vault-card-content">
+
+                      <span className="employee-vault-card-category">
                         {pretty(
                           type
                         )}
                       </span>
 
-                    </div>
-
-                    <div className="employee-vault-document-meta">
-
-                      <span>
-                        SOURCE
-                      </span>
-
-                      <strong>
-                        {pretty(
-                          source
+                      <h3
+                        title={
+                          documentName(
+                            document
+                          )
+                        }
+                      >
+                        {documentName(
+                          document
                         )}
-                      </strong>
+                      </h3>
+
+                      {document?.description ? (
+                        <p className="employee-vault-card-description">
+                          {
+                            document.description
+                          }
+                        </p>
+                      ) : (
+                        <p className="employee-vault-card-description is-empty">
+                          Employee document
+                        </p>
+                      )}
 
                     </div>
 
-                    <div className="employee-vault-document-meta">
+                    {/* META */}
 
-                      <span>
-                        ADDED
-                      </span>
+                    <div className="employee-vault-card-meta">
 
-                      <strong>
-                        {formatDate(
-                          document?.uploadedAt ||
-                          document?.createdAt
-                        )}
-                      </strong>
+                      <div>
+                        <span>
+                          Added
+                        </span>
 
-                    </div>
+                        <strong>
+                          {addedDate}
+                        </strong>
+                      </div>
 
-                    <div className="employee-vault-document-meta">
+                      <div>
+                        <span>
+                          Size
+                        </span>
 
-                      <span>
-                        SIZE
-                      </span>
-
-                      <strong>
-                        {formatBytes(
-                          document?.size ||
-                          document?.fileSize
-                        ) ||
-                          "—"}
-                      </strong>
+                        <strong>
+                          {size ||
+                            "—"}
+                        </strong>
+                      </div>
 
                     </div>
 
-                    <div className="employee-vault-document-actions">
+                    {/* ACTIONS */}
+
+                    <div className="employee-vault-card-actions">
 
                       <button
                         type="button"
+                        className="employee-vault-card-view"
                         disabled={
                           busy ===
                           `OPEN:${id}`
@@ -1342,6 +1259,10 @@ function EmployeeDocumentVaultPage() {
                           )
                         }
                       >
+                        <span>
+                          ↗
+                        </span>
+
                         {busy ===
                         `OPEN:${id}`
                           ? "Opening..."
@@ -1350,7 +1271,7 @@ function EmployeeDocumentVaultPage() {
 
                       <button
                         type="button"
-                        className="is-danger"
+                        className="employee-vault-card-remove"
                         disabled={
                           busy ===
                           `DELETE:${id}`
@@ -1360,8 +1281,12 @@ function EmployeeDocumentVaultPage() {
                             document
                           )
                         }
+                        title="Remove document"
                       >
-                        Remove
+                        {busy ===
+                        `DELETE:${id}`
+                          ? "..."
+                          : "×"}
                       </button>
 
                     </div>
@@ -1372,87 +1297,47 @@ function EmployeeDocumentVaultPage() {
             )}
 
           </div>
+
         ) : (
+
           <div className="employee-vault-empty">
 
-            <div>
-              D
+            <div className="employee-vault-empty-icon">
+              <span>
+                PDF
+              </span>
             </div>
 
-            <strong>
-              No employee documents
-            </strong>
+            <h3>
+              No documents uploaded
+            </h3>
 
             <p>
-              Upload HR documents or complete
-              onboarding to build the permanent
-              employee record.
+              Upload the employee's first document to start the document record.
             </p>
 
             <button
               type="button"
-              onClick={() =>
-                setShowUpload(
-                  true
-                )
+              className="employee-vault-primary"
+              onClick={
+                openUploadModal
               }
             >
-              Upload First Document
+              + Upload Document
             </button>
 
           </div>
+
         )}
 
       </section>
 
-      {/* =================================================
-          MERGE INFORMATION
-      ================================================== */}
-
-      <section className="employee-vault-master-info">
-
-        <div className="employee-vault-master-icon">
-          M
-        </div>
-
-        <div>
-
-          <strong>
-            Employee Master File
-          </strong>
-
-          <p>
-            Select the required documents above
-            and create one consolidated PDF for
-            the permanent employee record.
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          disabled={
-            !selected.length ||
-            busy ===
-              "MERGE"
-          }
-          onClick={
-            handleGenerateMasterFile
-          }
-        >
-          {busy ===
-          "MERGE"
-            ? "Generating..."
-            : "Generate Master PDF"}
-        </button>
-
-      </section>
-
-      {/* =================================================
+      {/* ===============================================
           UPLOAD MODAL
-      ================================================== */}
+      ================================================ */}
 
       {showUpload ? (
+
         <div
           className="employee-vault-modal-backdrop"
           onMouseDown={(
@@ -1460,13 +1345,10 @@ function EmployeeDocumentVaultPage() {
           ) => {
             if (
               event.target ===
-              event.currentTarget &&
-              busy !==
-                "UPLOAD"
+                event.currentTarget &&
+              busy !== "UPLOAD"
             ) {
-              setShowUpload(
-                false
-              );
+              closeUploadModal();
             }
           }}
         >
@@ -1478,36 +1360,42 @@ function EmployeeDocumentVaultPage() {
             }
           >
 
+            {/* MODAL HEADER */}
+
             <div className="employee-vault-modal-header">
 
-              <div>
+              <div className="employee-vault-modal-heading">
 
-                <span>
-                  EMPLOYEE DOCUMENT
-                </span>
+                <div className="employee-vault-modal-heading-icon">
+                  +
+                </div>
 
-                <h2>
-                  Upload Document
-                </h2>
+                <div>
+                  <h2>
+                    Upload Document
+                  </h2>
 
-                <p>
-                  Add a permanent HR document
-                  to {employee?.fullName ||
-                    "this employee"}.
-                </p>
+                  <p>
+                    {employee?.fullName ||
+                      "Employee"}
+
+                    {employee?.employeeCode
+                      ? ` · ${employee.employeeCode}`
+                      : ""}
+                  </p>
+                </div>
 
               </div>
 
               <button
                 type="button"
+                className="employee-vault-modal-close"
                 disabled={
                   busy ===
                   "UPLOAD"
                 }
-                onClick={() =>
-                  setShowUpload(
-                    false
-                  )
+                onClick={
+                  closeUploadModal
                 }
               >
                 ×
@@ -1515,16 +1403,22 @@ function EmployeeDocumentVaultPage() {
 
             </div>
 
+            {/* MODAL BODY */}
+
             <div className="employee-vault-modal-body">
 
               <label className="employee-vault-field">
 
                 <span>
-                  Document Title *
+                  Document Title
+                  <b>
+                    *
+                  </b>
                 </span>
 
                 <input
                   type="text"
+                  autoFocus
                   value={
                     uploadForm.title
                   }
@@ -1549,77 +1443,65 @@ function EmployeeDocumentVaultPage() {
 
               </label>
 
-              <div className="employee-vault-form-grid">
+              <label className="employee-vault-field">
 
-                <label className="employee-vault-field">
+                <span>
+                  Document Type
+                  <b>
+                    *
+                  </b>
+                </span>
 
-                  <span>
-                    Document Type *
-                  </span>
-
-                  <select
-                    value={
-                      uploadForm.documentType
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setUploadForm(
-                        (
-                          current
-                        ) => ({
-                          ...current,
-
-                          documentType:
-                            event
-                              .target
-                              .value,
-                        })
-                      )
-                    }
-                  >
-
-                    {DOCUMENT_TYPES.map(
+                <select
+                  value={
+                    uploadForm.documentType
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setUploadForm(
                       (
-                        item
-                      ) => (
-                        <option
-                          key={
-                            item.value
-                          }
-                          value={
-                            item.value
-                          }
-                        >
-                          {item.label}
-                        </option>
-                      )
-                    )}
+                        current
+                      ) => ({
+                        ...current,
 
-                  </select>
+                        documentType:
+                          event
+                            .target
+                            .value,
+                      })
+                    )
+                  }
+                >
 
-                </label>
+                  {DOCUMENT_TYPES.map(
+                    (item) => (
+                      <option
+                        key={
+                          item.value
+                        }
+                        value={
+                          item.value
+                        }
+                      >
+                        {
+                          item.label
+                        }
+                      </option>
+                    )
+                  )}
 
-                <label className="employee-vault-field">
+                </select>
 
-                  <span>
-                    Category
-                  </span>
-
-                  <input
-                    type="text"
-                    value="Employee Record"
-                    readOnly
-                  />
-
-                </label>
-
-              </div>
+              </label>
 
               <label className="employee-vault-field">
 
                 <span>
                   Description
+                  <small>
+                    Optional
+                  </small>
                 </span>
 
                 <textarea
@@ -1627,7 +1509,7 @@ function EmployeeDocumentVaultPage() {
                   value={
                     uploadForm.description
                   }
-                  placeholder="Optional remarks about this document..."
+                  placeholder="Add a short note about this document..."
                   onChange={(
                     event
                   ) =>
@@ -1648,10 +1530,15 @@ function EmployeeDocumentVaultPage() {
 
               </label>
 
+              {/* FILE PICKER */}
+
               <div className="employee-vault-field">
 
                 <span>
-                  File *
+                  Document File
+                  <b>
+                    *
+                  </b>
                 </span>
 
                 <input
@@ -1669,20 +1556,16 @@ function EmployeeDocumentVaultPage() {
                         .target
                         .files?.[0]
                     );
-
-                    /*
-                     * Do NOT clear event.target.value here.
-                     *
-                     * The selected File object is retained
-                     * inside React state and passed directly
-                     * to FormData during submission.
-                     */
                   }}
                 />
 
                 <button
                   type="button"
-                  className="employee-vault-file-picker"
+                  className={`employee-vault-file-picker ${
+                    uploadForm.file
+                      ? "has-file"
+                      : ""
+                  }`}
                   onClick={() =>
                     fileInputRef
                       .current
@@ -1690,41 +1573,58 @@ function EmployeeDocumentVaultPage() {
                   }
                 >
 
-                  {uploadForm.file ? (
-                    <>
-                      <strong>
-                        {uploadForm.file.name}
-                      </strong>
+                  <div className="employee-vault-file-picker-icon">
+                    {uploadForm.file
+                      ? "✓"
+                      : "↑"}
+                  </div>
 
-                      <span>
-                        {formatBytes(
-                          uploadForm
-                            .file
-                            .size
-                        )}
-                        {" · "}
-                        {uploadForm.file.type}
-                      </span>
+                  <div className="employee-vault-file-picker-copy">
 
-                      <b>
-                        Change
-                      </b>
-                    </>
-                  ) : (
-                    <>
-                      <strong>
-                        Select PDF, JPG or PNG
-                      </strong>
+                    {uploadForm.file ? (
+                      <>
+                        <strong>
+                          {
+                            uploadForm
+                              .file
+                              .name
+                          }
+                        </strong>
 
-                      <span>
-                        Maximum file size 15 MB
-                      </span>
+                        <span>
+                          {formatBytes(
+                            uploadForm
+                              .file
+                              .size
+                          )}
 
-                      <b>
-                        Browse
-                      </b>
-                    </>
-                  )}
+                          {" · "}
+
+                          {uploadForm.file.type ===
+                          "application/pdf"
+                            ? "PDF"
+                            : "Image"}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <strong>
+                          Choose document
+                        </strong>
+
+                        <span>
+                          PDF, JPG or PNG · Maximum 15 MB
+                        </span>
+                      </>
+                    )}
+
+                  </div>
+
+                  <b className="employee-vault-file-picker-action">
+                    {uploadForm.file
+                      ? "Change"
+                      : "Browse"}
+                  </b>
 
                 </button>
 
@@ -1738,6 +1638,8 @@ function EmployeeDocumentVaultPage() {
 
             </div>
 
+            {/* MODAL FOOTER */}
+
             <div className="employee-vault-modal-footer">
 
               <button
@@ -1747,10 +1649,8 @@ function EmployeeDocumentVaultPage() {
                   busy ===
                   "UPLOAD"
                 }
-                onClick={() =>
-                  setShowUpload(
-                    false
-                  )
+                onClick={
+                  closeUploadModal
                 }
               >
                 Cancel
@@ -1761,7 +1661,9 @@ function EmployeeDocumentVaultPage() {
                 className="employee-vault-primary"
                 disabled={
                   busy ===
-                  "UPLOAD"
+                    "UPLOAD" ||
+                  !uploadForm.title.trim() ||
+                  !uploadForm.file
                 }
               >
                 {busy ===
@@ -1775,6 +1677,7 @@ function EmployeeDocumentVaultPage() {
           </form>
 
         </div>
+
       ) : null}
 
     </div>

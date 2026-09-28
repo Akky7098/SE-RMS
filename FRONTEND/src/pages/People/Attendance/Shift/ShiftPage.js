@@ -1532,149 +1532,7 @@ function ShiftPage() {
      FILTER EMPLOYEES
   ======================================================= */
 
-  const filteredEmployees =
-    useMemo(
-      () => {
-        const needle =
-          String(
-            search ||
-            ""
-          )
-            .trim()
-            .toLowerCase();
 
-        return safeEmployees.filter(
-          (
-            employee
-          ) => {
-            if (
-              department &&
-              getEmployeeDepartmentValue(
-                employee
-              ) !==
-                department
-            ) {
-              return false;
-            }
-
-            if (
-              office &&
-              getEmployeeOfficeValue(
-                employee
-              ) !==
-                office
-            ) {
-              return false;
-            }
-
-            if (
-              !needle
-            ) {
-              return true;
-            }
-
-            const haystack =
-              [
-                getEmployeeName(
-                  employee
-                ),
-
-                employee
-                  ?.employeeCode,
-
-                getEmployeeDepartmentLabel(
-                  employee
-                ),
-
-                employee
-                  ?.designation,
-
-                employee
-                  ?.designationName,
-
-                employee
-                  ?.workLocation,
-              ]
-                .filter(
-                  Boolean
-                )
-                .join(
-                  " "
-                )
-                .toLowerCase();
-
-            return haystack.includes(
-              needle
-            );
-          }
-        );
-      },
-      [
-        safeEmployees,
-
-        search,
-
-        department,
-
-        office,
-      ]
-    );
-
-  useEffect(
-    () => {
-      setReviewPage(
-        1
-      );
-    },
-    [
-      search,
-      department,
-      office,
-    ]
-  );
-
-  /* =======================================================
-     REVIEW PAGINATION
-  ======================================================= */
-
-  const reviewPages =
-    Math.max(
-      1,
-
-      Math.ceil(
-        filteredEmployees
-          .length /
-        REVIEW_PAGE_SIZE
-      )
-    );
-
-  const safeReviewPage =
-    Math.min(
-      reviewPage,
-      reviewPages
-    );
-
-  const reviewEmployees =
-    useMemo(
-      () => {
-        const start =
-          (
-            safeReviewPage -
-            1
-          ) *
-          REVIEW_PAGE_SIZE;
-
-        return filteredEmployees.slice(
-          start,
-          start +
-            REVIEW_PAGE_SIZE
-        );
-      },
-      [
-        filteredEmployees,
-        safeReviewPage,
-      ]
-    );
 
   /* =======================================================
      ROSTER STATUS
@@ -1998,6 +1856,236 @@ function ShiftPage() {
         safeShifts,
       ]
     );
+
+
+    
+
+
+    /* =========================================================
+   REVIEW — ONLY PEOPLE WITH AN ACTUAL WEEK ASSIGNMENT
+========================================================= */
+
+const reviewAssignedEmployees =
+  useMemo(() => {
+    const ids =
+      new Set(
+        assignmentDetails
+          .map(
+            (item) =>
+              String(
+                item?.employeeId ||
+                ""
+              )
+          )
+          .filter(Boolean)
+      );
+
+    return safeEmployees
+      .filter((employee) =>
+        ids.has(
+          employeeIdOf(employee)
+        )
+      )
+      .sort((a, b) =>
+        getEmployeeName(a).localeCompare(
+          getEmployeeName(b)
+        )
+      );
+  }, [
+    assignmentDetails,
+    safeEmployees,
+  ]);
+
+/* =========================================================
+   NIGHT SHIFT RECORDS
+========================================================= */
+
+const nightShiftRecords =
+  useMemo(() => {
+    return assignmentDetails.filter(
+      (item) => {
+        if (
+          normalize(item?.dayType) !==
+          "SHIFT"
+        ) {
+          return false;
+        }
+
+        const shift =
+          item?.shift;
+
+        return (
+          normalize(shift?.type) ===
+            "NIGHT" ||
+          Boolean(
+            shift?.crossesMidnight
+          ) ||
+          normalize(
+            shift?.code ||
+            item?.scheduleCode
+          ).includes("NIGHT")
+        );
+      }
+    );
+  }, [assignmentDetails]);
+
+const hasNightShift =
+  nightShiftRecords.length > 0;
+
+/* =========================================================
+   REVIEW COUNTS
+========================================================= */
+
+const assignedShiftEmployeeCount =
+  useMemo(() => {
+    return new Set(
+      assignmentDetails
+        .filter(
+          (item) =>
+            normalize(item?.dayType) ===
+            "SHIFT"
+        )
+        .map(
+          (item) =>
+            String(
+              item?.employeeId ||
+              ""
+            )
+        )
+        .filter(Boolean)
+    ).size;
+  }, [assignmentDetails]);
+
+const nightShiftEmployeeCount =
+  useMemo(() => {
+    return new Set(
+      nightShiftRecords
+        .map(
+          (item) =>
+            String(
+              item?.employeeId ||
+              ""
+            )
+        )
+        .filter(Boolean)
+    ).size;
+  }, [nightShiftRecords]);
+
+
+
+  /* =========================================================
+   REVIEW FILTER EMPLOYEES
+========================================================= */
+
+const filteredEmployees =
+  useMemo(() => {
+    const needle =
+      String(
+        search || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    return reviewAssignedEmployees.filter(
+      (employee) => {
+        if (
+          department &&
+          getEmployeeDepartmentValue(
+            employee
+          ) !== department
+        ) {
+          return false;
+        }
+
+        if (
+          office &&
+          getEmployeeOfficeValue(
+            employee
+          ) !== office
+        ) {
+          return false;
+        }
+
+        if (!needle) {
+          return true;
+        }
+
+        const haystack =
+          [
+            getEmployeeName(
+              employee
+            ),
+
+            employee
+              ?.employeeCode,
+
+            getEmployeeDepartmentLabel(
+              employee
+            ),
+
+            employee
+              ?.designation,
+
+            employee
+              ?.designationName,
+
+            employee
+              ?.workLocation,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+        return haystack.includes(
+          needle
+        );
+      }
+    );
+  }, [
+    reviewAssignedEmployees,
+    search,
+    department,
+    office,
+  ]);
+
+
+/* =========================================================
+   REVIEW PAGINATION
+========================================================= */
+
+const reviewPages =
+  Math.max(
+    1,
+    Math.ceil(
+      filteredEmployees.length /
+        REVIEW_PAGE_SIZE
+    )
+  );
+
+const safeReviewPage =
+  Math.min(
+    reviewPage,
+    reviewPages
+  );
+
+const reviewEmployees =
+  useMemo(() => {
+    const start =
+      (
+        safeReviewPage -
+        1
+      ) *
+      REVIEW_PAGE_SIZE;
+
+    return filteredEmployees.slice(
+      start,
+      start +
+        REVIEW_PAGE_SIZE
+    );
+  }, [
+    filteredEmployees,
+    safeReviewPage,
+  ]);
 
   /* =======================================================
      DEPARTMENT ROSTER DETAILS
@@ -4232,6 +4320,55 @@ const publishAllRosters =
       ==================================================== */}
 
       <header className="se-shift-header">
+        <div
+  className="se-shift-fish-pond"
+  aria-hidden="true"
+>
+  <span className="se-shift-fish se-shift-fish--1">
+    <i className="fish-body">
+      <b className="fish-eye" />
+      <b className="fish-mouth" />
+      <b className="fish-fin" />
+    </i>
+    <i className="fish-tail" />
+  </span>
+
+  <span className="se-shift-fish se-shift-fish--2">
+    <i className="fish-body">
+      <b className="fish-eye" />
+      <b className="fish-mouth" />
+      <b className="fish-fin" />
+    </i>
+    <i className="fish-tail" />
+  </span>
+
+  <span className="se-shift-fish se-shift-fish--3">
+    <i className="fish-body">
+      <b className="fish-eye" />
+      <b className="fish-mouth" />
+      <b className="fish-fin" />
+    </i>
+    <i className="fish-tail" />
+  </span>
+
+  <span className="se-shift-fish se-shift-fish--4">
+    <i className="fish-body">
+      <b className="fish-eye" />
+      <b className="fish-mouth" />
+      <b className="fish-fin" />
+    </i>
+    <i className="fish-tail" />
+  </span>
+
+  <span className="se-shift-fish se-shift-fish--5">
+    <i className="fish-body">
+      <b className="fish-eye" />
+      <b className="fish-mouth" />
+      <b className="fish-fin" />
+    </i>
+    <i className="fish-tail" />
+  </span>
+</div>
 
         <div className="se-shift-header-left">
 
@@ -4248,44 +4385,86 @@ const publishAllRosters =
             ←
           </button>
 
-          <div>
+          <div className="se-shift-title-block">
 
-            <span>
-              PEOPLE · ATTENDANCE · SHIFT
-            </span>
+  <span>
+    PEOPLE · ATTENDANCE
+  </span>
 
-            <h1>
-              Shift Management
-            </h1>
+  <div className="se-shift-title-row">
 
-            <p>
-              Weekly shift exceptions, review and publishing.
-            </p>
+    <span
+      className="se-shift-running-orbit"
+      aria-hidden="true"
+    >
+      <i />
+    </span>
 
-          </div>
+    <h1>
+      Shift Management
+    </h1>
 
-        </div>
+  </div>
 
-        <div className="se-shift-header-actions">
+  <p>
+    Assign, review and publish employee shifts.
+  </p>
 
-          <button
-            type="button"
-            className="se-shift-refresh"
-            disabled={
-              refreshing
-            }
-            onClick={() =>
-              loadPage(
-                true
-              )
-            }
-          >
-            {refreshing
-              ? "Refreshing..."
-              : "↻ Refresh"}
-          </button>
+</div>
 
         </div>
+
+       <div className="se-shift-header-actions">
+
+  {access.canViewTeam &&
+  hasNightShift ? (
+    <button
+      type="button"
+      className="se-shift-header-pdf"
+      onClick={
+        downloadNightShiftPdf
+      }
+      title="Download this week's Night Shift employee list"
+    >
+      <span className="se-shift-header-pdf-icon">
+        ↓
+      </span>
+
+      <span>
+        <strong>
+          Night Shift PDF
+        </strong>
+
+        <small>
+          {nightShiftEmployeeCount} employee
+          {nightShiftEmployeeCount === 1
+            ? ""
+            : "s"}
+        </small>
+      </span>
+    </button>
+  ) : null}
+
+  <button
+    type="button"
+    className="se-shift-refresh"
+    disabled={refreshing}
+    onClick={() =>
+      loadPage(true)
+    }
+  >
+    <span>
+      {refreshing
+        ? "↻"
+        : "↻"}
+    </span>
+
+    {refreshing
+      ? "Refreshing..."
+      : "Refresh"}
+  </button>
+
+</div>
 
       </header>
 
@@ -4315,16 +4494,14 @@ const publishAllRosters =
           </span>
 
           <div>
+  <strong>
+    My Shift
+  </strong>
 
-            <strong>
-              My Shift
-            </strong>
-
-            <small>
-              Published schedule
-            </small>
-
-          </div>
+  <small>
+    See my weekly schedule
+  </small>
+</div>
 
         </button>
 
@@ -4350,16 +4527,14 @@ const publishAllRosters =
             </span>
 
             <div>
+  <strong>
+    Assign Shift
+  </strong>
 
-              <strong>
-                Assign
-              </strong>
-
-              <small>
-                Shift exceptions
-              </small>
-
-            </div>
+  <small>
+    Give employees a shift
+  </small>
+</div>
 
           </button>
         ) : null}
@@ -4386,16 +4561,14 @@ const publishAllRosters =
             </span>
 
             <div>
+  <strong>
+    Review Assigned
+  </strong>
 
-              <strong>
-                Review
-              </strong>
-
-              <small>
-                Weekly roster
-              </small>
-
-            </div>
+  <small>
+    Check assigned employees
+  </small>
+</div>
 
           </button>
         ) : null}
@@ -4422,16 +4595,14 @@ const publishAllRosters =
             </span>
 
             <div>
+  <strong>
+    Shift Timings
+  </strong>
 
-              <strong>
-                Shift Master
-              </strong>
-
-              <small>
-                Timing setup
-              </small>
-
-            </div>
+  <small>
+    Create & edit shift times
+  </small>
+</div>
 
           </button>
         ) : null}
@@ -4908,55 +5079,82 @@ const publishAllRosters =
           .canViewTeam ? (
           <>
 
-            <section className="se-shift-clean-heading">
+            <section className="se-shift-clean-heading se-shift-review-heading-v8">
 
-              <div>
+  <div>
 
-                <span>
-                  WEEKLY ROSTER
-                </span>
+    <span>
+      ASSIGNED THIS WEEK
+    </span>
 
-                <h2>
-                  Review and correct
-                </h2>
+    <h2>
+      Employee Shift Review
+    </h2>
 
-                <p>
-                  Search employees, inspect their week and make individual corrections only when required.
-                </p>
+    <p>
+      Only employees with an assigned shift or schedule change are shown here.
+    </p>
 
-              </div>
+  </div>
 
-              <aside>
+  <div className="se-shift-review-heading-stats">
 
-                <small>
-                  ROSTER STATUS
-                </small>
+    <div>
+      <small>
+        EMPLOYEES
+      </small>
 
-                <strong>
-                  {
-                    rosterStatus
-                  }
-                </strong>
+      <strong>
+        {
+          reviewAssignedEmployees
+            .length
+        }
+      </strong>
+    </div>
 
-              </aside>
+    <div>
+      <small>
+        SHIFT ASSIGNED
+      </small>
 
-            </section>
+      <strong>
+        {
+          assignedShiftEmployeeCount
+        }
+      </strong>
+    </div>
+
+    <div className="night">
+      <small>
+        NIGHT SHIFT
+      </small>
+
+      <strong>
+        {
+          nightShiftEmployeeCount
+        }
+      </strong>
+    </div>
+
+    <div>
+      <small>
+        STATUS
+      </small>
+
+      <strong>
+        {rosterStatus}
+      </strong>
+    </div>
+
+  </div>
+
+</section>
 
             {/* ===============================================
                 REVIEW SUMMARY
             ================================================ */}
 
-            <ShiftSummary
-              employees={
-                safeEmployees
-              }
-              assignments={
-                mergedAssignments
-              }
-              roster={
-                roster
-              }
-            />
+           
 
             {/* ===============================================
                 REVIEW FILTERS
@@ -4966,9 +5164,9 @@ const publishAllRosters =
 
               <label className="search">
 
-                <span>
-                  SEARCH
-                </span>
+               <span>
+  FIND EMPLOYEE
+</span>
 
                 <input
                   value={
@@ -4983,7 +5181,7 @@ const publishAllRosters =
                         .value
                     )
                   }
-                  placeholder="Employee name or code"
+                  placeholder="Type employee name or ID..."
                 />
 
               </label>
@@ -5042,8 +5240,8 @@ const publishAllRosters =
               <label>
 
                 <span>
-                  OFFICE
-                </span>
+  FILTER BY LOCATION
+</span>
 
                 <select
                   value={
@@ -5110,7 +5308,7 @@ const publishAllRosters =
                     );
                   }}
                 >
-                  Clear
+                  Clear Filters
                 </button>
               ) : null}
 
@@ -5120,50 +5318,62 @@ const publishAllRosters =
                 EMPLOYEE COUNT
             ================================================ */}
 
-            <div className="se-shift-review-count se-shift-review-count-v7">
+            <div className="se-shift-review-count se-shift-review-count-v8">
 
-              <div>
+  <div>
 
-                <span>
-                  EMPLOYEE SCHEDULE
-                </span>
+    <span className="se-shift-review-count-icon">
+      ✓
+    </span>
 
-                <strong>
-                  {filteredEmployees.length} employees
-                </strong>
+    <div>
+      <span>
+        ASSIGNED EMPLOYEES
+      </span>
 
-              </div>
+      <strong>
+        {filteredEmployees.length} employee
+        {filteredEmployees.length === 1
+          ? ""
+          : "s"} shown
+      </strong>
+    </div>
 
-              <div>
+  </div>
 
-                <span>
-                  Showing{" "}
-                  {filteredEmployees
-                    .length
-                    ? (
-                        safeReviewPage -
-                        1
-                      ) *
-                        REVIEW_PAGE_SIZE +
-                      1
-                    : 0}
-                  {" – "}
-                  {Math.min(
-                    safeReviewPage *
-                      REVIEW_PAGE_SIZE,
+  <div className="se-shift-review-count-page">
 
-                    filteredEmployees
-                      .length
-                  )}
-                </span>
+    <span>
+      {filteredEmployees.length
+        ? (
+            safeReviewPage -
+            1
+          ) *
+            REVIEW_PAGE_SIZE +
+          1
+        : 0}
 
-                <small>
-                  50 per page
-                </small>
+      {" – "}
 
-              </div>
+      {Math.min(
+        safeReviewPage *
+          REVIEW_PAGE_SIZE,
 
-            </div>
+        filteredEmployees
+          .length
+      )}
+
+      {" of "}
+
+      {
+        filteredEmployees
+          .length
+      }
+    </span>
+
+  </div>
+
+</div>
 
             {/* ===============================================
                 GRID
@@ -5336,65 +5546,22 @@ const publishAllRosters =
                 <div>
 
                   <span>
-                    WEEKLY WORKFLOW
-                  </span>
+  READY TO FINISH
+</span>
 
-                  <strong>
-                    Finalize weekly schedule
-                  </strong>
+<strong>
+  Publish this week's shifts
+</strong>
 
-                  <p>
-                    Submit completed department rosters for review. HR publishes the final schedule used by attendance processing.
-                  </p>
+<p>
+  Check the assigned employees above, then publish when everything is correct.
+</p>
 
                 </div>
 
                <div className="se-shift-final-workflow-actions">
 
-  {assignmentDetails.some(
-    (
-      item
-    ) => {
-      if (
-        normalize(
-          item?.dayType
-        ) !==
-        "SHIFT"
-      ) {
-        return false;
-      }
 
-      return (
-        normalize(
-          item
-            ?.shift
-            ?.type
-        ) ===
-          "NIGHT" ||
-        Boolean(
-          item
-            ?.shift
-            ?.crossesMidnight
-        ) ||
-        normalize(
-          item
-            ?.scheduleCode
-        ).includes(
-          "NIGHT"
-        )
-      );
-    }
-  ) ? (
-    <button
-      type="button"
-      className="download"
-      onClick={
-        downloadNightShiftPdf
-      }
-    >
-      ↓ Night Shift PDF
-    </button>
-  ) : null}
 
  {(access
   .canPublishRoster ||

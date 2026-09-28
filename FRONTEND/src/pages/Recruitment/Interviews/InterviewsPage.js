@@ -26,22 +26,63 @@ import {
 } from "../utils/recruitmentHelpers";
 
 import "./Interviews.css";
+import interviewHeroVideo from "../interview-hero.mp4";
+import interviewHeroPoster from "../interview-hero-poster.webp";
 
 /* =========================================================
-   FILTERS
+   CONSTANTS
 ========================================================= */
 
-// const FILTERS = [
-//   "ALL",
-//   "UPCOMING",
-//   "TODAY",
-//   "COMPLETED",
-//   "CANCELLED",
-// ];
+const CLOSED_STATUSES = [
+  "COMPLETED",
+  "CANCELLED",
+  "NO_SHOW",
+];
+
+const ACTIVE_STATUSES = [
+  "SCHEDULED",
+  "RESCHEDULED",
+  "CHECKED_IN",
+  "INTERVIEWED",
+];
+
+const STATUS_PRIORITY = {
+  CHECKED_IN: 1,
+  INTERVIEWED: 2,
+  SCHEDULED: 3,
+  RESCHEDULED: 4,
+  COMPLETED: 5,
+  CANCELLED: 6,
+  NO_SHOW: 7,
+};
 
 /* =========================================================
-   HELPERS
+   BASIC HELPERS
 ========================================================= */
+
+const normalizeStatus = (
+  value
+) =>
+  String(
+    value || ""
+  )
+    .trim()
+    .toUpperCase();
+
+const toTime = (
+  value
+) => {
+  const time =
+    new Date(
+      value || 0
+    ).getTime();
+
+  return Number.isNaN(
+    time
+  )
+    ? 0
+    : time;
+};
 
 const isToday = (
   value
@@ -56,6 +97,14 @@ const isToday = (
     new Date(
       value
     );
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return false;
+  }
 
   const now =
     new Date();
@@ -74,10 +123,9 @@ const getInterviewTone = (
   status
 ) => {
   const value =
-    String(
-      status ||
-        ""
-    ).toUpperCase();
+    normalizeStatus(
+      status
+    );
 
   if (
     value ===
@@ -113,6 +161,533 @@ const getInterviewTone = (
 };
 
 /* =========================================================
+   CANDIDATE IDENTITY
+
+   One candidate can have multiple interview records.
+
+   We group by candidate ID first.
+
+   Fallbacks are only used for old records where candidate
+   population may be incomplete.
+========================================================= */
+
+const getCandidateKey = (
+  interview
+) => {
+  const candidateId =
+    getRecordId(
+      interview?.candidate
+    );
+
+  if (
+    candidateId
+  ) {
+    return `candidate:${candidateId}`;
+  }
+
+  const rawCandidateId =
+    interview?.candidateId;
+
+  if (
+    rawCandidateId
+  ) {
+    return `candidate:${String(
+      rawCandidateId
+    )}`;
+  }
+
+  const email =
+    String(
+      interview?.candidate
+        ?.email ||
+      interview?.candidateEmail ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+  if (
+    email
+  ) {
+    return `email:${email}`;
+  }
+
+  const name =
+    String(
+      interview?.candidate
+        ?.fullName ||
+      interview?.candidateName ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+  const position =
+    String(
+      interview?.positionTitle ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+  return `legacy:${name}:${position}`;
+};
+
+/* =========================================================
+   SORT INTERVIEWS FOR A CANDIDATE
+========================================================= */
+
+const sortCandidateInterviews = (
+  records
+) => {
+  return [
+    ...records,
+  ].sort(
+    (
+      a,
+      b
+    ) => {
+      const roundA =
+        Number(
+          a?.roundNumber ||
+          0
+        );
+
+      const roundB =
+        Number(
+          b?.roundNumber ||
+          0
+        );
+
+      if (
+        roundA !==
+        roundB
+      ) {
+        return (
+          roundA -
+          roundB
+        );
+      }
+
+      return (
+        toTime(
+          a?.scheduledAt
+        ) -
+        toTime(
+          b?.scheduledAt
+        )
+      );
+    }
+  );
+};
+
+/* =========================================================
+   CURRENT / NEXT INTERVIEW
+
+   Priority:
+   1. Active upcoming/current interview
+   2. Latest interview record
+========================================================= */
+
+const getCurrentInterview = (
+  records
+) => {
+  if (
+    !records?.length
+  ) {
+    return null;
+  }
+
+  const now =
+    Date.now();
+
+  const active =
+    records
+      .filter(
+        (
+          interview
+        ) =>
+          !CLOSED_STATUSES.includes(
+            normalizeStatus(
+              interview?.status
+            )
+          )
+      )
+      .sort(
+        (
+          a,
+          b
+        ) => {
+          const aTime =
+            toTime(
+              a?.scheduledAt
+            );
+
+          const bTime =
+            toTime(
+              b?.scheduledAt
+            );
+
+          const aFuture =
+            aTime >=
+            now;
+
+          const bFuture =
+            bTime >=
+            now;
+
+          if (
+            aFuture &&
+            !bFuture
+          ) {
+            return -1;
+          }
+
+          if (
+            !aFuture &&
+            bFuture
+          ) {
+            return 1;
+          }
+
+          if (
+            aFuture &&
+            bFuture
+          ) {
+            return (
+              aTime -
+              bTime
+            );
+          }
+
+          return (
+            bTime -
+            aTime
+          );
+        }
+      );
+
+  if (
+    active.length
+  ) {
+    return active[0];
+  }
+
+  return [
+    ...records,
+  ].sort(
+    (
+      a,
+      b
+    ) =>
+      toTime(
+        b?.scheduledAt
+      ) -
+      toTime(
+        a?.scheduledAt
+      )
+  )[0];
+};
+
+/* =========================================================
+   CANDIDATE OVERALL STATUS
+========================================================= */
+
+const getCandidateStatus = (
+  records,
+  currentInterview
+) => {
+  if (
+    !records?.length
+  ) {
+    return "SCHEDULED";
+  }
+
+  const statuses =
+    records.map(
+      (
+        interview
+      ) =>
+        normalizeStatus(
+          interview?.status
+        )
+    );
+
+  if (
+    statuses.some(
+      (
+        status
+      ) =>
+        status ===
+        "CHECKED_IN"
+    )
+  ) {
+    return "CHECKED_IN";
+  }
+
+  if (
+    statuses.some(
+      (
+        status
+      ) =>
+        status ===
+        "INTERVIEWED"
+    )
+  ) {
+    return "INTERVIEWED";
+  }
+
+  if (
+    statuses.some(
+      (
+        status
+      ) =>
+        status ===
+          "SCHEDULED" ||
+        status ===
+          "RESCHEDULED"
+    )
+  ) {
+    return normalizeStatus(
+      currentInterview?.status
+    ) || "SCHEDULED";
+  }
+
+  const completed =
+    statuses.filter(
+      (
+        status
+      ) =>
+        status ===
+        "COMPLETED"
+    ).length;
+
+  if (
+    completed > 0
+  ) {
+    return "COMPLETED";
+  }
+
+  if (
+    statuses.every(
+      (
+        status
+      ) =>
+        status ===
+          "CANCELLED" ||
+        status ===
+          "NO_SHOW"
+    )
+  ) {
+    return statuses.includes(
+      "NO_SHOW"
+    )
+      ? "NO_SHOW"
+      : "CANCELLED";
+  }
+
+  return (
+    normalizeStatus(
+      currentInterview?.status
+    ) ||
+    "SCHEDULED"
+  );
+};
+
+/* =========================================================
+   GROUP INTERVIEWS BY CANDIDATE
+========================================================= */
+
+const groupInterviewsByCandidate = (
+  interviews
+) => {
+  const map =
+    new Map();
+
+  interviews.forEach(
+    (
+      interview
+    ) => {
+      const key =
+        getCandidateKey(
+          interview
+        );
+
+      if (
+        !map.has(
+          key
+        )
+      ) {
+        map.set(
+          key,
+          []
+        );
+      }
+
+      map
+        .get(
+          key
+        )
+        .push(
+          interview
+        );
+    }
+  );
+
+  return Array.from(
+    map.entries()
+  ).map(
+    (
+      [
+        key,
+        rawRecords,
+      ]
+    ) => {
+      const records =
+        sortCandidateInterviews(
+          rawRecords
+        );
+
+      const first =
+        records[0];
+
+      const latest =
+        [
+          ...records,
+        ].sort(
+          (
+            a,
+            b
+          ) =>
+            toTime(
+              b?.scheduledAt
+            ) -
+            toTime(
+              a?.scheduledAt
+            )
+        )[0];
+
+      const current =
+        getCurrentInterview(
+          records
+        );
+
+      const completedCount =
+        records.filter(
+          (
+            interview
+          ) =>
+            normalizeStatus(
+              interview?.status
+            ) ===
+            "COMPLETED"
+        ).length;
+
+      const cancelledCount =
+        records.filter(
+          (
+            interview
+          ) =>
+            [
+              "CANCELLED",
+              "NO_SHOW",
+            ].includes(
+              normalizeStatus(
+                interview?.status
+              )
+            )
+        ).length;
+
+      const activeCount =
+        records.filter(
+          (
+            interview
+          ) =>
+            ACTIVE_STATUSES.includes(
+              normalizeStatus(
+                interview?.status
+              )
+            )
+        ).length;
+
+      const candidate =
+        current?.candidate ||
+        latest?.candidate ||
+        first?.candidate ||
+        null;
+
+      const candidateId =
+        getRecordId(
+          candidate
+        ) ||
+        current?.candidateId ||
+        latest?.candidateId ||
+        "";
+
+      const candidateName =
+        safeText(
+          candidate?.fullName ||
+          current?.candidateName ||
+          latest?.candidateName ||
+          first?.candidateName,
+          "Candidate"
+        );
+
+      const positionTitle =
+        safeText(
+          current?.positionTitle ||
+          latest?.positionTitle ||
+          first?.positionTitle,
+          "Position"
+        );
+
+      const department =
+        current?.department ||
+        latest?.department ||
+        first?.department ||
+        null;
+
+      const overallStatus =
+        getCandidateStatus(
+          records,
+          current
+        );
+
+      return {
+        key,
+
+        candidate,
+
+        candidateId,
+
+        candidateName,
+
+        positionTitle,
+
+        department,
+
+        records,
+
+        totalRounds:
+          records.length,
+
+        completedCount,
+
+        cancelledCount,
+
+        activeCount,
+
+        current,
+
+        latest,
+
+        overallStatus,
+      };
+    }
+  );
+};
+
+/* =========================================================
    COMPONENT
 ========================================================= */
 
@@ -123,6 +698,9 @@ const InterviewsPage =
   }) => {
     const navigate =
       useNavigate();
+
+    const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
+    const [heroVideoReady, setHeroVideoReady] = useState(false);
 
     const [
       interviews,
@@ -157,6 +735,41 @@ const InterviewsPage =
       search,
       setSearch,
     ] = useState("");
+
+
+    useEffect(() => {
+  if (evaluationMode) {
+    return undefined;
+  }
+
+  let timerId = null;
+  let idleId = null;
+
+  const enableVideo = () => {
+    setHeroVideoEnabled(true);
+  };
+
+  if ("requestIdleCallback" in window) {
+    idleId = window.requestIdleCallback(enableVideo, {
+      timeout: 1800,
+    });
+  } else {
+    timerId = window.setTimeout(enableVideo, 700);
+  }
+
+  return () => {
+    if (
+      idleId !== null &&
+      "cancelIdleCallback" in window
+    ) {
+      window.cancelIdleCallback(idleId);
+    }
+
+    if (timerId !== null) {
+      window.clearTimeout(timerId);
+    }
+  };
+}, [evaluationMode]);
 
     /* =====================================================
        LOAD
@@ -202,9 +815,9 @@ const InterviewsPage =
                 ?.response
                 ?.data
                 ?.message ||
-                loadError
-                  ?.message ||
-                "Interviews could not be loaded."
+              loadError
+                ?.message ||
+              "Interviews could not be loaded."
             );
           } finally {
             setLoading(
@@ -219,297 +832,539 @@ const InterviewsPage =
         []
       );
 
-    useEffect(() => {
-      load();
-    }, [
-      load,
-    ]);
+    useEffect(
+      () => {
+        load();
+      },
+      [
+        load,
+      ]
+    );
 
     /* =====================================================
-       METRICS
+       RAW INTERVIEW METRICS
+
+       These remain interview-level metrics.
     ===================================================== */
 
     const metrics =
-      useMemo(() => {
-        let today =
-          0;
+      useMemo(
+        () => {
+          let today =
+            0;
 
-        let upcoming =
-          0;
+          let upcoming =
+            0;
 
-        let completed =
-          0;
+          let completed =
+            0;
 
-        let evaluationPending =
-          0;
+          let actionDue =
+            0;
 
-        let cancelled =
-          0;
+          const now =
+            Date.now();
 
-        const now =
-          Date.now();
-
-        interviews.forEach(
-          (
-            interview
-          ) => {
-            const status =
-              String(
-                interview?.status ||
-                  ""
-              ).toUpperCase();
-
-            const scheduled =
-              new Date(
-                interview?.scheduledAt ||
-                  0
-              ).getTime();
-
-            if (
-              isToday(
-                interview?.scheduledAt
-              )
-            ) {
-              today +=
-                1;
-            }
-
-            if (
-              scheduled >
-                now &&
-              ![
-                "COMPLETED",
-                "CANCELLED",
-                "NO_SHOW",
-              ].includes(
-                status
-              )
-            ) {
-              upcoming +=
-                1;
-            }
-
-            if (
-              status ===
-              "COMPLETED"
-            ) {
-              completed +=
-                1;
-            }
-
-            if (
-              [
-                "CHECKED_IN",
-                "INTERVIEWED",
-                "SCHEDULED",
-                "RESCHEDULED",
-              ].includes(
-                status
-              ) &&
-              scheduled <=
-                now
-            ) {
-              evaluationPending +=
-                1;
-            }
-
-            if (
-              [
-                "CANCELLED",
-                "NO_SHOW",
-              ].includes(
-                status
-              )
-            ) {
-              cancelled +=
-                1;
-            }
-          }
-        );
-
-        return {
-          total:
-            interviews.length,
-
-          today,
-
-          upcoming,
-
-          completed,
-
-          evaluationPending,
-
-          cancelled,
-        };
-      }, [
-        interviews,
-      ]);
-
-    /* =====================================================
-       FILTER
-    ===================================================== */
-
-    const visible =
-      useMemo(() => {
-        const keyword =
-          search
-            .trim()
-            .toLowerCase();
-
-        const now =
-          Date.now();
-
-        return interviews
-          .filter(
+          interviews.forEach(
             (
               interview
             ) => {
               const status =
-                String(
-                  interview
-                    ?.status ||
-                    ""
-                ).toUpperCase();
+                normalizeStatus(
+                  interview?.status
+                );
 
               const scheduled =
-                new Date(
-                  interview
-                    ?.scheduledAt ||
-                    0
-                ).getTime();
-
-              if (
-                evaluationMode &&
-                ![
-                  "COMPLETED",
-                  "CHECKED_IN",
-                  "SCHEDULED",
-                  "RESCHEDULED",
-                ].includes(
-                  status
-                )
-              ) {
-                return false;
-              }
-
-              if (
-                filter ===
-                "TODAY"
-              ) {
-                if (
-                  !isToday(
-                    interview
-                      ?.scheduledAt
-                  )
-                ) {
-                  return false;
-                }
-              }
-
-              if (
-                filter ===
-                "UPCOMING"
-              ) {
-                if (
-                  scheduled <=
-                    now ||
-                  [
-                    "COMPLETED",
-                    "CANCELLED",
-                    "NO_SHOW",
-                  ].includes(
-                    status
-                  )
-                ) {
-                  return false;
-                }
-              }
-
-              if (
-                filter ===
-                  "COMPLETED" &&
-                status !==
-                  "COMPLETED"
-              ) {
-                return false;
-              }
-
-              if (
-                filter ===
-                  "CANCELLED" &&
-                ![
-                  "CANCELLED",
-                  "NO_SHOW",
-                ].includes(
-                  status
-                )
-              ) {
-                return false;
-              }
-
-              if (
-                !keyword
-              ) {
-                return true;
-              }
-
-              return [
-                interview
-                  ?.interviewNumber,
-
-                interview
-                  ?.candidate
-                  ?.fullName,
-
-                interview
-                  ?.candidateName,
-
-                interview
-                  ?.positionTitle,
-
-                interview
-                  ?.roundName,
-
-                interview
-                  ?.interviewer
-                  ?.displayName,
-
-                interview
-                  ?.department
-                  ?.name,
-              ]
-                .filter(
-                  Boolean
-                )
-                .join(
-                  " "
-                )
-                .toLowerCase()
-                .includes(
-                  keyword
+                toTime(
+                  interview?.scheduledAt
                 );
+
+              if (
+                isToday(
+                  interview?.scheduledAt
+                )
+              ) {
+                today +=
+                  1;
+              }
+
+              if (
+                scheduled >
+                  now &&
+                !CLOSED_STATUSES.includes(
+                  status
+                )
+              ) {
+                upcoming +=
+                  1;
+              }
+
+              if (
+                status ===
+                "COMPLETED"
+              ) {
+                completed +=
+                  1;
+              }
+
+              if (
+                ACTIVE_STATUSES.includes(
+                  status
+                ) &&
+                scheduled <=
+                  now
+              ) {
+                actionDue +=
+                  1;
+              }
+            }
+          );
+
+          return {
+            interviews:
+              interviews.length,
+
+            today,
+
+            upcoming,
+
+            completed,
+
+            actionDue,
+          };
+        },
+        [
+          interviews,
+        ]
+      );
+
+    /* =====================================================
+       GROUP INTO CANDIDATES
+    ===================================================== */
+
+    const candidateGroups =
+      useMemo(
+        () =>
+          groupInterviewsByCandidate(
+            interviews
+          ),
+        [
+          interviews,
+        ]
+      );
+
+    /* =====================================================
+       CANDIDATE METRICS
+    ===================================================== */
+
+    const candidateMetrics =
+      useMemo(
+        () => {
+          const now =
+            Date.now();
+
+          return {
+            total:
+              candidateGroups.length,
+
+            today:
+              candidateGroups.filter(
+                (
+                  group
+                ) =>
+                  group.records.some(
+                    (
+                      interview
+                    ) =>
+                      isToday(
+                        interview
+                          ?.scheduledAt
+                      )
+                  )
+              ).length,
+
+            upcoming:
+              candidateGroups.filter(
+                (
+                  group
+                ) =>
+                  group.records.some(
+                    (
+                      interview
+                    ) => {
+                      const status =
+                        normalizeStatus(
+                          interview
+                            ?.status
+                        );
+
+                      return (
+                        toTime(
+                          interview
+                            ?.scheduledAt
+                        ) >
+                          now &&
+                        !CLOSED_STATUSES.includes(
+                          status
+                        )
+                      );
+                    }
+                  )
+              ).length,
+
+            completed:
+              candidateGroups.filter(
+                (
+                  group
+                ) =>
+                  group.overallStatus ===
+                  "COMPLETED"
+              ).length,
+
+            actionDue:
+              candidateGroups.filter(
+                (
+                  group
+                ) =>
+                  group.records.some(
+                    (
+                      interview
+                    ) => {
+                      const status =
+                        normalizeStatus(
+                          interview
+                            ?.status
+                        );
+
+                      return (
+                        ACTIVE_STATUSES.includes(
+                          status
+                        ) &&
+                        toTime(
+                          interview
+                            ?.scheduledAt
+                        ) <=
+                          now
+                      );
+                    }
+                  )
+              ).length,
+          };
+        },
+        [
+          candidateGroups,
+        ]
+      );
+
+    /* =====================================================
+       FILTER CANDIDATES
+    ===================================================== */
+
+    const visibleCandidates =
+      useMemo(
+        () => {
+          const keyword =
+            search
+              .trim()
+              .toLowerCase();
+
+          const now =
+            Date.now();
+
+          return candidateGroups
+            .filter(
+              (
+                group
+              ) => {
+                const {
+                  records,
+                } =
+                  group;
+
+                if (
+                  evaluationMode
+                ) {
+                  const evaluationRelevant =
+                    records.some(
+                      (
+                        interview
+                      ) =>
+                        [
+                          "COMPLETED",
+                          "CHECKED_IN",
+                          "INTERVIEWED",
+                          "SCHEDULED",
+                          "RESCHEDULED",
+                        ].includes(
+                          normalizeStatus(
+                            interview
+                              ?.status
+                          )
+                        )
+                    );
+
+                  if (
+                    !evaluationRelevant
+                  ) {
+                    return false;
+                  }
+                }
+
+                if (
+                  filter ===
+                  "TODAY"
+                ) {
+                  const hasToday =
+                    records.some(
+                      (
+                        interview
+                      ) =>
+                        isToday(
+                          interview
+                            ?.scheduledAt
+                        )
+                    );
+
+                  if (
+                    !hasToday
+                  ) {
+                    return false;
+                  }
+                }
+
+                if (
+                  filter ===
+                  "UPCOMING"
+                ) {
+                  const hasUpcoming =
+                    records.some(
+                      (
+                        interview
+                      ) => {
+                        const status =
+                          normalizeStatus(
+                            interview
+                              ?.status
+                          );
+
+                        return (
+                          toTime(
+                            interview
+                              ?.scheduledAt
+                          ) >
+                            now &&
+                          !CLOSED_STATUSES.includes(
+                            status
+                          )
+                        );
+                      }
+                    );
+
+                  if (
+                    !hasUpcoming
+                  ) {
+                    return false;
+                  }
+                }
+
+                if (
+                  filter ===
+                  "COMPLETED"
+                ) {
+                  const hasCompleted =
+                    records.some(
+                      (
+                        interview
+                      ) =>
+                        normalizeStatus(
+                          interview
+                            ?.status
+                        ) ===
+                        "COMPLETED"
+                    );
+
+                  if (
+                    !hasCompleted
+                  ) {
+                    return false;
+                  }
+                }
+
+                if (
+                  filter ===
+                  "ACTION_DUE"
+                ) {
+                  const hasActionDue =
+                    records.some(
+                      (
+                        interview
+                      ) => {
+                        const status =
+                          normalizeStatus(
+                            interview
+                              ?.status
+                          );
+
+                        return (
+                          ACTIVE_STATUSES.includes(
+                            status
+                          ) &&
+                          toTime(
+                            interview
+                              ?.scheduledAt
+                          ) <=
+                            now
+                        );
+                      }
+                    );
+
+                  if (
+                    !hasActionDue
+                  ) {
+                    return false;
+                  }
+                }
+
+                if (
+                  !keyword
+                ) {
+                  return true;
+                }
+
+                const interviewText =
+                  records
+                    .map(
+                      (
+                        interview
+                      ) =>
+                        [
+                          interview
+                            ?.interviewNumber,
+
+                          interview
+                            ?.roundName,
+
+                          interview
+                            ?.interviewer
+                            ?.displayName,
+
+                          interview
+                            ?.mode,
+
+                          interview
+                            ?.status,
+                        ]
+                          .filter(
+                            Boolean
+                          )
+                          .join(
+                            " "
+                          )
+                    )
+                    .join(
+                      " "
+                    );
+
+                return [
+                  group.candidateName,
+
+                  group.positionTitle,
+
+                  group.department
+                    ?.name,
+
+                  interviewText,
+                ]
+                  .filter(
+                    Boolean
+                  )
+                  .join(
+                    " "
+                  )
+                  .toLowerCase()
+                  .includes(
+                    keyword
+                  );
+              }
+            )
+            .sort(
+              (
+                a,
+                b
+              ) => {
+                const aCurrent =
+                  toTime(
+                    a.current
+                      ?.scheduledAt
+                  );
+
+                const bCurrent =
+                  toTime(
+                    b.current
+                      ?.scheduledAt
+                  );
+
+                return (
+                  bCurrent -
+                  aCurrent
+                );
+              }
+            );
+        },
+        [
+          candidateGroups,
+          filter,
+          search,
+          evaluationMode,
+        ]
+      );
+
+    /* =====================================================
+       OPEN CANDIDATE INTERVIEW WORKSPACE
+
+       We keep using the existing interview detail route.
+
+       The current interview is preferred.
+       Latest interview is fallback.
+    ===================================================== */
+
+    const openCandidate =
+      (
+        group
+      ) => {
+        const target =
+          group?.current ||
+          group?.latest;
+
+        const interviewId =
+          getRecordId(
+            target
+          );
+
+        if (
+          !interviewId
+        ) {
+          return;
+        }
+
+        navigate(
+          buildRecruitmentUrl(
+            "interview",
+            {
+              id:
+                interviewId,
+
+              candidateId:
+                group?.candidateId ||
+                undefined,
             }
           )
-          .sort(
-            (
-              a,
-              b
-            ) =>
-              new Date(
-                a?.scheduledAt ||
-                  0
-              ).getTime() -
-              new Date(
-                b?.scheduledAt ||
-                  0
-              ).getTime()
-          );
-      }, [
-        interviews,
-        filter,
-        search,
-        evaluationMode,
-      ]);
+        );
+      };
+
+    /* =====================================================
+       RENDER
+    ===================================================== */
 
     return (
       <section className="se-interviews-page">
@@ -517,44 +1372,82 @@ const InterviewsPage =
             HEADER
         ================================================== */}
 
-        <header className="se-interviews-head">
-          <div>
-            <span>
-              {evaluationMode
-                ? "INTERVIEWS · EVALUATIONS"
-                : "RECRUITMENT · INTERVIEWS"}
-            </span>
+       <header
+  className={`se-interviews-head ${
+    !evaluationMode
+      ? "se-interviews-video-hero"
+      : ""
+  }`}
+>
+  {!evaluationMode && (
+    <>
+      <img
+        className="se-interviews-hero-poster"
+        src={interviewHeroPoster}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        fetchPriority="high"
+      />
 
-            <h1>
-              {evaluationMode
-                ? "Evaluations"
-                : "Interviews"}
-            </h1>
+      {heroVideoEnabled ? (
+        <video
+          className={`se-interviews-hero-video ${
+            heroVideoReady ? "is-ready" : ""
+          }`}
+          src={interviewHeroVideo}
+          poster={interviewHeroPoster}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+          onCanPlay={() => setHeroVideoReady(true)}
+        />
+      ) : null}
 
-            <p>
-              {evaluationMode
-                ? "Review completed and pending interview evaluations from one drill-down workspace."
-                : "Schedule tracking, interviewer coordination and candidate interview progress."}
-            </p>
-          </div>
+      <div
+        className="se-interviews-hero-blend"
+        aria-hidden="true"
+      />
+    </>
+  )}
 
-          <button
-            type="button"
-            onClick={() =>
-              load(
-                true
-              )
-            }
-            disabled={
-              refreshing
-            }
-          >
-            ↻{" "}
-            {refreshing
-              ? "Refreshing"
-              : "Refresh"}
-          </button>
-        </header>
+  <div className="se-interviews-head-copy">
+    <span>
+      {evaluationMode
+        ? "EVALUATIONS"
+        : "INTERVIEWS"}
+    </span>
+
+    <h1>
+      {evaluationMode
+        ? "Evaluations"
+        : "Interviews"}
+    </h1>
+
+    {!evaluationMode && (
+      <p>
+        Manage interviews, rounds and candidate evaluations.
+      </p>
+    )}
+  </div>
+
+  <button
+    type="button"
+    onClick={() => load(true)}
+    disabled={refreshing}
+  >
+    <span aria-hidden="true">
+      ↻
+    </span>
+
+    {refreshing
+      ? "Refreshing"
+      : "Refresh"}
+  </button>
+</header>
 
         {/* =================================================
             METRICS
@@ -576,18 +1469,18 @@ const InterviewsPage =
             }
           >
             <span className="all">
-              I
+              C
             </span>
 
             <div>
               <strong>
                 {
-                  metrics.total
+                  candidateMetrics.total
                 }
               </strong>
 
               <small>
-                Total
+                Candidates
               </small>
             </div>
           </button>
@@ -613,7 +1506,7 @@ const InterviewsPage =
             <div>
               <strong>
                 {
-                  metrics.today
+                  candidateMetrics.today
                 }
               </strong>
 
@@ -644,7 +1537,7 @@ const InterviewsPage =
             <div>
               <strong>
                 {
-                  metrics.upcoming
+                  candidateMetrics.upcoming
                 }
               </strong>
 
@@ -675,7 +1568,7 @@ const InterviewsPage =
             <div>
               <strong>
                 {
-                  metrics.completed
+                  candidateMetrics.completed
                 }
               </strong>
 
@@ -687,16 +1580,26 @@ const InterviewsPage =
 
           <button
             type="button"
-            className="pending"
+            onClick={() =>
+              setFilter(
+                "ACTION_DUE"
+              )
+            }
+            className={
+              filter ===
+              "ACTION_DUE"
+                ? "active pending"
+                : "pending"
+            }
           >
             <span>
-              E
+              !
             </span>
 
             <div>
               <strong>
                 {
-                  metrics.evaluationPending
+                  candidateMetrics.actionDue
                 }
               </strong>
 
@@ -708,12 +1611,12 @@ const InterviewsPage =
         </div>
 
         {/* =================================================
-            TOOLBAR
+            SEARCH
         ================================================== */}
 
         <div className="se-interview-toolbar">
           <div>
-            <span>
+            <span aria-hidden="true">
               ⌕
             </span>
 
@@ -730,7 +1633,7 @@ const InterviewsPage =
                     .value
                 )
               }
-              placeholder="Search candidate, interview, position or interviewer..."
+              placeholder="Search candidate, position or interview..."
             />
 
             {search ? (
@@ -741,6 +1644,7 @@ const InterviewsPage =
                     ""
                   )
                 }
+                aria-label="Clear search"
               >
                 ×
               </button>
@@ -750,12 +1654,20 @@ const InterviewsPage =
           <span>
             <strong>
               {
-                visible.length
+                visibleCandidates.length
               }
             </strong>{" "}
-            visible
+            candidate
+            {visibleCandidates.length ===
+            1
+              ? ""
+              : "s"}
           </span>
         </div>
+
+        {/* =================================================
+            ERROR
+        ================================================== */}
 
         {error ? (
           <div className="se-interview-error">
@@ -772,27 +1684,20 @@ const InterviewsPage =
         ) : null}
 
         {/* =================================================
-            LIST
+            CANDIDATE INTERVIEW PIPELINE
         ================================================== */}
 
         <article className="se-interview-list-panel">
           <header>
             <div>
               <span>
-                INTERVIEW SCHEDULE
+                INTERVIEW PIPELINE
               </span>
 
               <strong>
-                {evaluationMode
-                  ? "Evaluation Queue"
-                  : "Interview Pipeline"}
+                Candidates
               </strong>
             </div>
-
-            <p>
-              Click any row for complete
-              interview drill-down.
-            </p>
           </header>
 
           {loading ? (
@@ -802,10 +1707,10 @@ const InterviewsPage =
               <span />
               <span />
             </div>
-          ) : visible.length >
+          ) : visibleCandidates.length >
             0 ? (
             <div className="se-interview-table-wrap">
-              <table className="se-interview-table">
+              <table className="se-interview-table se-interview-candidate-table">
                 <thead>
                   <tr>
                     <th>
@@ -817,7 +1722,11 @@ const InterviewsPage =
                     </th>
 
                     <th>
-                      Round
+                      Interviews
+                    </th>
+
+                    <th>
+                      Current Round
                     </th>
 
                     <th>
@@ -829,10 +1738,6 @@ const InterviewsPage =
                     </th>
 
                     <th>
-                      Mode
-                    </th>
-
-                    <th>
                       Status
                     </th>
 
@@ -841,42 +1746,71 @@ const InterviewsPage =
                 </thead>
 
                 <tbody>
-                  {visible.map(
+                  {visibleCandidates.map(
                     (
-                      interview
+                      group
                     ) => {
-                      const id =
+                      const current =
+                        group.current ||
+                        group.latest;
+
+                      const currentId =
                         getRecordId(
-                          interview
+                          current
+                        );
+
+                      const roundName =
+                        safeText(
+                          current
+                            ?.roundName,
+                          `Round ${
+                            current
+                              ?.roundNumber ||
+                            group.totalRounds ||
+                            1
+                          }`
                         );
 
                       return (
                         <tr
                           key={
-                            id
+                            group.key
                           }
                           onClick={() =>
-                            navigate(
-                              buildRecruitmentUrl(
-                                "interview",
-                                {
-                                  id,
-                                }
-                              )
+                            openCandidate(
+                              group
                             )
                           }
+                          role="button"
+                          tabIndex={
+                            0
+                          }
+                          onKeyDown={(
+                            event
+                          ) => {
+                            if (
+                              event.key ===
+                                "Enter" ||
+                              event.key ===
+                                " "
+                            ) {
+                              event.preventDefault();
+
+                              openCandidate(
+                                group
+                              );
+                            }
+                          }}
                         >
+                          {/* =====================================
+                              CANDIDATE
+                          ====================================== */}
+
                           <td>
                             <div className="se-interview-person">
                               <span>
-                                {safeText(
-                                  interview
-                                    ?.candidate
-                                    ?.fullName ||
-                                    interview
-                                      ?.candidateName,
-                                  "C"
-                                )
+                                {group
+                                  .candidateName
                                   .charAt(
                                     0
                                   )
@@ -885,39 +1819,38 @@ const InterviewsPage =
 
                               <div>
                                 <strong>
-                                  {safeText(
-                                    interview
-                                      ?.candidate
-                                      ?.fullName ||
-                                      interview
-                                        ?.candidateName,
-                                    "Candidate"
-                                  )}
+                                  {
+                                    group.candidateName
+                                  }
                                 </strong>
 
                                 <small>
-                                  {safeText(
-                                    interview
-                                      ?.interviewNumber,
-                                    "Interview"
-                                  )}
+                                  {group.candidateId
+                                    ? `Candidate · ${String(
+                                        group.candidateId
+                                      ).slice(
+                                        -6
+                                      )}`
+                                    : "Candidate"}
                                 </small>
                               </div>
                             </div>
                           </td>
 
+                          {/* =====================================
+                              POSITION
+                          ====================================== */}
+
                           <td>
                             <strong>
-                              {safeText(
-                                interview
-                                  ?.positionTitle,
-                                "Position"
-                              )}
+                              {
+                                group.positionTitle
+                              }
                             </strong>
 
                             <small>
                               {safeText(
-                                interview
+                                group
                                   ?.department
                                   ?.name,
                                 ""
@@ -925,66 +1858,113 @@ const InterviewsPage =
                             </small>
                           </td>
 
+                          {/* =====================================
+                              INTERVIEW HISTORY SUMMARY
+                          ====================================== */}
+
+                          <td>
+                            <div className="se-interview-round-summary">
+                              <strong>
+                                {
+                                  group.totalRounds
+                                }{" "}
+                                {group.totalRounds ===
+                                1
+                                  ? "round"
+                                  : "rounds"}
+                              </strong>
+
+                              <small>
+                                {
+                                  group.completedCount
+                                }{" "}
+                                completed
+                              </small>
+                            </div>
+                          </td>
+
+                          {/* =====================================
+                              CURRENT / NEXT ROUND
+                          ====================================== */}
+
                           <td>
                             <strong>
-                              {safeText(
-                                interview
-                                  ?.roundName,
-                                `Round ${
-                                  interview
-                                    ?.roundNumber ||
-                                  1
-                                }`
-                              )}
+                              {
+                                roundName
+                              }
                             </strong>
+
+                            <small>
+                              {current
+                                ?.interviewNumber ||
+                                `Interview ${
+                                  currentId
+                                    ? String(
+                                        currentId
+                                      ).slice(
+                                        -6
+                                      )
+                                    : ""
+                                }`}
+                            </small>
                           </td>
+
+                          {/* =====================================
+                              SCHEDULE
+                          ====================================== */}
 
                           <td>
                             <strong>
                               {formatRecruitmentDate(
-                                interview
+                                current
                                   ?.scheduledAt
                               )}
                             </strong>
 
                             <small>
                               {formatRecruitmentTime(
-                                interview
+                                current
                                   ?.scheduledAt
                               )}
                             </small>
                           </td>
 
+                          {/* =====================================
+                              INTERVIEWER
+                          ====================================== */}
+
                           <td>
                             <strong>
                               {safeText(
-                                interview
+                                current
                                   ?.interviewer
                                   ?.displayName,
-                                "Interviewer"
+                                "—"
                               )}
                             </strong>
-                          </td>
 
-                          <td>
-                            <span className="se-interview-mode-pill">
+                            <small>
                               {safeText(
-                                interview
+                                current
                                   ?.mode,
-                                "—"
+                                ""
                               ).replaceAll(
                                 "_",
                                 " "
                               )}
-                            </span>
+                            </small>
                           </td>
+
+                          {/* =====================================
+                              STATUS
+                          ====================================== */}
 
                           <td>
                             <RecruitmentStatusBadge
                               label={
                                 safeText(
-                                  interview
-                                    ?.status,
+                                  group
+                                    .overallStatus,
                                   "Scheduled"
                                 ).replaceAll(
                                   "_",
@@ -993,12 +1973,16 @@ const InterviewsPage =
                               }
                               tone={
                                 getInterviewTone(
-                                  interview
-                                    ?.status
+                                  group
+                                    .overallStatus
                                 )
                               }
                             />
                           </td>
+
+                          {/* =====================================
+                              OPEN
+                          ====================================== */}
 
                           <td>
                             <span className="se-interview-arrow">
@@ -1015,8 +1999,8 @@ const InterviewsPage =
           ) : (
             <RecruitmentEmptyState
               icon="I"
-              title="No interviews found"
-              description="Scheduled interviews will appear here."
+              title="No candidates found"
+              description="No interview records match the current view."
             />
           )}
         </article>

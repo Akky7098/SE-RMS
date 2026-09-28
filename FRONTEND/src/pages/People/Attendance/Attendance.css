@@ -6793,3 +6793,11339 @@
   }
 
 }
+
+/* =========================================================
+   PRODUCTION ATTENDANCE UI V3
+   Readability + register + personal history/calendar
+========================================================= */
+
+.se-people-att-page {
+  --att-v3-text: #182230;
+  --att-v3-muted: #667085;
+  --att-v3-border: #e4e7ec;
+  --att-v3-surface: #ffffff;
+  --att-v3-soft: #f8fafc;
+  --att-v3-green: #079455;
+  --att-v3-green-soft: #ecfdf3;
+  --att-v3-red: #d92d20;
+  --att-v3-red-soft: #fef3f2;
+  --att-v3-blue: #175cd3;
+  --att-v3-blue-soft: #eff8ff;
+  --att-v3-yellow: #dc6803;
+  --att-v3-yellow-soft: #fffaeb;
+  --att-v3-purple: #6938ef;
+  --att-v3-purple-soft: #f4f3ff;
+  --att-v3-cyan: #026aa2;
+  --att-v3-cyan-soft: #f0f9ff;
+
+  font-size: 14px;
+  color: var(--att-v3-text);
+}
+
+.se-people-att-heading > div > span,
+.se-people-att-register-head > div > span,
+.se-people-att-filter-heading > div > span,
+.se-people-att-my-copy > span,
+.se-people-att-drawer-head > div > span,
+.se-people-att-detail-section-head span,
+.se-people-att-modal header span,
+.se-att-calendar-head span,
+.se-att-section-heading > div > span {
+  font-size: 11px;
+  letter-spacing: 1.25px;
+}
+
+.se-people-att-heading h1 {
+  font-size: 26px;
+}
+
+.se-people-att-heading p,
+.se-people-att-my-copy p,
+.se-att-section-heading p {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.se-people-att-nav strong {
+  font-size: 13px;
+}
+
+.se-people-att-nav small {
+  font-size: 11px;
+}
+
+.se-people-att-range-chip span,
+.se-people-att-field > span,
+.se-people-att-my-grid small,
+.se-people-att-kpi small,
+.se-people-att-scope-card small {
+  font-size: 10px;
+}
+
+.se-people-att-range-chip strong,
+.se-people-att-refresh,
+.se-people-att-export,
+.se-people-att-field input,
+.se-people-att-field select,
+.se-people-att-field textarea,
+.se-people-att-range-tabs button {
+  font-size: 12px;
+}
+
+.se-people-att-filter-heading h2,
+.se-people-att-register-head h2 {
+  font-size: 20px;
+}
+
+.se-people-att-register-head p {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* ---------- My attendance ---------- */
+
+.se-att-my-card-v3 {
+  padding: 24px;
+  border: 1px solid var(--att-v3-border);
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.055);
+}
+
+.se-att-my-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.se-att-my-state {
+  min-width: 150px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--att-v3-border);
+  border-radius: 14px;
+  background: var(--att-v3-soft);
+}
+
+.se-att-my-state > i {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: #98a2b3;
+}
+
+.se-att-my-state.working {
+  border-color: #abefc6;
+  background: var(--att-v3-green-soft);
+}
+
+.se-att-my-state.working > i {
+  background: var(--att-v3-green);
+  box-shadow: 0 0 0 5px rgba(7, 148, 85, 0.11);
+}
+
+.se-att-my-state.completed {
+  border-color: #b2ddff;
+  background: var(--att-v3-blue-soft);
+}
+
+.se-att-my-state.completed > i {
+  background: var(--att-v3-blue);
+}
+
+.se-att-my-state small,
+.se-att-my-state strong {
+  display: block;
+}
+
+.se-att-my-state small {
+  color: var(--att-v3-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .65px;
+}
+
+.se-att-my-state strong {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.se-att-my-grid-v3 {
+  grid-template-columns: repeat(6, minmax(135px, 1fr));
+  gap: 12px;
+}
+
+.se-att-my-grid-v3 article {
+  min-height: 112px;
+  padding: 16px;
+  border: 1px solid var(--att-v3-border);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.se-att-my-grid-v3 article:hover {
+  border-color: #d0d5dd;
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.045);
+}
+
+.se-att-my-grid-v3 strong {
+  margin-top: 10px;
+  color: var(--att-v3-text);
+  font-size: 17px;
+}
+
+.se-att-my-grid-v3 article > span {
+  display: block;
+  margin-top: 7px;
+  color: var(--att-v3-muted);
+  font-size: 11px;
+}
+
+.se-att-my-stat--in {
+  border-top: 3px solid var(--att-v3-green) !important;
+}
+
+.se-att-my-stat--out {
+  border-top: 3px solid var(--att-v3-blue) !important;
+}
+
+.se-att-my-stat--working {
+  border-top: 3px solid var(--att-v3-purple) !important;
+  background: linear-gradient(180deg, #fff 0%, #fafaff 100%) !important;
+}
+
+/* ---------- Today button ---------- */
+
+.se-att-today-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #fecdd3;
+  border-radius: 11px;
+  background: #fff1f2;
+  color: #be123c;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.se-att-today-button:hover {
+  background: #ffe4e6;
+}
+
+.se-att-register-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Register ---------- */
+
+.se-att-register-v2 {
+  border: 1px solid var(--att-v3-border);
+  border-radius: 20px;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.045);
+}
+
+.se-att-register-head-v2 {
+  align-items: center;
+  padding: 20px 22px;
+}
+
+.se-att-register-count {
+  min-width: 88px;
+  padding: 9px 13px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--att-v3-border);
+  border-radius: 12px;
+  background: var(--att-v3-soft);
+}
+
+.se-att-register-count strong {
+  color: var(--att-v3-text);
+  font-size: 17px;
+}
+
+.se-att-register-count span {
+  color: var(--att-v3-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-att-register-table {
+  min-width: 1460px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.se-att-register-table th {
+  height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--att-v3-border);
+  background: #f8fafc;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.se-att-register-table td {
+  height: 72px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eaecf0;
+  color: #344054;
+  font-size: 12px;
+}
+
+.se-att-register-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.se-att-register-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.se-att-register-row--biometric {
+  background: linear-gradient(90deg, rgba(23, 92, 211, .025), transparent 24%);
+}
+
+.se-att-register-person {
+  min-width: 220px;
+}
+
+.se-att-register-person > span {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  background: #1d2939;
+  font-size: 11px;
+}
+
+.se-att-register-person strong {
+  color: var(--att-v3-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.se-att-register-person small,
+.se-att-register-shift small {
+  margin-top: 4px;
+  color: var(--att-v3-muted);
+  font-size: 10px;
+}
+
+.se-att-register-date,
+.se-att-register-working,
+.se-att-register-time {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.se-att-register-time {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.se-att-register-time--in {
+  background: var(--att-v3-green-soft);
+  color: var(--att-v3-green);
+}
+
+.se-att-register-time--out {
+  background: var(--att-v3-blue-soft);
+  color: var(--att-v3-blue);
+}
+
+.se-att-register-office {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: #f2f4f7;
+  color: #475467;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.se-people-att-status,
+.se-people-att-mode,
+.se-people-att-source,
+.se-att-register-exception,
+.se-att-register-normal {
+  font-size: 10px;
+}
+
+.se-att-register-open {
+  width: 36px;
+  height: 36px;
+}
+
+.se-att-register-v2--compact .se-att-register-table {
+  min-width: 1050px;
+}
+
+/* ---------- History + calendar ---------- */
+
+.se-att-history-workspace {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(390px, .85fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.se-att-history-workspace .se-people-att-register-card {
+  margin-top: 0;
+}
+
+.se-att-calendar-card {
+  overflow: hidden;
+  position: sticky;
+  top: 104px;
+  border: 1px solid var(--att-v3-border);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.045);
+}
+
+.se-att-calendar-head {
+  padding: 20px;
+  border-bottom: 1px solid var(--att-v3-border);
+}
+
+.se-att-calendar-head span {
+  color: #e30b19;
+  font-weight: 900;
+}
+
+.se-att-calendar-head h3 {
+  margin: 6px 0 0;
+  color: var(--att-v3-text);
+  font-size: 20px;
+}
+
+.se-att-calendar-head p {
+  margin: 5px 0 0;
+  color: var(--att-v3-muted);
+  font-size: 12px;
+}
+
+.se-att-calendar-weekdays {
+  padding: 12px 14px 8px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.se-att-calendar-weekdays span {
+  color: #98a2b3;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.se-att-calendar-grid {
+  padding: 0 14px 14px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.se-att-calendar-day {
+  min-height: 82px;
+  padding: 8px;
+  border: 1px solid var(--att-v3-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.se-att-calendar-day > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.se-att-calendar-day small {
+  color: var(--att-v3-muted);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.se-att-calendar-day strong {
+  color: var(--att-v3-text);
+  font-size: 14px;
+}
+
+.se-att-calendar-day > span {
+  display: block;
+  margin-top: 10px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.se-att-calendar-day em {
+  display: block;
+  overflow: hidden;
+  margin-top: 4px;
+  color: var(--att-v3-muted);
+  font-size: 8px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.se-att-calendar-day--present {
+  border-color: #abefc6;
+  background: var(--att-v3-green-soft);
+  color: var(--att-v3-green);
+}
+
+.se-att-calendar-day--absent {
+  border-color: #fecdca;
+  background: var(--att-v3-red-soft);
+  color: var(--att-v3-red);
+}
+
+.se-att-calendar-day--leave {
+  border-color: #b2ddff;
+  background: var(--att-v3-blue-soft);
+  color: var(--att-v3-blue);
+}
+
+.se-att-calendar-day--no-checkout,
+.se-att-calendar-day--half-day {
+  border-color: #fedf89;
+  background: var(--att-v3-yellow-soft);
+  color: var(--att-v3-yellow);
+}
+
+.se-att-calendar-day--week-off {
+  border-color: #b9e6fe;
+  background: var(--att-v3-cyan-soft);
+  color: var(--att-v3-cyan);
+}
+
+.se-att-calendar-day--holiday {
+  border-color: #d9d6fe;
+  background: var(--att-v3-purple-soft);
+  color: var(--att-v3-purple);
+}
+
+.se-att-calendar-day--not-marked {
+  background: #f9fafb;
+  color: #98a2b3;
+}
+
+.se-att-calendar-legend {
+  padding: 14px 16px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  border-top: 1px solid var(--att-v3-border);
+}
+
+.se-att-calendar-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.se-att-calendar-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #98a2b3;
+}
+
+.se-att-calendar-legend-dot--present { background: var(--att-v3-green); }
+.se-att-calendar-legend-dot--absent { background: var(--att-v3-red); }
+.se-att-calendar-legend-dot--leave { background: var(--att-v3-blue); }
+.se-att-calendar-legend-dot--no-checkout,
+.se-att-calendar-legend-dot--half-day { background: var(--att-v3-yellow); }
+.se-att-calendar-legend-dot--week-off { background: var(--att-v3-cyan); }
+.se-att-calendar-legend-dot--holiday { background: var(--att-v3-purple); }
+
+@media (max-width: 1280px) {
+  .se-att-history-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .se-att-calendar-card {
+    position: static;
+  }
+
+  .se-att-my-grid-v3 {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .se-att-my-card-top,
+  .se-att-section-heading,
+  .se-att-register-heading-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .se-att-my-grid-v3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .se-att-calendar-grid {
+    gap: 4px;
+  }
+
+  .se-att-calendar-day {
+    min-height: 68px;
+    padding: 6px;
+  }
+
+  .se-att-calendar-day em {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .se-att-my-grid-v3 {
+    grid-template-columns: 1fr;
+  }
+
+  .se-att-calendar-day > span {
+    overflow: hidden;
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+/* =========================================================
+   ATTENDANCE REGISTER — FINAL TABLE OVERRIDE
+   IMPORTANT:
+   ADD THIS AT THE ABSOLUTE END OF Attendance.css
+========================================================= */
+
+
+/* =========================================================
+   REGISTER CARD
+========================================================= */
+
+.se-people-att-register-card {
+  position: relative;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    #e2e7ec;
+
+  border-radius:
+    18px;
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    0 8px 30px
+    rgba(
+      25,
+      32,
+      40,
+      0.045
+    );
+}
+
+
+/* =========================================================
+   REGISTER HEADER
+========================================================= */
+
+.se-people-att-register-head {
+  min-height:
+    82px;
+
+  padding:
+    18px
+    22px;
+
+  align-items:
+    center;
+
+  border-bottom:
+    1px solid
+    #e9edf1;
+
+  background:
+    #ffffff;
+}
+
+.se-people-att-register-head h2 {
+  margin:
+    4px
+    0
+    0;
+
+  color:
+    #252b33;
+
+  font-size:
+    18px;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -0.35px;
+}
+
+.se-people-att-register-head p {
+  margin-top:
+    5px;
+
+  color:
+    #929ba6;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.45;
+}
+
+.se-people-att-register-head > strong {
+  padding:
+    8px
+    12px;
+
+  border:
+    1px solid
+    #e4e8ec;
+
+  border-radius:
+    10px;
+
+  background:
+    #fafbfc;
+
+  color:
+    #313841;
+
+  font-size:
+    10px;
+
+  font-weight:
+    850;
+
+  white-space:
+    nowrap;
+}
+
+
+/* =========================================================
+   SCROLL CONTAINER
+========================================================= */
+
+.se-people-att-table-wrap {
+  position:
+    relative;
+
+  width:
+    100%;
+
+  max-width:
+    100%;
+
+  overflow-x:
+    auto;
+
+  overflow-y:
+    visible;
+
+  background:
+    #ffffff;
+
+  scrollbar-width:
+    thin;
+
+  scrollbar-color:
+    #cfd6dd
+    #f5f7f9;
+
+  -webkit-overflow-scrolling:
+    touch;
+}
+
+.se-people-att-table-wrap::-webkit-scrollbar {
+  height:
+    8px;
+}
+
+.se-people-att-table-wrap::-webkit-scrollbar-track {
+  background:
+    #f5f7f9;
+}
+
+.se-people-att-table-wrap::-webkit-scrollbar-thumb {
+  border:
+    2px solid
+    #f5f7f9;
+
+  border-radius:
+    999px;
+
+  background:
+    #cfd6dd;
+}
+
+
+/* =========================================================
+   MAIN TABLE
+========================================================= */
+
+.se-people-att-table {
+  width:
+    100%;
+
+  min-width:
+    1260px;
+
+  border-collapse:
+    separate;
+
+  border-spacing:
+    0;
+
+  table-layout:
+    fixed;
+
+  background:
+    #ffffff;
+}
+
+
+/* =========================================================
+   PROFESSIONAL COLUMN WIDTHS
+
+   1  Employee
+   2  Date
+   3  Status
+   4  Mode
+   5  Office
+   6  Shift
+   7  Check In
+   8  Check Out
+   9  Working
+   10 Exception
+   11 Source
+   12 Action
+========================================================= */
+
+.se-people-att-table th:nth-child(1),
+.se-people-att-table td:nth-child(1) {
+  width:
+    225px;
+}
+
+.se-people-att-table th:nth-child(2),
+.se-people-att-table td:nth-child(2) {
+  width:
+    112px;
+}
+
+.se-people-att-table th:nth-child(3),
+.se-people-att-table td:nth-child(3) {
+  width:
+    110px;
+}
+
+.se-people-att-table th:nth-child(4),
+.se-people-att-table td:nth-child(4) {
+  width:
+    100px;
+}
+
+.se-people-att-table th:nth-child(5),
+.se-people-att-table td:nth-child(5) {
+  width:
+    135px;
+}
+
+.se-people-att-table th:nth-child(6),
+.se-people-att-table td:nth-child(6) {
+  width:
+    145px;
+}
+
+.se-people-att-table th:nth-child(7),
+.se-people-att-table td:nth-child(7) {
+  width:
+    105px;
+}
+
+.se-people-att-table th:nth-child(8),
+.se-people-att-table td:nth-child(8) {
+  width:
+    105px;
+}
+
+.se-people-att-table th:nth-child(9),
+.se-people-att-table td:nth-child(9) {
+  width:
+    95px;
+}
+
+.se-people-att-table th:nth-child(10),
+.se-people-att-table td:nth-child(10) {
+  width:
+    130px;
+}
+
+.se-people-att-table th:nth-child(11),
+.se-people-att-table td:nth-child(11) {
+  width:
+    90px;
+}
+
+.se-people-att-table th:nth-child(12),
+.se-people-att-table td:nth-child(12) {
+  width:
+    55px;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.se-people-att-table thead {
+  position:
+    relative;
+
+  z-index:
+    2;
+}
+
+.se-people-att-table th {
+  height:
+    46px;
+
+  padding:
+    0
+    12px;
+
+  border-bottom:
+    1px solid
+    #e2e7eb;
+
+  background:
+    #f7f9fa;
+
+  color:
+    #89939f;
+
+  text-align:
+    left;
+
+  vertical-align:
+    middle;
+
+  font-size:
+    7.5px;
+
+  font-weight:
+    900;
+
+  line-height:
+    1;
+
+  letter-spacing:
+    0.8px;
+
+  text-transform:
+    uppercase;
+
+  white-space:
+    nowrap;
+}
+
+.se-people-att-table th:first-child {
+  padding-left:
+    20px;
+}
+
+
+/* =========================================================
+   BODY ROW
+========================================================= */
+
+.se-people-att-table tbody tr {
+  height:
+    67px;
+
+  background:
+    #ffffff;
+
+  transition:
+    background
+    0.15s ease,
+    box-shadow
+    0.15s ease;
+}
+
+.se-people-att-table tbody tr:hover {
+  background:
+    #fafcfd;
+
+  box-shadow:
+    inset 3px 0 0
+    rgba(
+      227,
+      11,
+      25,
+      0.72
+    );
+}
+
+.se-people-att-table td {
+  height:
+    67px;
+
+  min-height:
+    67px;
+
+  padding:
+    9px
+    12px;
+
+  overflow:
+    hidden;
+
+  border-bottom:
+    1px solid
+    #edf0f3;
+
+  color:
+    #4e5864;
+
+  vertical-align:
+    middle;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.35;
+}
+
+.se-people-att-table tbody tr:last-child td {
+  border-bottom:
+    0;
+}
+
+.se-people-att-table td:first-child {
+  padding-left:
+    20px;
+}
+
+
+/* =========================================================
+   EMPLOYEE
+========================================================= */
+
+.se-people-att-person {
+  width:
+    100%;
+
+  min-width:
+    0;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    10px;
+}
+
+.se-people-att-person > span {
+  width:
+    38px;
+
+  height:
+    38px;
+
+  flex:
+    0 0
+    38px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  border-radius:
+    11px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #1d2633,
+      #273445
+    );
+
+  color:
+    #ffffff;
+
+  font-size:
+    10px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    0.2px;
+
+  box-shadow:
+    0 3px 8px
+    rgba(
+      23,
+      31,
+      41,
+      0.12
+    );
+}
+
+.se-people-att-person > div {
+  min-width:
+    0;
+
+  flex:
+    1;
+}
+
+.se-people-att-person strong {
+  display:
+    block;
+
+  max-width:
+    100%;
+
+  overflow:
+    hidden;
+
+  color:
+    #252c35;
+
+  font-size:
+    11px;
+
+  font-weight:
+    800;
+
+  line-height:
+    1.25;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.se-people-att-person small {
+  display:
+    block;
+
+  max-width:
+    100%;
+
+  margin-top:
+    4px;
+
+  overflow:
+    hidden;
+
+  color:
+    #9aa3ae;
+
+  font-size:
+    7.5px;
+
+  font-weight:
+    650;
+
+  line-height:
+    1.2;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+
+/* =========================================================
+   DATE
+========================================================= */
+
+.se-people-att-date {
+  color:
+    #424b56;
+
+  font-size:
+    10px;
+
+  font-weight:
+    750;
+
+  white-space:
+    nowrap;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.se-people-att-status {
+  min-height:
+    27px;
+
+  padding:
+    0
+    9px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    6px;
+
+  border-radius:
+    999px;
+
+  font-size:
+    8px;
+
+  font-weight:
+    850;
+
+  line-height:
+    1;
+
+  white-space:
+    nowrap;
+}
+
+.se-people-att-status i {
+  width:
+    5px;
+
+  height:
+    5px;
+
+  flex:
+    0 0
+    5px;
+
+  border-radius:
+    50%;
+
+  background:
+    currentColor;
+}
+
+.se-people-att-status--present {
+  border:
+    1px solid
+    #d8f1e3;
+
+  background:
+    #eefaf3;
+
+  color:
+    #168d50;
+}
+
+.se-people-att-status--absent {
+  border:
+    1px solid
+    #f5dadd;
+
+  background:
+    #fff1f2;
+
+  color:
+    #cf2432;
+}
+
+.se-people-att-status--not-marked,
+.se-people-att-status--half-day {
+  border:
+    1px solid
+    #f5e5bd;
+
+  background:
+    #fff8e7;
+
+  color:
+    #b77908;
+}
+
+
+/* =========================================================
+   MODE / SOURCE
+========================================================= */
+
+.se-people-att-mode,
+.se-people-att-source {
+  min-height:
+    26px;
+
+  padding:
+    0
+    8px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  border:
+    1px solid
+    #e8ebee;
+
+  border-radius:
+    7px;
+
+  background:
+    #f5f6f8;
+
+  color:
+    #66707c;
+
+  font-size:
+    7.5px;
+
+  font-weight:
+    800;
+
+  white-space:
+    nowrap;
+}
+
+.se-people-att-mode--wfh {
+  border-color:
+    #dbe8fb;
+
+  background:
+    #eef5ff;
+
+  color:
+    #3478df;
+}
+
+.se-people-att-mode--field-visit,
+.se-people-att-mode--on-duty {
+  border-color:
+    #e3daf7;
+
+  background:
+    #f6f2ff;
+
+  color:
+    #7650cd;
+}
+
+
+/* =========================================================
+   OFFICE
+========================================================= */
+
+.se-people-att-table td:nth-child(5) {
+  color:
+    #536071;
+
+  font-weight:
+    700;
+}
+
+
+/* =========================================================
+   SHIFT
+========================================================= */
+
+.se-people-att-shift {
+  min-width:
+    0;
+}
+
+.se-people-att-shift strong {
+  overflow:
+    hidden;
+
+  color:
+    #444d58;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.se-people-att-shift small {
+  overflow:
+    hidden;
+
+  color:
+    #929ca8;
+
+  font-size:
+    7.5px;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+
+/* =========================================================
+   CHECK-IN / CHECK-OUT
+========================================================= */
+
+.se-people-att-table td:nth-child(7),
+.se-people-att-table td:nth-child(8) {
+  font-variant-numeric:
+    tabular-nums;
+
+  white-space:
+    nowrap;
+}
+
+.se-people-att-table td:nth-child(7) {
+  color:
+    #168d50;
+
+  font-weight:
+    850;
+}
+
+.se-people-att-table td:nth-child(8) {
+  color:
+    #2f6fce;
+
+  font-weight:
+    850;
+}
+
+
+/* =========================================================
+   WORKING HOURS
+========================================================= */
+
+.se-people-att-table td:nth-child(9) {
+  color:
+    #414a55;
+
+  font-weight:
+    750;
+
+  font-variant-numeric:
+    tabular-nums;
+
+  white-space:
+    nowrap;
+}
+
+
+/* =========================================================
+   EXCEPTION
+========================================================= */
+
+.se-people-att-exception {
+  display:
+    inline-block;
+
+  max-width:
+    120px;
+
+  overflow:
+    hidden;
+
+  color:
+    #b67806;
+
+  font-size:
+    7.5px;
+
+  font-weight:
+    800;
+
+  line-height:
+    1.35;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.se-people-att-normal {
+  color:
+    #1b9255;
+
+  font-size:
+    8px;
+
+  font-weight:
+    800;
+}
+
+
+/* =========================================================
+   OPEN ACTION
+========================================================= */
+
+.se-people-att-row-open {
+  width:
+    30px;
+
+  height:
+    30px;
+
+  display:
+    inline-grid;
+
+  place-items:
+    center;
+
+  padding:
+    0;
+
+  border:
+    1px solid
+    #e1e5e9;
+
+  border-radius:
+    8px;
+
+  background:
+    #ffffff;
+
+  color:
+    #66707b;
+
+  cursor:
+    pointer;
+
+  transition:
+    all
+    0.15s ease;
+}
+
+.se-people-att-row-open:hover {
+  border-color:
+    #efb8bd;
+
+  background:
+    #fff5f6;
+
+  color:
+    var(--att-red);
+}
+
+
+/* =========================================================
+   STICK EMPLOYEE COLUMN ON HORIZONTAL SCROLL
+========================================================= */
+
+@media (min-width: 901px) {
+
+  .se-people-att-table th:first-child,
+  .se-people-att-table td:first-child {
+    position:
+      sticky;
+
+    left:
+      0;
+
+    z-index:
+      3;
+  }
+
+  .se-people-att-table th:first-child {
+    z-index:
+      5;
+
+    background:
+      #f7f9fa;
+  }
+
+  .se-people-att-table td:first-child {
+    background:
+      #ffffff;
+
+    box-shadow:
+      8px 0 14px
+      rgba(
+        29,
+        37,
+        46,
+        0.025
+      );
+  }
+
+  .se-people-att-table tbody tr:hover td:first-child {
+    background:
+      #fafcfd;
+  }
+}
+
+
+/* =========================================================
+   LARGE DESKTOP
+========================================================= */
+
+@media (min-width: 1500px) {
+
+  .se-people-att-table {
+    min-width:
+      100%;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .se-people-att-table {
+    min-width:
+      1220px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .se-people-att-register-card {
+    border-radius:
+      14px;
+  }
+
+  .se-people-att-register-head {
+    min-height:
+      auto;
+
+    padding:
+      15px
+      16px;
+  }
+
+  .se-people-att-register-head h2 {
+    font-size:
+      16px;
+  }
+
+  .se-people-att-table {
+    min-width:
+      1180px;
+  }
+
+  .se-people-att-table th {
+    height:
+      42px;
+  }
+
+  .se-people-att-table tbody tr,
+  .se-people-att-table td {
+    height:
+      62px;
+
+    min-height:
+      62px;
+  }
+
+  .se-people-att-table th:first-child,
+  .se-people-att-table td:first-child {
+    padding-left:
+      15px;
+  }
+
+  .se-people-att-person > span {
+    width:
+      34px;
+
+    height:
+      34px;
+
+    flex-basis:
+      34px;
+
+    border-radius:
+      9px;
+  }
+
+}
+
+/* =========================================================
+   ATTENDANCE FILTER V4
+   Compact enterprise filter design
+========================================================= */
+
+.se-att-filter-v4 {
+  background: #fff;
+  border: 1px solid #e5eaf1;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.035);
+}
+
+.se-att-filter-v4-head {
+  min-height: 70px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.se-att-filter-v4-title > span,
+.se-att-register-v3-title > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #ef1b24;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.se-att-filter-v4-title h2,
+.se-att-register-v3-title h2 {
+  margin: 0;
+  color: #202936;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.se-att-filter-v4-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.se-att-filter-v4-active {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #fff1f2;
+  color: #e11d2e;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.se-att-filter-v4-reset {
+  border: 0;
+  background: transparent;
+  color: #7c8492;
+  cursor: pointer;
+  padding: 7px 4px;
+  font-size: 11px;
+  font-weight: 750;
+  transition: color 0.18s ease;
+}
+
+.se-att-filter-v4-reset:hover {
+  color: #ef1b24;
+}
+
+/* DATE TOOLBAR */
+
+.se-att-filter-v4-toolbar {
+  padding: 14px 20px 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fbfcfe;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.se-att-filter-v4-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #e3e8ef;
+  border-radius: 11px;
+  background: #f3f5f8;
+  flex: 0 0 auto;
+}
+
+.se-att-filter-v4-tabs button {
+  min-width: 76px;
+  height: 32px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #747e8e;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-att-filter-v4-tabs button:hover {
+  color: #252d39;
+}
+
+.se-att-filter-v4-tabs button.active {
+  background: #fff;
+  color: #ef1b24;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(15, 23, 42, 0.025);
+}
+
+.se-att-filter-v4-period {
+  height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #e2e7ee;
+  border-radius: 10px;
+  background: #fff;
+  color: #7a8493;
+  white-space: nowrap;
+}
+
+.se-att-filter-v4-period strong {
+  color: #354052;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-att-filter-v4-period-arrow {
+  color: #a7afba;
+  font-size: 13px;
+}
+
+/* SMALL FROM / TO */
+
+.se-att-filter-v4-custom {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.se-att-filter-v4-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.se-att-filter-v4-date-field > span,
+.se-att-filter-v4-field > span,
+.se-att-filter-v4-more > span {
+  color: #8a94a4;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.se-att-filter-v4-date-input {
+  width: 174px;
+  height: 38px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #8791a0;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-att-filter-v4-date-input:focus-within {
+  border-color: rgba(239, 27, 36, 0.48);
+  box-shadow: 0 0 0 3px rgba(239, 27, 36, 0.07);
+}
+
+.se-att-filter-v4-date-input input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #303947;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.se-att-filter-v4-custom-arrow {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  color: #a8b0bc;
+  font-size: 13px;
+}
+
+/* PRIMARY FILTERS */
+
+.se-att-filter-v4-grid {
+  padding: 14px 20px 18px;
+  display: grid;
+  grid-template-columns:
+    minmax(230px, 1.35fr)
+    minmax(160px, 0.9fr)
+    minmax(175px, 0.95fr)
+    minmax(160px, 0.78fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.se-att-filter-v4-field,
+.se-att-filter-v4-more {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.se-att-filter-v4-field > input,
+.se-att-filter-v4-field > select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-att-filter-v4-field > select {
+  cursor: pointer;
+}
+
+.se-att-filter-v4-field > input:focus,
+.se-att-filter-v4-field > select:focus {
+  border-color: rgba(239, 27, 36, 0.48);
+  box-shadow: 0 0 0 3px rgba(239, 27, 36, 0.07);
+}
+
+.se-att-filter-v4-input-wrap {
+  height: 40px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #9aa3af;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-att-filter-v4-input-wrap:focus-within {
+  border-color: rgba(239, 27, 36, 0.48);
+  box-shadow: 0 0 0 3px rgba(239, 27, 36, 0.07);
+}
+
+.se-att-filter-v4-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #374151;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.se-att-filter-v4-input-wrap input::placeholder {
+  color: #a6aeba;
+}
+
+.se-att-filter-v4-clear {
+  width: 23px;
+  height: 23px;
+  flex: 0 0 23px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f3f6;
+  color: #7d8795;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.se-att-filter-v4-more-btn {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #4f5968;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.se-att-filter-v4-more-btn:hover,
+.se-att-filter-v4-more-btn.active {
+  border-color: #cfd6df;
+  background: #f8f9fb;
+  color: #252d39;
+}
+
+.se-att-filter-v4-more-btn.has-value {
+  border-color: rgba(239, 27, 36, 0.26);
+}
+
+.se-att-filter-v4-more-btn strong {
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #ef1b24;
+  color: #fff;
+  font-size: 9px;
+}
+
+.se-att-filter-v4-chevron {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.se-att-filter-v4-more-btn.active
+.se-att-filter-v4-chevron {
+  transform: rotate(180deg);
+}
+
+/* ADVANCED */
+
+.se-att-filter-v4-advanced {
+  padding: 0 20px 18px;
+}
+
+.se-att-filter-v4-advanced-grid {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid #e7ebf0;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+
+/* =========================================================
+   ATTENDANCE REGISTER V3
+========================================================= */
+
+.se-att-register-v3 {
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid #e4e9f0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.035);
+}
+
+.se-att-register-head-v3 {
+  min-height: 78px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #e9edf2;
+}
+
+.se-att-register-v3-title p {
+  margin: 5px 0 0;
+  color: #929baa;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.se-att-register-v3-count {
+  min-width: 100px;
+  height: 40px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #e0e5eb;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+.se-att-register-v3-count strong {
+  color: #202936;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.se-att-register-v3-count span {
+  color: #ef1b24;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* TABLE */
+
+.se-att-register-v3-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+  scrollbar-color: #cfd5dd transparent;
+}
+
+.se-att-register-v3-table {
+  width: 100%;
+  min-width: 1280px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+}
+
+.se-att-register-v3-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 43px;
+  padding: 0 14px;
+  border-bottom: 1px solid #dfe5ec;
+  background: #f8fafc;
+  color: #8b95a5;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+/*
+  Strong horizontal separation:
+  every attendance row is visually distinct.
+*/
+.se-att-register-v3-table tbody td {
+  min-height: 66px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e6eaf0;
+  background: #fff;
+  color: #374151;
+  vertical-align: middle;
+  white-space: nowrap;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.se-att-register-v3-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.se-att-register-v3-row {
+  cursor: pointer;
+  outline: none;
+}
+
+.se-att-register-v3-row:hover td {
+  background: #fafbfd;
+  border-bottom-color: #dde3ea;
+}
+
+.se-att-register-v3-row:focus-visible td {
+  background: #fff8f8;
+  box-shadow:
+    inset 0 1px rgba(239, 27, 36, 0.18),
+    inset 0 -1px rgba(239, 27, 36, 0.18);
+}
+
+.se-att-register-v3-row--biometric td {
+  background: #fffefd;
+}
+
+.se-att-register-v3-row--biometric:hover td {
+  background: #fffaf8;
+}
+
+/* EMPLOYEE */
+
+.se-att-register-v3-employee-cell {
+  min-width: 205px;
+}
+
+.se-att-register-v3-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.se-att-register-v3-avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #222c3a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.se-att-register-v3-person-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.se-att-register-v3-person-copy strong {
+  max-width: 175px;
+  overflow: hidden;
+  color: #26303d;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-person-copy small {
+  max-width: 175px;
+  overflow: hidden;
+  color: #929baa;
+  text-overflow: ellipsis;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.se-att-register-v3-date {
+  color: #4a5565;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-att-register-v3-office,
+.se-att-register-v3-source {
+  color: #566174;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.se-att-register-v3-shift {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.se-att-register-v3-shift strong {
+  color: #3d4756;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-shift small {
+  color: #99a2af;
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.se-att-register-v3-time {
+  min-width: 65px;
+  height: 29px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-time--in {
+  background: #eafaf2;
+  color: #079455;
+}
+
+.se-att-register-v3-time--out {
+  background: #eef6ff;
+  color: #2574c8;
+}
+
+.se-att-register-v3-working {
+  color: #27313f;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-normal {
+  display: inline-flex;
+  align-items: center;
+  color: #7b8593;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.se-att-register-v3-exception {
+  min-height: 25px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 7px;
+  background: #fff4e5;
+  color: #b15d00;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-exception strong {
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #fff;
+  color: #a95700;
+  font-size: 8px;
+}
+
+/* DRILL-DOWN */
+
+.se-att-register-v3-action-head,
+.se-att-register-v3-action-cell {
+  width: 52px;
+  min-width: 52px;
+  text-align: center !important;
+}
+
+.se-att-register-v3-open {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e0e5eb;
+  border-radius: 9px;
+  background: #fff;
+  color: #6f7a89;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.se-att-register-v3-row:hover
+.se-att-register-v3-open {
+  border-color: rgba(239, 27, 36, 0.25);
+  background: #fff3f3;
+  color: #ef1b24;
+  transform: translateX(2px);
+}
+
+/* LOADING / EMPTY */
+
+.se-att-register-v3-loading {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.se-att-register-v3-loading > span {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #eceff3;
+  border-top-color: #ef1b24;
+  border-radius: 50%;
+  animation: seAttSpin 0.7s linear infinite;
+}
+
+.se-att-register-v3-loading div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.se-att-register-v3-loading strong {
+  color: #3c4654;
+  font-size: 12px;
+}
+
+.se-att-register-v3-loading small {
+  color: #99a2af;
+  font-size: 10px;
+}
+
+@keyframes seAttSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.se-att-register-v3-empty {
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.se-att-register-v3-empty-icon {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: #f4f6f8;
+  color: #8d97a5;
+}
+
+.se-att-register-v3-empty strong {
+  color: #3c4654;
+  font-size: 13px;
+}
+
+.se-att-register-v3-empty p {
+  margin: 5px 0 0;
+  color: #99a2af;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1180px) {
+  .se-att-filter-v4-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .se-att-filter-v4-custom {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .se-att-filter-v4-date-field {
+    flex: 1;
+  }
+
+  .se-att-filter-v4-date-input {
+    width: 100%;
+  }
+
+  .se-att-filter-v4-grid {
+    grid-template-columns:
+      minmax(220px, 1.4fr)
+      minmax(160px, 1fr)
+      minmax(160px, 1fr);
+  }
+
+  .se-att-filter-v4-more {
+    grid-column: 1 / -1;
+  }
+
+  .se-att-filter-v4-more-btn {
+    max-width: 190px;
+  }
+}
+
+@media (max-width: 760px) {
+  .se-att-filter-v4,
+  .se-att-register-v3 {
+    border-radius: 14px;
+  }
+
+  .se-att-filter-v4-head,
+  .se-att-register-head-v3 {
+    min-height: auto;
+    padding: 14px;
+  }
+
+  .se-att-filter-v4-title h2,
+  .se-att-register-v3-title h2 {
+    font-size: 17px;
+  }
+
+  .se-att-filter-v4-toolbar {
+    padding: 12px 14px;
+  }
+
+  .se-att-filter-v4-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .se-att-filter-v4-tabs button {
+    min-width: 72px;
+    flex: 1 0 auto;
+  }
+
+  .se-att-filter-v4-custom {
+    align-items: flex-end;
+  }
+
+  .se-att-filter-v4-date-input {
+    height: 37px;
+    padding: 0 8px;
+  }
+
+  .se-att-filter-v4-custom-arrow {
+    height: 37px;
+  }
+
+  .se-att-filter-v4-grid {
+    padding: 13px 14px 15px;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px;
+  }
+
+  .se-att-filter-v4-search {
+    grid-column: 1 / -1;
+  }
+
+  .se-att-filter-v4-more {
+    grid-column: auto;
+  }
+
+  .se-att-filter-v4-more-btn {
+    max-width: none;
+  }
+
+  .se-att-filter-v4-advanced {
+    padding: 0 14px 15px;
+  }
+
+  .se-att-filter-v4-advanced-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .se-att-register-v3-title p {
+    display: none;
+  }
+
+  .se-att-register-v3-count {
+    min-width: 78px;
+  }
+
+  .se-att-register-v3-table {
+    min-width: 1160px;
+  }
+
+  .se-att-register-v3-table thead th,
+  .se-att-register-v3-table tbody td {
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+}
+
+@media (max-width: 520px) {
+  .se-att-filter-v4-head {
+    align-items: flex-start;
+  }
+
+  .se-att-filter-v4-active {
+    display: none;
+  }
+
+  .se-att-filter-v4-custom {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1fr)
+      14px
+      minmax(0, 1fr);
+  }
+
+  .se-att-filter-v4-date-input svg {
+    display: none;
+  }
+
+  .se-att-filter-v4-date-input input {
+    font-size: 10px;
+  }
+
+  .se-att-filter-v4-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .se-att-filter-v4-search,
+  .se-att-filter-v4-more {
+    grid-column: auto;
+  }
+
+  .se-att-register-head-v3 {
+    gap: 10px;
+  }
+
+  .se-att-register-v3-count {
+    height: 36px;
+    min-width: 72px;
+    padding: 0 9px;
+  }
+
+  .se-att-register-v3-count strong {
+    font-size: 15px;
+  }
+}
+/* =========================================================
+   ATTENDANCE FILTER V4
+   Compact enterprise filter design
+========================================================= */
+
+.se-att-filter-v4 {
+  background: #fff;
+  border: 1px solid #e5eaf1;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.035);
+}
+
+.se-att-filter-v4-head {
+  min-height: 70px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.se-att-filter-v4-title > span,
+.se-att-register-v3-title > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #ef1b24;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.se-att-filter-v4-title h2,
+.se-att-register-v3-title h2 {
+  margin: 0;
+  color: #202936;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.se-att-filter-v4-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.se-att-filter-v4-active {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #fff1f2;
+  color: #e11d2e;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.se-att-filter-v4-reset {
+  border: 0;
+  background: transparent;
+  color: #7c8492;
+  cursor: pointer;
+  padding: 7px 4px;
+  font-size: 11px;
+  font-weight: 750;
+  transition: color 0.18s ease;
+}
+
+.se-att-filter-v4-reset:hover {
+  color: #ef1b24;
+}
+
+/* DATE TOOLBAR */
+
+.se-att-filter-v4-toolbar {
+  padding: 14px 20px 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fbfcfe;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.se-att-filter-v4-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #e3e8ef;
+  border-radius: 11px;
+  background: #f3f5f8;
+  flex: 0 0 auto;
+}
+
+.se-att-filter-v4-tabs button {
+  min-width: 76px;
+  height: 32px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #747e8e;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-att-filter-v4-tabs button:hover {
+  color: #252d39;
+}
+
+.se-att-filter-v4-tabs button.active {
+  background: #fff;
+  color: #ef1b24;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(15, 23, 42, 0.025);
+}
+
+.se-att-filter-v4-period {
+  height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #e2e7ee;
+  border-radius: 10px;
+  background: #fff;
+  color: #7a8493;
+  white-space: nowrap;
+}
+
+.se-att-filter-v4-period strong {
+  color: #354052;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-att-filter-v4-period-arrow {
+  color: #a7afba;
+  font-size: 13px;
+}
+
+/* SMALL FROM / TO */
+
+.se-att-filter-v4-custom {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.se-att-filter-v4-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.se-att-filter-v4-date-field > span,
+.se-att-filter-v4-field > span,
+.se-att-filter-v4-more > span {
+  color: #8a94a4;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.se-att-filter-v4-date-input {
+  width: 174px;
+  height: 38px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #8791a0;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-att-filter-v4-date-input:focus-within {
+  border-color: rgba(239, 27, 36, 0.48);
+  box-shadow: 0 0 0 3px rgba(239, 27, 36, 0.07);
+}
+
+.se-att-filter-v4-date-input input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #303947;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.se-att-filter-v4-custom-arrow {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  color: #a8b0bc;
+  font-size: 13px;
+}
+
+/* PRIMARY FILTERS */
+
+.se-att-filter-v4-grid {
+  padding: 14px 20px 18px;
+  display: grid;
+  grid-template-columns:
+    minmax(230px, 1.35fr)
+    minmax(160px, 0.9fr)
+    minmax(175px, 0.95fr)
+    minmax(160px, 0.78fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.se-att-filter-v4-field,
+.se-att-filter-v4-more {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.se-att-filter-v4-field > input,
+.se-att-filter-v4-field > select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-att-filter-v4-field > select {
+  cursor: pointer;
+}
+
+.se-att-filter-v4-field > input:focus,
+.se-att-filter-v4-field > select:focus {
+  border-color: rgba(239, 27, 36, 0.48);
+  box-shadow: 0 0 0 3px rgba(239, 27, 36, 0.07);
+}
+
+.se-att-filter-v4-input-wrap {
+  height: 40px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #9aa3af;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.se-att-filter-v4-input-wrap:focus-within {
+  border-color: rgba(239, 27, 36, 0.48);
+  box-shadow: 0 0 0 3px rgba(239, 27, 36, 0.07);
+}
+
+.se-att-filter-v4-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #374151;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.se-att-filter-v4-input-wrap input::placeholder {
+  color: #a6aeba;
+}
+
+.se-att-filter-v4-clear {
+  width: 23px;
+  height: 23px;
+  flex: 0 0 23px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f3f6;
+  color: #7d8795;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.se-att-filter-v4-more-btn {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #4f5968;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.se-att-filter-v4-more-btn:hover,
+.se-att-filter-v4-more-btn.active {
+  border-color: #cfd6df;
+  background: #f8f9fb;
+  color: #252d39;
+}
+
+.se-att-filter-v4-more-btn.has-value {
+  border-color: rgba(239, 27, 36, 0.26);
+}
+
+.se-att-filter-v4-more-btn strong {
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #ef1b24;
+  color: #fff;
+  font-size: 9px;
+}
+
+.se-att-filter-v4-chevron {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.se-att-filter-v4-more-btn.active
+.se-att-filter-v4-chevron {
+  transform: rotate(180deg);
+}
+
+/* ADVANCED */
+
+.se-att-filter-v4-advanced {
+  padding: 0 20px 18px;
+}
+
+.se-att-filter-v4-advanced-grid {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid #e7ebf0;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+
+/* =========================================================
+   ATTENDANCE REGISTER V3
+========================================================= */
+
+.se-att-register-v3 {
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid #e4e9f0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.035);
+}
+
+.se-att-register-head-v3 {
+  min-height: 78px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #e9edf2;
+}
+
+.se-att-register-v3-title p {
+  margin: 5px 0 0;
+  color: #929baa;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.se-att-register-v3-count {
+  min-width: 100px;
+  height: 40px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #e0e5eb;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+.se-att-register-v3-count strong {
+  color: #202936;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.se-att-register-v3-count span {
+  color: #ef1b24;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* TABLE */
+
+.se-att-register-v3-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+  scrollbar-color: #cfd5dd transparent;
+}
+
+.se-att-register-v3-table {
+  width: 100%;
+  min-width: 1280px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+}
+
+.se-att-register-v3-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 43px;
+  padding: 0 14px;
+  border-bottom: 1px solid #dfe5ec;
+  background: #f8fafc;
+  color: #8b95a5;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+/*
+  Strong horizontal separation:
+  every attendance row is visually distinct.
+*/
+.se-att-register-v3-table tbody td {
+  min-height: 66px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e6eaf0;
+  background: #fff;
+  color: #374151;
+  vertical-align: middle;
+  white-space: nowrap;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.se-att-register-v3-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.se-att-register-v3-row {
+  cursor: pointer;
+  outline: none;
+}
+
+.se-att-register-v3-row:hover td {
+  background: #fafbfd;
+  border-bottom-color: #dde3ea;
+}
+
+.se-att-register-v3-row:focus-visible td {
+  background: #fff8f8;
+  box-shadow:
+    inset 0 1px rgba(239, 27, 36, 0.18),
+    inset 0 -1px rgba(239, 27, 36, 0.18);
+}
+
+.se-att-register-v3-row--biometric td {
+  background: #fffefd;
+}
+
+.se-att-register-v3-row--biometric:hover td {
+  background: #fffaf8;
+}
+
+/* EMPLOYEE */
+
+.se-att-register-v3-employee-cell {
+  min-width: 205px;
+}
+
+.se-att-register-v3-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.se-att-register-v3-avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #222c3a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.se-att-register-v3-person-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.se-att-register-v3-person-copy strong {
+  max-width: 175px;
+  overflow: hidden;
+  color: #26303d;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-person-copy small {
+  max-width: 175px;
+  overflow: hidden;
+  color: #929baa;
+  text-overflow: ellipsis;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.se-att-register-v3-date {
+  color: #4a5565;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-att-register-v3-office,
+.se-att-register-v3-source {
+  color: #566174;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.se-att-register-v3-shift {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.se-att-register-v3-shift strong {
+  color: #3d4756;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-shift small {
+  color: #99a2af;
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.se-att-register-v3-time {
+  min-width: 65px;
+  height: 29px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-time--in {
+  background: #eafaf2;
+  color: #079455;
+}
+
+.se-att-register-v3-time--out {
+  background: #eef6ff;
+  color: #2574c8;
+}
+
+.se-att-register-v3-working {
+  color: #27313f;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-normal {
+  display: inline-flex;
+  align-items: center;
+  color: #7b8593;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.se-att-register-v3-exception {
+  min-height: 25px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 7px;
+  background: #fff4e5;
+  color: #b15d00;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.se-att-register-v3-exception strong {
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #fff;
+  color: #a95700;
+  font-size: 8px;
+}
+
+/* DRILL-DOWN */
+
+.se-att-register-v3-action-head,
+.se-att-register-v3-action-cell {
+  width: 52px;
+  min-width: 52px;
+  text-align: center !important;
+}
+
+.se-att-register-v3-open {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e0e5eb;
+  border-radius: 9px;
+  background: #fff;
+  color: #6f7a89;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.se-att-register-v3-row:hover
+.se-att-register-v3-open {
+  border-color: rgba(239, 27, 36, 0.25);
+  background: #fff3f3;
+  color: #ef1b24;
+  transform: translateX(2px);
+}
+
+/* LOADING / EMPTY */
+
+.se-att-register-v3-loading {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.se-att-register-v3-loading > span {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #eceff3;
+  border-top-color: #ef1b24;
+  border-radius: 50%;
+  animation: seAttSpin 0.7s linear infinite;
+}
+
+.se-att-register-v3-loading div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.se-att-register-v3-loading strong {
+  color: #3c4654;
+  font-size: 12px;
+}
+
+.se-att-register-v3-loading small {
+  color: #99a2af;
+  font-size: 10px;
+}
+
+@keyframes seAttSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.se-att-register-v3-empty {
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.se-att-register-v3-empty-icon {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: #f4f6f8;
+  color: #8d97a5;
+}
+
+.se-att-register-v3-empty strong {
+  color: #3c4654;
+  font-size: 13px;
+}
+
+.se-att-register-v3-empty p {
+  margin: 5px 0 0;
+  color: #99a2af;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1180px) {
+  .se-att-filter-v4-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .se-att-filter-v4-custom {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .se-att-filter-v4-date-field {
+    flex: 1;
+  }
+
+  .se-att-filter-v4-date-input {
+    width: 100%;
+  }
+
+  .se-att-filter-v4-grid {
+    grid-template-columns:
+      minmax(220px, 1.4fr)
+      minmax(160px, 1fr)
+      minmax(160px, 1fr);
+  }
+
+  .se-att-filter-v4-more {
+    grid-column: 1 / -1;
+  }
+
+  .se-att-filter-v4-more-btn {
+    max-width: 190px;
+  }
+}
+
+@media (max-width: 760px) {
+  .se-att-filter-v4,
+  .se-att-register-v3 {
+    border-radius: 14px;
+  }
+
+  .se-att-filter-v4-head,
+  .se-att-register-head-v3 {
+    min-height: auto;
+    padding: 14px;
+  }
+
+  .se-att-filter-v4-title h2,
+  .se-att-register-v3-title h2 {
+    font-size: 17px;
+  }
+
+  .se-att-filter-v4-toolbar {
+    padding: 12px 14px;
+  }
+
+  .se-att-filter-v4-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .se-att-filter-v4-tabs button {
+    min-width: 72px;
+    flex: 1 0 auto;
+  }
+
+  .se-att-filter-v4-custom {
+    align-items: flex-end;
+  }
+
+  .se-att-filter-v4-date-input {
+    height: 37px;
+    padding: 0 8px;
+  }
+
+  .se-att-filter-v4-custom-arrow {
+    height: 37px;
+  }
+
+  .se-att-filter-v4-grid {
+    padding: 13px 14px 15px;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px;
+  }
+
+  .se-att-filter-v4-search {
+    grid-column: 1 / -1;
+  }
+
+  .se-att-filter-v4-more {
+    grid-column: auto;
+  }
+
+  .se-att-filter-v4-more-btn {
+    max-width: none;
+  }
+
+  .se-att-filter-v4-advanced {
+    padding: 0 14px 15px;
+  }
+
+  .se-att-filter-v4-advanced-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .se-att-register-v3-title p {
+    display: none;
+  }
+
+  .se-att-register-v3-count {
+    min-width: 78px;
+  }
+
+  .se-att-register-v3-table {
+    min-width: 1160px;
+  }
+
+  .se-att-register-v3-table thead th,
+  .se-att-register-v3-table tbody td {
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+}
+
+@media (max-width: 520px) {
+  .se-att-filter-v4-head {
+    align-items: flex-start;
+  }
+
+  .se-att-filter-v4-active {
+    display: none;
+  }
+
+  .se-att-filter-v4-custom {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1fr)
+      14px
+      minmax(0, 1fr);
+  }
+
+  .se-att-filter-v4-date-input svg {
+    display: none;
+  }
+
+  .se-att-filter-v4-date-input input {
+    font-size: 10px;
+  }
+
+  .se-att-filter-v4-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .se-att-filter-v4-search,
+  .se-att-filter-v4-more {
+    grid-column: auto;
+  }
+
+  .se-att-register-head-v3 {
+    gap: 10px;
+  }
+
+  .se-att-register-v3-count {
+    height: 36px;
+    min-width: 72px;
+    padding: 0 9px;
+  }
+
+  .se-att-register-v3-count strong {
+    font-size: 15px;
+  }
+}
+/* =========================================================
+   ATTENDANCE FINAL TABLE GRID
+   Horizontal + vertical separation
+========================================================= */
+
+.se-att-register-v3-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* HEADER COLUMN DIVIDERS */
+
+.se-att-register-v3-table thead th {
+  border-right: 1px solid #e3e8ef !important;
+  border-bottom: 1px solid #dce2e9 !important;
+  background: #f8fafc;
+}
+
+.se-att-register-v3-table thead th:last-child {
+  border-right: 0 !important;
+}
+
+/* BODY: EVERY CELL HAS A ROW + COLUMN LINE */
+
+.se-att-register-v3-table tbody td {
+  border-right: 1px solid #e7ebf0 !important;
+  border-bottom: 1px solid #e2e7ed !important;
+}
+
+/* NO DOUBLE BORDER ON LAST COLUMN */
+
+.se-att-register-v3-table tbody td:last-child {
+  border-right: 0 !important;
+}
+
+/* KEEP LAST ROW CLEAN */
+
+.se-att-register-v3-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+/* HOVER MUST KEEP GRID VISIBLE */
+
+.se-att-register-v3-table tbody tr:hover td {
+  background: #fafbfd;
+  border-right-color: #dde3ea !important;
+  border-bottom-color: #dce2e8 !important;
+}
+
+/* EMPLOYEE COLUMN A LITTLE MORE SPACE */
+
+.se-att-register-v3-table th:first-child,
+.se-att-register-v3-table td:first-child {
+  padding-left: 20px !important;
+}
+
+/* WORKING COLUMN */
+
+.se-att-register-v3-working {
+  min-width: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: #27313f;
+}
+
+/* =========================================================
+   CUSTOM DATE STATE
+========================================================= */
+
+.se-att-filter-v4-date-field--disabled {
+  opacity: 0.52;
+}
+
+.se-att-filter-v4-date-field--disabled
+.se-att-filter-v4-date-input {
+  background: #f4f6f8;
+  border-color: #e5e9ee;
+  cursor: not-allowed;
+}
+
+.se-att-filter-v4-date-field--disabled
+.se-att-filter-v4-date-input input {
+  cursor: not-allowed;
+}
+
+.se-att-filter-v4-date-input input:disabled {
+  color: #9ca5b2;
+  -webkit-text-fill-color: #9ca5b2;
+}
+
+/* Keep dates compact */
+
+.se-att-filter-v4-date-input {
+  width: 165px;
+}
+
+/* =========================================================
+   REGISTER ALIGNMENT
+========================================================= */
+
+.se-att-register-v3-table thead th,
+.se-att-register-v3-table tbody td {
+  box-sizing: border-box;
+}
+
+.se-att-register-v3-table tbody td {
+  height: 68px;
+}
+
+/* Center data-heavy columns */
+
+.se-att-register-v3-table th:nth-child(7),
+.se-att-register-v3-table th:nth-child(8),
+.se-att-register-v3-table th:nth-child(9),
+.se-att-register-v3-table td:nth-child(7),
+.se-att-register-v3-table td:nth-child(8),
+.se-att-register-v3-table td:nth-child(9) {
+  text-align: center;
+}
+
+/* Keep employee information left aligned */
+
+.se-att-register-v3-table th:first-child,
+.se-att-register-v3-table td:first-child {
+  text-align: left;
+}
+/* =========================================================
+   ATTENDANCE REGISTER PAGINATION
+   100 RECORDS PER PAGE
+========================================================= */
+
+.se-att-register-pagination {
+  min-height: 62px;
+  padding: 12px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+
+  border-top: 1px solid #e2e7ed;
+  background: #ffffff;
+}
+
+.se-att-register-pagination-summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  color: #8a94a3;
+
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.se-att-register-pagination-summary strong {
+  color: #283342;
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.se-att-register-pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.se-att-register-pagination-nav {
+  height: 34px;
+  padding: 0 11px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #596576;
+
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.se-att-register-pagination-nav:hover:not(:disabled) {
+  border-color: #cfd6df;
+  background: #f8fafc;
+  color: #202936;
+
+  box-shadow:
+    0 2px 6px
+    rgba(15, 23, 42, 0.04);
+}
+
+.se-att-register-pagination-nav:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.se-att-register-pagination-nav svg {
+  flex: 0 0 auto;
+}
+
+.se-att-register-pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.se-att-register-pagination-page {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid transparent;
+  border-radius: 9px;
+
+  background: transparent;
+  color: #697386;
+
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.se-att-register-pagination-page:hover {
+  border-color: #e2e7ed;
+  background: #f7f9fb;
+  color: #242d3a;
+}
+
+.se-att-register-pagination-page.is-active {
+  border-color:
+    rgba(
+      239,
+      27,
+      36,
+      0.22
+    );
+
+  background: #fff1f2;
+  color: #ef1b24;
+}
+
+.se-att-register-pagination-page.is-active:hover {
+  border-color:
+    rgba(
+      239,
+      27,
+      36,
+      0.28
+    );
+
+  background: #fff1f2;
+  color: #ef1b24;
+}
+
+.se-att-register-pagination-gap {
+  width: 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #a0a8b4;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-att-register-pagination-single {
+  color: #929ba8;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   PAGINATION MOBILE
+========================================================= */
+
+@media (max-width: 720px) {
+
+  .se-att-register-pagination {
+    padding: 12px;
+
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .se-att-register-pagination-summary {
+    justify-content: center;
+  }
+
+  .se-att-register-pagination-controls {
+    width: 100%;
+
+    justify-content: space-between;
+  }
+
+  .se-att-register-pagination-pages {
+    flex: 1;
+
+    justify-content: center;
+  }
+
+  .se-att-register-pagination-nav {
+    padding: 0 9px;
+  }
+
+  .se-att-register-pagination-nav span {
+    display: none;
+  }
+
+  .se-att-register-pagination-page {
+    width: 32px;
+    height: 32px;
+  }
+
+  .se-att-register-pagination-single {
+    text-align: center;
+  }
+}
+/* ============================================================
+   SE-RMS ATTENDANCE
+   FINAL UX / VISUAL LAYER
+   ------------------------------------------------------------
+   ADD ONLY AT THE ABSOLUTE END OF Attendance.css
+
+   ATTENDANCE IDENTITY:
+   Graphite + Warm Amber + Ivory
+
+   NO:
+   - Green primary UI
+   - Blue primary UI
+   - Red primary UI
+   - Burgundy primary UI
+
+   PURPOSE:
+   A completely untrained employee should understand:
+   1. Where am I working?
+   2. Select that option.
+   3. Start my workday.
+============================================================ */
+
+
+/* ============================================================
+   01. ATTENDANCE DESIGN TOKENS
+============================================================ */
+
+.se-people-att-page {
+  --att-ux-ink: #24231f;
+  --att-ux-ink-2: #37352f;
+  --att-ux-muted: #7d7970;
+  --att-ux-muted-2: #a09b91;
+
+  --att-ux-amber: #d69214;
+  --att-ux-amber-dark: #ad7007;
+  --att-ux-amber-deep: #8d5b05;
+
+  --att-ux-amber-soft: #fff7e7;
+  --att-ux-amber-soft-2: #fdf0cf;
+  --att-ux-amber-line: #e9c878;
+
+  --att-ux-cream: #fbfaf7;
+  --att-ux-paper: #ffffff;
+  --att-ux-line: #e9e5dc;
+  --att-ux-line-dark: #ddd7cb;
+
+  --att-ux-shadow:
+    0 12px 32px
+    rgba(48, 42, 29, 0.065);
+
+  --att-ux-shadow-hover:
+    0 18px 42px
+    rgba(70, 54, 22, 0.11);
+
+  background:
+    radial-gradient(
+      circle at 88% 7%,
+      rgba(214, 146, 20, 0.045),
+      transparent 23%
+    ),
+    linear-gradient(
+      180deg,
+      #faf9f6 0%,
+      #f7f6f2 100%
+    );
+
+  color: var(--att-ux-ink);
+}
+
+
+/* ============================================================
+   02. GLOBAL BUTTON FONT / FEEL
+============================================================ */
+
+.se-people-att-page button {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  letter-spacing: -0.08px;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+
+.se-people-att-page button:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(214, 146, 20, 0.18);
+}
+
+
+/* ============================================================
+   03. MAIN ATTENDANCE HEADER
+============================================================ */
+
+.se-people-att-page
+.se-people-att-header {
+  position: sticky;
+
+  top: 0;
+
+  z-index: 50;
+
+  min-height: 88px;
+
+  padding:
+    15px
+    30px;
+
+  overflow: hidden;
+
+  border-bottom:
+    1px solid
+    var(--att-ux-line);
+
+  background:
+    rgba(255, 255, 255, 0.965);
+
+  backdrop-filter:
+    blur(20px);
+
+  box-shadow:
+    0 5px 22px
+    rgba(44, 40, 31, 0.025);
+}
+
+
+/* warm animated light */
+
+.se-people-att-page
+.se-people-att-header::after {
+  content: "";
+
+  position: absolute;
+
+  width: 240px;
+  height: 240px;
+
+  right: 20%;
+  top: -205px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(214, 146, 20, 0.13),
+      rgba(214, 146, 20, 0.025) 45%,
+      transparent 70%
+    );
+
+  pointer-events: none;
+
+  animation:
+    seAttendanceHeaderGlow
+    7s ease-in-out infinite;
+}
+
+
+@keyframes seAttendanceHeaderGlow {
+
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0)
+      scale(1);
+  }
+
+  50% {
+    transform:
+      translate3d(-25px, 18px, 0)
+      scale(1.13);
+  }
+}
+
+
+/* ============================================================
+   04. BACK BUTTON
+============================================================ */
+
+.se-people-att-page
+.se-people-att-back {
+  width: 43px;
+  height: 43px;
+
+  flex:
+    0 0 43px;
+
+  display: grid;
+
+  place-items: center;
+
+  border:
+    1px solid
+    var(--att-ux-line);
+
+  border-radius: 13px;
+
+  background:
+    #ffffff;
+
+  color:
+    var(--att-ux-ink-2);
+
+  font-size: 18px;
+
+  box-shadow:
+    0 5px 14px
+    rgba(46, 41, 31, 0.035);
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+
+.se-people-att-page
+.se-people-att-back:hover {
+  transform:
+    translateX(-2px);
+
+  border-color:
+    var(--att-ux-amber-line);
+
+  background:
+    var(--att-ux-amber-soft);
+
+  color:
+    var(--att-ux-amber-dark);
+}
+
+
+/* ============================================================
+   05. ATTENDANCE TITLE
+============================================================ */
+
+.se-people-att-page
+.se-people-att-heading {
+  position: relative;
+
+  z-index: 2;
+}
+
+
+.se-people-att-page
+.se-people-att-heading > div > span {
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  color:
+    var(--att-ux-amber-dark) !important;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.65px;
+
+  text-transform: uppercase;
+}
+
+
+.se-people-att-page
+.se-people-att-heading > div > span::before {
+  content: "";
+
+  width: 20px;
+  height: 2px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--att-ux-amber),
+      #efc66b
+    );
+}
+
+
+.se-people-att-page
+.se-people-att-heading h1 {
+  position: relative;
+
+  width: fit-content;
+
+  margin:
+    4px 0 0;
+
+  color:
+    #23221e;
+
+  font-size:
+    clamp(25px, 2vw, 31px);
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: -1.05px;
+
+  animation:
+    seAttendanceTitleIn
+    600ms
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+
+.se-people-att-page
+.se-people-att-heading h1::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: -8px;
+
+  width: 38px;
+  height: 3px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--att-ux-amber),
+      #f1c55e
+    );
+
+  transform-origin: left;
+
+  animation:
+    seAttendanceTitleLine
+    800ms
+    180ms ease both;
+}
+
+
+@keyframes seAttendanceTitleIn {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(9px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+
+@keyframes seAttendanceTitleLine {
+
+  from {
+    transform:
+      scaleX(0);
+  }
+
+  to {
+    transform:
+      scaleX(1);
+  }
+}
+
+
+.se-people-att-page
+.se-people-att-heading p {
+  margin:
+    14px 0 0;
+
+  color:
+    #918c83;
+
+  font-size: 10px;
+
+  font-weight: 550;
+}
+
+
+/* ============================================================
+   06. CURRENT RANGE
+============================================================ */
+
+.se-people-att-page
+.se-people-att-range-chip {
+  min-width: 185px;
+
+  padding:
+    7px 15px;
+
+  border-right:
+    1px solid
+    var(--att-ux-line);
+}
+
+
+.se-people-att-page
+.se-people-att-range-chip span {
+  color:
+    #aaa49a;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.15px;
+}
+
+
+.se-people-att-page
+.se-people-att-range-chip strong {
+  margin-top: 4px;
+
+  color:
+    #46433c;
+
+  font-size: 10px;
+
+  font-weight: 800;
+}
+
+
+/* ============================================================
+   07. REFRESH BUTTON
+============================================================ */
+
+.se-people-att-page
+.se-people-att-refresh {
+  min-height: 40px;
+
+  padding:
+    0 14px;
+
+  gap: 7px;
+
+  border:
+    1px solid
+    var(--att-ux-line);
+
+  border-radius: 11px;
+
+  background:
+    #ffffff;
+
+  color:
+    #625e56;
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
+}
+
+
+.se-people-att-page
+.se-people-att-refresh:hover:not(:disabled) {
+  transform:
+    translateY(-1px);
+
+  border-color:
+    var(--att-ux-amber-line);
+
+  background:
+    var(--att-ux-amber-soft);
+
+  color:
+    var(--att-ux-amber-dark);
+}
+
+
+/* ============================================================
+   08. ATTENDANCE NAVIGATION
+============================================================ */
+
+.se-people-att-page
+.se-people-att-nav,
+.se-people-att-page
+.se-people-att-nav--workspace {
+  position: relative;
+
+  padding:
+    10px 30px;
+
+  gap: 7px;
+
+  overflow-x: auto;
+
+  border-bottom:
+    1px solid
+    var(--att-ux-line);
+
+  background:
+    rgba(255, 255, 255, 0.97);
+
+  box-shadow:
+    0 5px 18px
+    rgba(45, 40, 31, 0.02);
+
+  scrollbar-width: none;
+}
+
+
+.se-people-att-page
+.se-people-att-nav::-webkit-scrollbar,
+.se-people-att-page
+.se-people-att-nav--workspace::-webkit-scrollbar {
+  display: none;
+}
+
+
+.se-people-att-page
+.se-people-att-nav button,
+.se-people-att-page
+.se-people-att-nav--workspace button {
+  position: relative;
+
+  min-width: 142px;
+  min-height: 46px;
+
+  padding:
+    7px 11px;
+
+  gap: 9px;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 12px;
+
+  background:
+    transparent;
+
+  color:
+    #666158;
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+
+.se-people-att-page
+.se-people-att-nav button:hover,
+.se-people-att-page
+.se-people-att-nav--workspace button:hover {
+  transform:
+    translateY(-1px);
+
+  border-color:
+    #eee6d7;
+
+  background:
+    #fcfaf5;
+
+  color:
+    var(--att-ux-amber-dark);
+}
+
+
+.se-people-att-page
+.se-people-att-nav button > span,
+.se-people-att-page
+.se-people-att-nav--workspace button > span {
+  width: 32px;
+  height: 32px;
+
+  flex:
+    0 0 32px;
+
+  display: grid;
+
+  place-items: center;
+
+  border-radius: 9px;
+
+  background:
+    #f2f0eb;
+
+  color:
+    #6f6a61;
+
+  font-size: 13px;
+
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+
+.se-people-att-page
+.se-people-att-nav button strong,
+.se-people-att-page
+.se-people-att-nav--workspace button strong {
+  color: inherit;
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.12px;
+}
+
+
+.se-people-att-page
+.se-people-att-nav button small,
+.se-people-att-page
+.se-people-att-nav--workspace button small {
+  margin-top: 2px;
+
+  color:
+    #aaa49b;
+
+  font-size: 7px;
+
+  font-weight: 550;
+}
+
+
+/* ACTIVE TAB */
+
+.se-people-att-page
+.se-people-att-nav button.active,
+.se-people-att-page
+.se-people-att-nav--workspace button.active {
+  border-color:
+    #ead8ae;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff9ec,
+      #ffffff
+    );
+
+  color:
+    #76500b;
+
+  box-shadow:
+    inset 3px 0 0
+    var(--att-ux-amber),
+    0 5px 14px
+    rgba(100, 73, 20, 0.05);
+}
+
+
+.se-people-att-page
+.se-people-att-nav button.active > span,
+.se-people-att-page
+.se-people-att-nav--workspace button.active > span {
+  background:
+    linear-gradient(
+      145deg,
+      #f5c75d,
+      #d89517
+    );
+
+  color:
+    #33250b;
+
+  box-shadow:
+    0 5px 13px
+    rgba(181, 122, 11, 0.16);
+}
+
+
+/* ============================================================
+   09. CONTENT WIDTH
+============================================================ */
+
+.se-people-att-page
+.se-people-att-content {
+  width:
+    min(
+      1600px,
+      calc(100% - 48px)
+    );
+
+  margin:
+    0 auto;
+
+  padding-top:
+    18px;
+}
+
+
+/* ============================================================
+   10. WORKDAY INTRO CARD
+============================================================ */
+
+.se-people-att-page
+.se-att-day-head {
+  position: relative;
+
+  min-height: 128px;
+
+  padding:
+    21px 24px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 25px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--att-ux-line);
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      120deg,
+      #ffffff 0%,
+      #fdfcf9 65%,
+      #fff8e9 100%
+    );
+
+  box-shadow:
+    var(--att-ux-shadow);
+}
+
+
+/* moving ambient shape */
+
+.se-people-att-page
+.se-att-day-head::before {
+  content: "";
+
+  position: absolute;
+
+  width: 210px;
+  height: 210px;
+
+  right: -70px;
+  top: -125px;
+
+  border:
+    1px solid
+    rgba(214, 146, 20, 0.13);
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 0 34px
+    rgba(214, 146, 20, 0.025),
+    0 0 0 70px
+    rgba(214, 146, 20, 0.012);
+
+  pointer-events: none;
+
+  animation:
+    seAttendanceOrbit
+    8s ease-in-out infinite;
+}
+
+
+@keyframes seAttendanceOrbit {
+
+  0%,
+  100% {
+    transform:
+      translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform:
+      translate3d(-16px, 15px, 0);
+  }
+}
+
+
+.se-people-att-page
+.se-att-day-head > div {
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/* TODAY / MY WORKDAY */
+
+.se-people-att-page
+.se-att-eyebrow,
+.se-people-att-page
+.se-att-start-heading > div > span {
+  color:
+    var(--att-ux-amber-dark) !important;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.6px;
+}
+
+
+.se-people-att-page
+.se-att-day-head h2 {
+  margin:
+    6px 0;
+
+  color:
+    #25241f;
+
+  font-size:
+    clamp(25px, 2.2vw, 33px);
+
+  line-height: 1.05;
+
+  font-weight: 900;
+
+  letter-spacing: -1.05px;
+}
+
+
+.se-people-att-page
+.se-att-day-head p {
+  max-width: 720px;
+
+  margin: 0;
+
+  color:
+    #8c877e;
+
+  font-size: 10px;
+
+  line-height: 1.55;
+
+  font-weight: 500;
+}
+
+
+/* ============================================================
+   11. WORKDAY STATUS
+============================================================ */
+
+.se-people-att-page
+.se-att-day-status {
+  position: relative;
+
+  z-index: 3;
+
+  min-width: 174px;
+
+  padding:
+    13px 15px;
+
+  border:
+    1px solid
+    #e9e3d8;
+
+  border-radius: 13px;
+
+  background:
+    rgba(255, 255, 255, 0.92);
+
+  box-shadow:
+    0 6px 18px
+    rgba(55, 48, 34, 0.04);
+}
+
+
+.se-people-att-page
+.se-att-day-status small {
+  color:
+    #aaa49a;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.15px;
+}
+
+
+.se-people-att-page
+.se-att-day-status strong {
+  margin-top: 5px;
+
+  color:
+    #35332e;
+
+  font-size: 15px;
+
+  font-weight: 850;
+}
+
+
+.se-people-att-page
+.se-att-day-status span {
+  margin-top: 6px;
+
+  color:
+    #989288;
+
+  font-size: 8px;
+
+  font-weight: 650;
+}
+
+
+/* no green / blue */
+
+.se-people-att-page
+.se-att-day-status span.working,
+.se-people-att-page
+.se-att-day-status span.done {
+  color:
+    var(--att-ux-amber-dark);
+}
+
+
+/* ============================================================
+   12. START ATTENDANCE — MAIN ACTION CARD
+============================================================ */
+
+.se-people-att-page
+.se-att-start-card {
+  position: relative;
+
+  margin-top:
+    14px;
+
+  padding:
+    21px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    #e6e0d5;
+
+  border-radius:
+    18px;
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    var(--att-ux-shadow);
+}
+
+
+/* tiny top accent */
+
+.se-people-att-page
+.se-att-start-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 25px;
+
+  width: 68px;
+  height: 3px;
+
+  border-radius:
+    0 0 20px 20px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #d58e0d,
+      #f0c75e
+    );
+}
+
+
+/* ============================================================
+   13. QUESTION HEADER
+============================================================ */
+
+.se-people-att-page
+.se-att-start-heading {
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 20px;
+}
+
+
+.se-people-att-page
+.se-att-start-heading h3 {
+  margin:
+    5px 0 2px;
+
+  color:
+    #292823;
+
+  font-size: 18px;
+
+  line-height: 1.15;
+
+  font-weight: 900;
+
+  letter-spacing: -0.45px;
+}
+
+
+.se-people-att-page
+.se-att-start-heading p {
+  margin:
+    5px 0 0;
+
+  color:
+    #918c83;
+
+  font-size: 9px;
+
+  font-weight: 550;
+}
+
+
+/* remove visual importance from Step 1 of 2 */
+
+.se-people-att-page
+.se-att-start-step {
+  padding:
+    6px 9px;
+
+  border:
+    1px solid
+    #ebe5d9;
+
+  border-radius:
+    8px;
+
+  background:
+    #faf8f3;
+
+  color:
+    #9b958a;
+
+  font-size: 7px;
+
+  font-weight: 750;
+}
+
+
+/* ============================================================
+   14. WORK MODE CHOOSER
+   THIS IS THE MOST IMPORTANT UX AREA
+============================================================ */
+
+.se-people-att-page
+.se-att-mode-grid {
+  margin-top:
+    16px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap:
+    12px;
+}
+
+
+/* ============================================================
+   MODE CARD BASE
+============================================================ */
+
+.se-people-att-page
+.se-att-mode-card {
+  position: relative;
+
+  min-height: 116px;
+
+  padding:
+    15px 15px 15px 16px;
+
+  display: grid;
+
+  grid-template-columns:
+    46px minmax(0, 1fr) 25px;
+
+  align-items: center;
+
+  gap: 12px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    #e7e2d9;
+
+  border-radius:
+    16px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #fbfaf7
+    );
+
+  color:
+    #49463f;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 15px
+    rgba(48, 43, 32, 0.025);
+
+  transition:
+    transform 180ms
+      cubic-bezier(.2,.8,.2,1),
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+
+/* subtle arrow line */
+
+.se-people-att-page
+.se-att-mode-card::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+
+  width: 3px;
+
+  border-radius:
+    0 10px 10px 0;
+
+  background:
+    transparent;
+
+  transition:
+    background 180ms ease;
+}
+
+
+/* explicit CLICK cue */
+
+.se-people-att-page
+.se-att-mode-card::after {
+  content: "SELECT";
+
+  position: absolute;
+
+  right: 14px;
+  top: 10px;
+
+  color:
+    #b0aa9f;
+
+  font-size: 6px;
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+
+  opacity: 0.7;
+
+  transition:
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+
+.se-people-att-page
+.se-att-mode-card:hover {
+  transform:
+    translateY(-3px);
+
+  border-color:
+    #ddc88e;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffdf8,
+      #fff8e8
+    );
+
+  box-shadow:
+    var(--att-ux-shadow-hover);
+}
+
+
+.se-people-att-page
+.se-att-mode-card:hover::before {
+  background:
+    #df9d22;
+}
+
+
+.se-people-att-page
+.se-att-mode-card:hover::after {
+  color:
+    #9a6508;
+
+  opacity: 1;
+}
+
+
+/* ============================================================
+   MODE ICON
+============================================================ */
+
+.se-people-att-page
+.se-att-mode-card-icon {
+  width: 46px;
+  height: 46px;
+
+  flex:
+    0 0 46px;
+
+  display: grid;
+
+  place-items: center;
+
+  border:
+    1px solid
+    #e8e3da;
+
+  border-radius:
+    13px;
+
+  background:
+    #f5f3ee;
+
+  color:
+    #625e55;
+
+  font-size: 17px;
+
+  font-weight: 900;
+
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+
+.se-people-att-page
+.se-att-mode-card:hover
+.se-att-mode-card-icon {
+  transform:
+    scale(1.05);
+
+  border-color:
+    #e7d39e;
+
+  background:
+    #fff4d7;
+
+  color:
+    #9a6508;
+}
+
+
+/* ============================================================
+   MODE WORDING
+============================================================ */
+
+.se-people-att-page
+.se-att-mode-card div {
+  min-width: 0;
+}
+
+
+.se-people-att-page
+.se-att-mode-card strong {
+  display: block;
+
+  color:
+    #302f2a;
+
+  font-size: 12px;
+
+  line-height: 1.25;
+
+  font-weight: 850;
+
+  letter-spacing: -0.18px;
+}
+
+
+.se-people-att-page
+.se-att-mode-card small {
+  display: block;
+
+  max-width: 180px;
+
+  margin-top: 5px;
+
+  color:
+    #8f8a81;
+
+  font-size: 8px;
+
+  line-height: 1.45;
+
+  font-weight: 550;
+}
+
+
+/* radio/check area */
+
+.se-people-att-page
+.se-att-mode-card > i {
+  width: 21px;
+  height: 21px;
+
+  display: grid;
+
+  place-items: center;
+
+  border:
+    1.5px solid
+    #d5d0c6;
+
+  border-radius: 50%;
+
+  background:
+    #ffffff;
+
+  color:
+    transparent;
+
+  font-size: 9px;
+
+  font-style: normal;
+
+  font-weight: 900;
+
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+
+/* ============================================================
+   SELECTED MODE
+============================================================ */
+
+.se-people-att-page
+.se-att-mode-card.active,
+.se-people-att-page
+.se-att-mode-card.mode-wfh.active,
+.se-people-att-page
+.se-att-mode-card.mode-field_visit.active,
+.se-people-att-page
+.se-att-mode-card.mode-on_duty.active {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    #d8ad50;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf0 0%,
+      #fff4d9 100%
+    );
+
+  box-shadow:
+    0 0 0 3px
+    rgba(214, 146, 20, 0.09),
+    0 13px 27px
+    rgba(100, 73, 18, 0.09);
+}
+
+
+.se-people-att-page
+.se-att-mode-card.active::before,
+.se-people-att-page
+.se-att-mode-card.mode-wfh.active::before,
+.se-people-att-page
+.se-att-mode-card.mode-field_visit.active::before,
+.se-people-att-page
+.se-att-mode-card.mode-on_duty.active::before {
+  background:
+    linear-gradient(
+      180deg,
+      #e4a124,
+      #bd7907
+    );
+}
+
+
+.se-people-att-page
+.se-att-mode-card.active::after,
+.se-people-att-page
+.se-att-mode-card.mode-wfh.active::after,
+.se-people-att-page
+.se-att-mode-card.mode-field_visit.active::after,
+.se-people-att-page
+.se-att-mode-card.mode-on_duty.active::after {
+  content: "SELECTED";
+
+  color:
+    #996306;
+
+  opacity: 1;
+}
+
+
+.se-people-att-page
+.se-att-mode-card.active
+.se-att-mode-card-icon,
+.se-people-att-page
+.se-att-mode-card.mode-wfh.active
+.se-att-mode-card-icon,
+.se-people-att-page
+.se-att-mode-card.mode-field_visit.active
+.se-att-mode-card-icon,
+.se-people-att-page
+.se-att-mode-card.mode-on_duty.active
+.se-att-mode-card-icon {
+  border-color:
+    #e5c46f;
+
+  background:
+    linear-gradient(
+      145deg,
+      #f6c85f,
+      #dd991a
+    );
+
+  color:
+    #33240b;
+
+  box-shadow:
+    0 6px 14px
+    rgba(174, 113, 8, 0.17);
+}
+
+
+.se-people-att-page
+.se-att-mode-card.active > i,
+.se-people-att-page
+.se-att-mode-card.mode-wfh.active > i,
+.se-people-att-page
+.se-att-mode-card.mode-field_visit.active > i,
+.se-people-att-page
+.se-att-mode-card.mode-on_duty.active > i {
+  transform:
+    scale(1.04);
+
+  border-color:
+    #b87808;
+
+  background:
+    #b87808;
+
+  color:
+    #ffffff;
+}
+
+
+/* ============================================================
+   15. SELECTED MODE / NEXT ACTION AREA
+============================================================ */
+
+.se-people-att-page
+.se-att-start-footer {
+  position: relative;
+
+  margin-top:
+    13px;
+
+  padding:
+    13px 14px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content:
+    space-between;
+
+  gap: 20px;
+
+  border:
+    1px solid
+    #e6decf;
+
+  border-radius:
+    13px;
+
+  background:
+    linear-gradient(
+      100deg,
+      #faf8f3,
+      #fffaf0
+    );
+}
+
+
+.se-people-att-page
+.se-att-start-footer > div {
+  min-width: 0;
+}
+
+
+.se-people-att-page
+.se-att-start-footer small {
+  display: block;
+
+  color:
+    #a19b91;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+
+.se-people-att-page
+.se-att-start-footer strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color:
+    #37342e;
+
+  font-size: 11px;
+
+  font-weight: 850;
+}
+
+
+.se-people-att-page
+.se-att-start-footer span {
+  display: block;
+
+  margin-top: 3px;
+
+  color:
+    #8d887e;
+
+  font-size: 8px;
+
+  font-weight: 550;
+}
+
+
+/* ============================================================
+   16. MAIN START BUTTON
+   THIS MUST LOOK LIKE THE NEXT STEP
+============================================================ */
+
+.se-people-att-page
+.se-att-start-button {
+  position: relative;
+
+  min-width: 178px;
+  min-height: 46px;
+
+  padding:
+    0 18px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  overflow: hidden;
+
+  flex-shrink: 0;
+
+  border:
+    1px solid
+    #9c6507;
+
+  border-radius:
+    11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #e1a02b 0%,
+      #bd7907 100%
+    );
+
+  color:
+    #ffffff;
+
+  font-size: 10px;
+
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: 0;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 9px 20px
+    rgba(166, 105, 7, 0.2);
+
+  transition:
+    transform 170ms ease,
+    box-shadow 170ms ease,
+    filter 170ms ease;
+}
+
+
+/* soft shine */
+
+.se-people-att-page
+.se-att-start-button::before {
+  content: "";
+
+  position: absolute;
+
+  top: -40%;
+  left: -50%;
+
+  width: 35%;
+  height: 180%;
+
+  transform:
+    rotate(18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.28),
+      transparent
+    );
+
+  animation:
+    seAttendanceButtonShine
+    3.8s ease-in-out infinite;
+}
+
+
+@keyframes seAttendanceButtonShine {
+
+  0%,
+  62% {
+    left: -55%;
+  }
+
+  100% {
+    left: 130%;
+  }
+}
+
+
+.se-people-att-page
+.se-att-start-button:hover:not(:disabled) {
+  transform:
+    translateY(-2px);
+
+  filter:
+    brightness(1.035);
+
+  box-shadow:
+    0 13px 27px
+    rgba(166, 105, 7, 0.27);
+}
+
+
+.se-people-att-page
+.se-att-start-button:active:not(:disabled) {
+  transform:
+    translateY(0);
+}
+
+
+.se-people-att-page
+.se-att-start-button:disabled {
+  border-color:
+    #d4d0c8;
+
+  background:
+    #ddd9d1;
+
+  color:
+    #969188;
+
+  box-shadow: none;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+}
+
+
+.se-people-att-page
+.se-att-start-button:disabled::before {
+  display: none;
+}
+
+
+/* ============================================================
+   17. ACTIVE WORKDAY
+   NO GREEN
+============================================================ */
+
+.se-people-att-page
+.se-att-active-session {
+  position: relative;
+
+  margin-top:
+    14px;
+
+  padding:
+    17px 19px;
+
+  display: grid;
+
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 14px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    #e6d5aa;
+
+  border-radius:
+    16px;
+
+  background:
+    linear-gradient(
+      110deg,
+      #fffaf0,
+      #ffffff
+    );
+
+  box-shadow:
+    0 9px 24px
+    rgba(75, 57, 23, 0.055);
+}
+
+
+.se-people-att-page
+.se-att-active-session::after {
+  content: "";
+
+  position: absolute;
+
+  width: 120px;
+  height: 120px;
+
+  right: -55px;
+  top: -75px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(214, 146, 20, 0.07);
+
+  pointer-events: none;
+}
+
+
+.se-people-att-page
+.se-att-active-indicator {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+
+  place-items: center;
+
+  border:
+    1px solid
+    #ead8ad;
+
+  border-radius:
+    12px;
+
+  background:
+    #fff3d6;
+}
+
+
+.se-people-att-page
+.se-att-active-indicator span {
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+
+  background:
+    #c9850b;
+
+  box-shadow:
+    0 0 0 5px
+    rgba(201, 133, 11, 0.11);
+
+  animation:
+    seAttendanceLivePulse
+    1.8s ease-in-out infinite;
+}
+
+
+@keyframes seAttendanceLivePulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px
+      rgba(201, 133, 11, 0.1);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 10px
+      rgba(201, 133, 11, 0);
+  }
+}
+
+
+.se-people-att-page
+.se-att-active-copy small {
+  color:
+    #9b6507;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.2px;
+}
+
+
+.se-people-att-page
+.se-att-active-copy h3 {
+  margin:
+    4px 0;
+
+  color:
+    #302e29;
+
+  font-size: 15px;
+
+  font-weight: 850;
+}
+
+
+.se-people-att-page
+.se-att-active-copy p {
+  margin: 0;
+
+  color:
+    #8b867d;
+
+  font-size: 8px;
+
+  line-height: 1.45;
+}
+
+
+/* ============================================================
+   18. FINISH WORKDAY BUTTON
+============================================================ */
+
+.se-people-att-page
+.se-att-finish-button {
+  min-height: 40px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid
+    #d9d3c9;
+
+  border-radius:
+    10px;
+
+  background:
+    #ffffff;
+
+  color:
+    #514d45;
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+
+.se-people-att-page
+.se-att-finish-button:hover:not(:disabled) {
+  transform:
+    translateY(-1px);
+
+  border-color:
+    #d5b66d;
+
+  background:
+    #fffaf0;
+
+  color:
+    #8d5b05;
+}
+
+
+/* ============================================================
+   19. DAY SHORTCUTS
+============================================================ */
+
+.se-people-att-page
+.se-att-day-shortcuts {
+  margin-top:
+    13px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+
+.se-people-att-page
+.se-att-day-shortcuts > button {
+  min-height: 70px;
+
+  padding:
+    11px 13px;
+
+  display: grid;
+
+  grid-template-columns:
+    36px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 10px;
+
+  border:
+    1px solid
+    #e6e1d8;
+
+  border-radius:
+    13px;
+
+  background:
+    #ffffff;
+
+  color:
+    #4c4942;
+
+  text-align: left;
+
+  box-shadow:
+    0 5px 14px
+    rgba(47, 42, 32, 0.025);
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+
+.se-people-att-page
+.se-att-day-shortcuts > button:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    #dec78f;
+
+  background:
+    #fffdf8;
+
+  box-shadow:
+    0 10px 22px
+    rgba(82, 63, 25, 0.07);
+}
+
+
+.se-people-att-page
+.se-att-day-shortcuts > button > span {
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+
+  place-items: center;
+
+  border-radius:
+    10px;
+
+  background:
+    #f5f2eb;
+
+  color:
+    #686258;
+
+  font-size: 12px;
+
+  font-weight: 900;
+
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+
+.se-people-att-page
+.se-att-day-shortcuts > button:hover > span {
+  background:
+    #fff1cc;
+
+  color:
+    #966107;
+}
+
+
+.se-people-att-page
+.se-att-day-shortcuts strong {
+  display: block;
+
+  color:
+    #37342f;
+
+  font-size: 10px;
+
+  font-weight: 800;
+}
+
+
+.se-people-att-page
+.se-att-day-shortcuts small {
+  display: block;
+
+  margin-top: 2px;
+
+  color:
+    #99938a;
+
+  font-size: 7px;
+
+  line-height: 1.4;
+}
+
+
+/* ============================================================
+   20. MY ATTENDANCE CARD
+============================================================ */
+
+.se-people-att-page
+.se-people-att-my-card {
+  margin-top:
+    13px;
+
+  padding:
+    19px;
+
+  border:
+    1px solid
+    var(--att-ux-line);
+
+  border-radius:
+    17px;
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    0 8px 25px
+    rgba(47, 42, 32, 0.04);
+}
+
+
+.se-people-att-page
+.se-people-att-my-copy > span {
+  color:
+    var(--att-ux-amber-dark) !important;
+}
+
+
+.se-people-att-page
+.se-people-att-my-copy h2 {
+  margin:
+    5px 0 0;
+
+  color:
+    #302e29;
+
+  font-size: 18px;
+
+  font-weight: 850;
+
+  letter-spacing: -0.35px;
+}
+
+
+.se-people-att-page
+.se-people-att-my-copy p {
+  margin:
+    4px 0 0;
+
+  color:
+    #928d84;
+
+  font-size: 9px;
+}
+
+
+/* ============================================================
+   21. MY ATTENDANCE METRICS
+============================================================ */
+
+.se-people-att-page
+.se-people-att-my-grid {
+  margin-top:
+    14px;
+
+  gap:
+    8px;
+}
+
+
+.se-people-att-page
+.se-people-att-my-grid article {
+  min-height:
+    76px;
+
+  padding:
+    11px;
+
+  border:
+    1px solid
+    #ebe6dd;
+
+  border-radius:
+    11px;
+
+  background:
+    #fbfaf7;
+}
+
+
+.se-people-att-page
+.se-people-att-my-grid small {
+  color:
+    #a29c92;
+
+  font-size: 7px;
+
+  font-weight: 850;
+}
+
+
+.se-people-att-page
+.se-people-att-my-grid strong {
+  margin-top:
+    8px;
+
+  color:
+    #37342e;
+
+  font-size: 14px;
+
+  font-weight: 850;
+}
+
+
+/* ============================================================
+   22. PRIMARY ATTENDANCE BUTTONS
+============================================================ */
+
+.se-people-att-page
+.se-people-att-primary-btn {
+  min-height: 40px;
+
+  padding:
+    0 15px;
+
+  border:
+    1px solid
+    #a76c07;
+
+  border-radius:
+    10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #dfa02d,
+      #b97406
+    );
+
+  color:
+    #ffffff;
+
+  font-size: 9px;
+
+  font-weight: 850;
+
+  box-shadow:
+    0 7px 16px
+    rgba(163, 103, 7, 0.16);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+
+.se-people-att-page
+.se-people-att-primary-btn:hover:not(:disabled) {
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    0 10px 21px
+    rgba(163, 103, 7, 0.22);
+}
+
+
+/* secondary */
+
+.se-people-att-page
+.se-people-att-secondary-btn {
+  min-height: 40px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid
+    #dfdad1;
+
+  border-radius:
+    10px;
+
+  background:
+    #ffffff;
+
+  color:
+    #5e5951;
+
+  font-size: 9px;
+
+  font-weight: 800;
+}
+
+
+.se-people-att-page
+.se-people-att-secondary-btn:hover {
+  border-color:
+    #d6bc7c;
+
+  background:
+    #fffaf0;
+
+  color:
+    #8e5c06;
+}
+
+
+/* ============================================================
+   23. FILTER FOCUS
+   REMOVE RED FOCUS
+============================================================ */
+
+.se-people-att-page
+.se-people-att-field input:focus,
+.se-people-att-page
+.se-people-att-field select:focus,
+.se-people-att-page
+.se-people-att-field textarea:focus {
+  border-color:
+    #d6ad55;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(214, 146, 20, 0.09);
+}
+
+
+/* ============================================================
+   24. RANGE TABS
+============================================================ */
+
+.se-people-att-page
+.se-people-att-range-tabs button.active {
+  background:
+    #ffffff;
+
+  color:
+    #966107;
+
+  box-shadow:
+    0 3px 10px
+    rgba(83, 64, 25, 0.07);
+}
+
+
+/* ============================================================
+   25. LOADING
+============================================================ */
+
+.se-people-att-page
+.se-people-att-loading > span {
+  border-color:
+    #eee9df;
+
+  border-top-color:
+    #d69214;
+}
+
+
+/* ============================================================
+   26. ROW OPEN / SMALL ACTIONS
+============================================================ */
+
+.se-people-att-page
+.se-people-att-row-open:hover {
+  border-color:
+    #d8bc78;
+
+  background:
+    #fffaf0;
+
+  color:
+    #8d5b05;
+}
+
+
+/* ============================================================
+   27. SUCCESS MESSAGE
+   WARM NEUTRAL — NO GREEN
+============================================================ */
+
+.se-people-att-page
+.se-people-att-success {
+  border-color:
+    #e7d6ad;
+
+  background:
+    #fffaf0;
+}
+
+
+.se-people-att-page
+.se-people-att-success > span {
+  background:
+    #ffefc6;
+
+  color:
+    #976207;
+}
+
+
+.se-people-att-page
+.se-people-att-success strong {
+  color:
+    #795109;
+}
+
+
+.se-people-att-page
+.se-people-att-success p,
+.se-people-att-page
+.se-people-att-success button {
+  color:
+    #8d7547;
+}
+
+
+/* ============================================================
+   28. LOCATION DOT
+   REMOVE PURPLE
+============================================================ */
+
+.se-people-att-page
+.se-people-att-location-dot {
+  border-color:
+    #f1deb1;
+
+  background:
+    #cf8a0d;
+}
+
+
+/* ============================================================
+   29. EXPORT BUTTON
+============================================================ */
+
+.se-people-att-page
+.se-people-att-export {
+  border:
+    1px solid
+    #35332e;
+
+  background:
+    #2e2c28;
+
+  color:
+    #ffffff;
+
+  box-shadow:
+    0 6px 14px
+    rgba(40, 37, 31, 0.12);
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+
+.se-people-att-page
+.se-people-att-export:hover {
+  transform:
+    translateY(-1px);
+
+  background:
+    #1f1e1b;
+}
+
+
+/* ============================================================
+   30. REMOVE OLD MODE COLOUR IDENTITY
+============================================================ */
+
+.se-people-att-page
+.se-att-mode-card.mode-wfh.active,
+
+.se-people-att-page
+.se-att-mode-card.mode-field_visit.active,
+
+.se-people-att-page
+.se-att-mode-card.mode-on_duty.active {
+  border-color:
+    #d8ad50;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf0,
+      #fff4d9
+    );
+}
+
+
+.se-people-att-page
+.se-att-mode-card.mode-wfh.active
+.se-att-mode-card-icon,
+
+.se-people-att-page
+.se-att-mode-card.mode-field_visit.active
+.se-att-mode-card-icon,
+
+.se-people-att-page
+.se-att-mode-card.mode-on_duty.active
+.se-att-mode-card-icon {
+  background:
+    linear-gradient(
+      145deg,
+      #f6c85f,
+      #dc9819
+    );
+
+  color:
+    #33240b;
+}
+
+
+/* ============================================================
+   31. MOBILE / TABLET
+============================================================ */
+
+@media (max-width: 1000px) {
+
+  .se-people-att-page
+  .se-att-mode-grid {
+    grid-template-columns:
+      repeat(3, minmax(180px, 1fr));
+
+    overflow-x: auto;
+
+    padding:
+      2px 2px 8px;
+
+    scrollbar-width: thin;
+  }
+
+
+  .se-people-att-page
+  .se-att-day-shortcuts {
+    grid-template-columns:
+      repeat(3, minmax(180px, 1fr));
+
+    overflow-x: auto;
+  }
+}
+
+
+@media (max-width: 760px) {
+
+  .se-people-att-page
+  .se-people-att-header {
+    position: static;
+
+    padding:
+      15px 16px;
+  }
+
+
+  .se-people-att-page
+  .se-people-att-content {
+    width:
+      calc(100% - 26px);
+
+    padding-top:
+      14px;
+  }
+
+
+  .se-people-att-page
+  .se-att-day-head {
+    min-height: 0;
+
+    padding:
+      18px;
+
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+
+  .se-people-att-page
+  .se-att-day-status {
+    width: 100%;
+
+    box-sizing:
+      border-box;
+  }
+
+
+  .se-people-att-page
+  .se-att-start-card {
+    padding:
+      17px 14px;
+  }
+
+
+  .se-people-att-page
+  .se-att-mode-grid {
+    grid-template-columns:
+      1fr;
+
+    overflow:
+      visible;
+  }
+
+
+  .se-people-att-page
+  .se-att-mode-card {
+    min-height:
+      92px;
+  }
+
+
+  .se-people-att-page
+  .se-att-start-footer {
+    align-items:
+      stretch;
+
+    flex-direction:
+      column;
+  }
+
+
+  .se-people-att-page
+  .se-att-start-button {
+    width: 100%;
+
+    min-height:
+      48px;
+  }
+
+
+  .se-people-att-page
+  .se-att-active-session {
+    grid-template-columns:
+      40px minmax(0, 1fr);
+  }
+
+
+  .se-people-att-page
+  .se-att-active-actions {
+    grid-column:
+      1 / -1;
+
+    width: 100%;
+  }
+
+
+  .se-people-att-page
+  .se-att-day-shortcuts {
+    grid-template-columns:
+      1fr;
+
+    overflow:
+      visible;
+  }
+}
+
+
+@media (max-width: 520px) {
+
+  .se-people-att-page
+  .se-people-att-nav,
+  .se-people-att-page
+  .se-people-att-nav--workspace {
+    padding:
+      8px 12px;
+  }
+
+
+  .se-people-att-page
+  .se-people-att-nav button,
+  .se-people-att-page
+  .se-people-att-nav--workspace button {
+    min-width:
+      118px;
+  }
+
+
+  .se-people-att-page
+  .se-people-att-heading h1 {
+    font-size:
+      25px;
+  }
+
+
+  .se-people-att-page
+  .se-att-day-head h2 {
+    font-size:
+      25px;
+  }
+
+
+  .se-people-att-page
+  .se-att-mode-card {
+    grid-template-columns:
+      43px minmax(0, 1fr) 22px;
+
+    padding:
+      13px;
+  }
+
+
+  .se-people-att-page
+  .se-att-mode-card-icon {
+    width: 43px;
+    height: 43px;
+
+    flex-basis:
+      43px;
+  }
+}
+
+
+/* ============================================================
+   32. ACCESSIBILITY
+============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .se-people-att-page
+  .se-people-att-header::after,
+
+  .se-people-att-page
+  .se-people-att-heading h1,
+
+  .se-people-att-page
+  .se-people-att-heading h1::after,
+
+  .se-people-att-page
+  .se-att-day-head::before,
+
+  .se-people-att-page
+  .se-att-start-button::before,
+
+  .se-people-att-page
+  .se-att-active-indicator span {
+    animation: none !important;
+  }
+}
+/* ============================================================
+   ATTENDANCE — FINAL ACTION BUTTON FIX
+   Finish Workday + Start Attendance
+============================================================ */
+
+
+/* START ATTENDANCE */
+
+.se-people-att-page .se-att-start-button {
+  min-width: 180px;
+  min-height: 46px;
+
+  padding: 0 20px;
+
+  border: 1px solid #1f1e1a;
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #34322d 0%,
+      #24231f 100%
+    );
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 18px rgba(35, 33, 28, 0.16);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+
+.se-people-att-page
+.se-att-start-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  background:
+    linear-gradient(
+      135deg,
+      #413d34 0%,
+      #292722 100%
+    );
+
+  box-shadow:
+    0 12px 24px rgba(35, 33, 28, 0.22);
+}
+
+
+.se-people-att-page
+.se-att-start-button:active:not(:disabled) {
+  transform: translateY(0);
+
+  box-shadow:
+    0 5px 12px rgba(35, 33, 28, 0.15);
+}
+
+
+/* remove old gold shine */
+.se-people-att-page
+.se-att-start-button::before {
+  display: none !important;
+}
+
+
+/* FINISH WORKDAY */
+
+.se-people-att-page .se-att-finish-button {
+  min-width: 130px;
+  min-height: 44px;
+
+  padding: 0 18px;
+
+  border: 1px solid #d5a43e;
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff9eb 0%,
+      #fff2cf 100%
+    );
+
+  color: #76500b;
+
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 14px rgba(145, 98, 11, 0.08);
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+}
+
+
+.se-people-att-page
+.se-att-finish-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  border-color: #bd7c0a;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f7c85e 0%,
+      #dc9719 100%
+    );
+
+  color: #302207;
+
+  box-shadow:
+    0 9px 19px rgba(169, 111, 8, 0.17);
+}
+
+
+.se-people-att-page
+.se-att-finish-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+
+/* DISABLED STATE — CLEARLY DISABLED */
+
+.se-people-att-page
+.se-att-start-button:disabled,
+.se-people-att-page
+.se-att-finish-button:disabled {
+  border-color: #ddd8ce;
+
+  background: #ebe8e1;
+
+  color: #aaa49a;
+
+  box-shadow: none;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+}
+/* ============================================================
+   SE-RMS ATTENDANCE HISTORY
+   PREMIUM 2-CARD HISTORY + FULL MONTH CALENDAR
+   FINAL OVERRIDE
+============================================================ */
+
+
+/* ============================================================
+   1. TWO EQUAL PREMIUM CARDS
+============================================================ */
+
+.se-people-att-page .se-att-history-workspace,
+.se-people-att-page .se-att-history-workspace--premium {
+  width: 100%;
+  margin-top: 16px;
+
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  gap: 16px;
+  align-items: start;
+}
+
+
+/* ============================================================
+   2. LEFT HISTORY CARD
+============================================================ */
+
+.se-people-att-page .se-att-history-register,
+.se-people-att-page .se-att-history-register-card {
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+
+  margin: 0;
+
+  border: 1px solid #e4e8ec;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 32px rgba(30, 38, 48, 0.055);
+}
+
+
+/* remove unnecessary outer register styling */
+
+.se-people-att-page
+.se-att-history-register-card
+.se-people-att-register-card,
+.se-people-att-page
+.se-att-history-register
+.se-people-att-register-card {
+  width: 100%;
+  margin: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  box-shadow: none;
+  background: transparent;
+}
+
+
+/* ============================================================
+   REGISTER HEADER
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-register-head {
+  min-height: 90px;
+
+  padding: 18px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  border-bottom: 1px solid #e9edf1;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #fbfcfd 100%
+    );
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-register-head > div > span {
+  color: #e30b19;
+
+  font-size: 9px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-register-head h2 {
+  margin: 6px 0 0;
+
+  color: #20262e;
+
+  font-size: 20px;
+  line-height: 1.1;
+
+  font-weight: 850;
+  letter-spacing: -0.45px;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-register-head p {
+  margin: 5px 0 0;
+
+  color: #929ba7;
+
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-register-head > strong {
+  flex: 0 0 auto;
+
+  padding: 9px 12px;
+
+  border: 1px solid #e2e7eb;
+  border-radius: 11px;
+
+  background: #f8fafb;
+
+  color: #252b33;
+
+  font-size: 15px;
+  line-height: 1;
+
+  font-weight: 850;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-register-head > strong::first-letter {
+  color: #252b33;
+}
+
+
+/* ============================================================
+   3. TURN HISTORY TABLE INTO RECORD CARDS
+============================================================ */
+
+/*
+   IMPORTANT:
+   base CSS has min-width: 1050px.
+   Kill that here.
+*/
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-v2--compact
+.se-att-register-table,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table {
+  width: 100% !important;
+  min-width: 0 !important;
+
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+
+/* no horizontal scrollbar */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table-wrap,
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-table-wrap {
+  width: 100%;
+
+  overflow: visible !important;
+
+  padding: 12px;
+
+  background: #f8fafb;
+}
+
+
+/* hide desktop table headings in compact history */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-v2--compact
+thead,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table thead {
+  display: none;
+}
+
+
+/* each tbody becomes normal */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-v2--compact
+tbody,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table tbody {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+
+/* EACH RECORD = CARD */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-v2--compact
+tbody tr,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table tbody tr {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 9px 12px;
+
+  min-width: 0;
+  min-height: 142px;
+
+  padding: 14px;
+
+  overflow: hidden;
+
+  border: 1px solid #e3e8ec;
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #fbfcfd 100%
+    );
+
+  box-shadow:
+    0 3px 12px rgba(31, 40, 50, 0.035);
+
+  cursor: pointer;
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+
+/* small accent */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-v2--compact
+tbody tr::before,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table tbody tr::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 14px;
+
+  width: 34px;
+  height: 3px;
+
+  border-radius: 0 0 4px 4px;
+
+  background: #d9a22e;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-v2--compact
+tbody tr:hover,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table tbody tr:hover {
+  transform: translateY(-2px);
+
+  border-color: #d3dbe1;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 9px 24px rgba(30, 38, 48, 0.08);
+}
+
+
+/* all cells become free layout */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-v2--compact
+tbody td,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table tbody td {
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  padding: 0 !important;
+
+  border: 0 !important;
+
+  background: transparent !important;
+
+  font-size: 9px;
+
+  white-space: normal;
+}
+
+
+/* ============================================================
+   EMPLOYEE CELL
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-person {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-person > span {
+  width: 38px;
+  height: 38px;
+
+  flex: 0 0 38px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #202630,
+      #333c48
+    );
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  box-shadow:
+    0 5px 12px rgba(32, 38, 48, 0.16);
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-person strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #202731;
+
+  font-size: 11px;
+  line-height: 1.25;
+
+  font-weight: 850;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-person small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #9ba3ad;
+
+  font-size: 7px;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   DATE
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-date {
+  color: #59636f;
+
+  font-size: 8px;
+  font-weight: 750;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   STATUS
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-status {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 5px 7px;
+
+  border-radius: 999px;
+
+  font-size: 7px;
+  font-weight: 850;
+}
+
+
+/* PRESENT */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-status--present {
+  border: 1px solid #bfe9cf;
+
+  background: #effaf3;
+
+  color: #17894d;
+}
+
+
+/* ABSENT */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-status--absent {
+  border: 1px solid #f2cac7;
+
+  background: #fff2f1;
+
+  color: #d14941;
+}
+
+
+/* LEAVE */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-status--on-leave {
+  border: 1px solid #cdd9f5;
+
+  background: #f1f5ff;
+
+  color: #4167bb;
+}
+
+
+/* ============================================================
+   MODE
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-mode {
+  width: fit-content;
+
+  padding: 5px 7px;
+
+  border-radius: 7px;
+
+  background: #f1f3f5;
+
+  color: #65707c;
+
+  font-size: 7px;
+  font-weight: 800;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-mode--wfh {
+  border: 1px solid #d3e1fb;
+
+  background: #eef5ff;
+
+  color: #3971c8;
+}
+
+
+/* ============================================================
+   SHIFT
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-shift strong {
+  display: block;
+
+  color: #424b56;
+
+  font-size: 8px;
+  line-height: 1.2;
+
+  font-weight: 850;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-shift small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #9ca4ad;
+
+  font-size: 6px;
+}
+
+
+/* ============================================================
+   OPEN BUTTON
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-open,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-row-open {
+  width: 28px;
+  height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid #dfe5e9;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #5c6671;
+
+  cursor: pointer;
+}
+
+
+/* ============================================================
+   REGISTER FOOTER
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-register-footer,
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-table-footer {
+  padding: 11px 15px;
+
+  border-top: 1px solid #e8ecef;
+
+  background: #ffffff;
+
+  color: #8c95a0;
+
+  font-size: 8px;
+}
+
+
+/* ============================================================
+   4. PREMIUM CALENDAR CARD
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-card,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-card--full {
+  position: static !important;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+
+  overflow: hidden;
+
+  border: 1px solid #e4e8ec;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 32px rgba(30, 38, 48, 0.055);
+}
+
+
+/* remove previous gold line */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-card--full::before {
+  display: none;
+}
+
+
+/* ============================================================
+   CALENDAR HEADER
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-head {
+  min-height: 90px;
+
+  padding: 17px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  border-bottom: 1px solid #e9edf1;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #fbfcfd 100%
+    );
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-title {
+  min-width: 0;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #e30b19;
+
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: 1.45px;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-head h3 {
+  margin: 0;
+
+  color: #20262e;
+
+  font-size: 20px;
+  line-height: 1.08;
+
+  font-weight: 850;
+  letter-spacing: -0.5px;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-head p {
+  margin: 5px 0 0;
+
+  color: #929ba7;
+
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+
+/* ============================================================
+   SUMMARY
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  flex: 0 0 auto;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item {
+  min-width: 47px;
+
+  padding: 7px 6px 6px;
+
+  border: 1px solid #e5e9ed;
+  border-radius: 9px;
+
+  background: #f8fafb;
+
+  text-align: center;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item strong {
+  display: block;
+
+  color: #252c34;
+
+  font-size: 13px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #9aa2ac;
+
+  font-size: 5.5px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: 0.6px;
+}
+
+
+/* PRESENT */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item--present {
+  border-color: #bfe8ce;
+  background: #effaf3;
+}
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item--present strong {
+  color: #16884c;
+}
+
+
+/* ABSENT */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item--absent {
+  border-color: #f0cbc8;
+  background: #fff2f1;
+}
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item--absent strong {
+  color: #d14941;
+}
+
+
+/* LEAVE */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item--leave {
+  border-color: #cdd9f4;
+  background: #f1f5ff;
+}
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-summary-item--leave strong {
+  color: #4167bb;
+}
+
+
+/* ============================================================
+   WEEKDAY BAR
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-weekdays {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, minmax(0, 1fr));
+
+  gap: 4px;
+
+  padding: 10px 12px 8px;
+
+  border-bottom: 1px solid #edf0f2;
+
+  background: #fafbfc;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-weekdays span {
+  text-align: center;
+
+  color: #9099a4;
+
+  font-size: 6.5px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: 0.7px;
+}
+
+
+/* ============================================================
+   CALENDAR GRID
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, minmax(0, 1fr));
+
+  gap: 5px;
+
+  padding: 10px 11px 12px;
+
+  background: #ffffff;
+}
+
+
+/* ============================================================
+   DAY CARD
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  min-height: 70px;
+
+  padding: 7px;
+
+  overflow: hidden;
+
+  border: 1px solid #e7eaed;
+  border-radius: 10px;
+
+  background: #fafbfc;
+
+  color: #6f7883;
+
+  box-shadow: none;
+
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day:not(.se-att-calendar-day--blank):hover {
+  z-index: 2;
+
+  transform: translateY(-2px);
+
+  border-color: #cfd6dc;
+
+  box-shadow:
+    0 7px 17px rgba(31, 40, 50, 0.09);
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--blank {
+  min-height: 70px;
+
+  border-color: transparent;
+
+  background: transparent;
+
+  box-shadow: none;
+}
+
+
+/* ============================================================
+   DATE NUMBER
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 3px;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-top strong {
+  color: #272e36;
+
+  font-size: 12px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-today {
+  padding: 3px 4px;
+
+  border-radius: 4px;
+
+  background: #242a31;
+
+  color: #ffffff;
+
+  font-size: 4.5px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+
+/* ============================================================
+   DAY STATUS
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-status {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  min-width: 0;
+
+  margin-top: 9px;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-status i {
+  width: 5px;
+  height: 5px;
+
+  flex: 0 0 5px;
+
+  border-radius: 50%;
+
+  background: #aeb6bf;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-status span {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #89919b;
+
+  font-size: 6.5px;
+  line-height: 1.1;
+
+  font-weight: 850;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   TIME
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-time {
+  display: flex;
+  align-items: center;
+
+  gap: 3px;
+
+  margin-top: auto;
+  padding-top: 6px;
+
+  overflow: hidden;
+
+  color: #9199a3;
+
+  font-size: 5.5px;
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-time b {
+  color: #bbc0c6;
+
+  font-size: 5px;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-empty {
+  margin-top: auto;
+  padding-top: 6px;
+
+  overflow: hidden;
+
+  color: #b4bac1;
+
+  font-size: 5.5px;
+  line-height: 1;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   PRESENT = GREEN
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--present {
+  border-color: #afe3c3;
+
+  background:
+    linear-gradient(
+      145deg,
+      #f2fbf5,
+      #eaf8ef
+    );
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--present
+.se-att-calendar-day-status i {
+  background: #1e9d5a;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--present
+.se-att-calendar-day-status span {
+  color: #16834b;
+}
+
+
+/* ============================================================
+   ABSENT = RED
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--absent {
+  border-color: #efc3c0;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff5f4,
+      #ffedec
+    );
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--absent
+.se-att-calendar-day-status i {
+  background: #e04c43;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--absent
+.se-att-calendar-day-status span {
+  color: #ca4038;
+}
+
+
+/* ============================================================
+   LEAVE = BLUE
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--leave {
+  border-color: #c6d6f5;
+
+  background:
+    linear-gradient(
+      145deg,
+      #f4f7ff,
+      #ebf1ff
+    );
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--leave
+.se-att-calendar-day-status i {
+  background: #3478df;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--leave
+.se-att-calendar-day-status span {
+  color: #3167ba;
+}
+
+
+/* ============================================================
+   HALF DAY = ORANGE
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--half-day {
+  border-color: #efd0a5;
+
+  background: #fff7eb;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--half-day
+.se-att-calendar-day-status i {
+  background: #d57d22;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--half-day
+.se-att-calendar-day-status span {
+  color: #b66719;
+}
+
+
+/* ============================================================
+   WEEK OFF
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--week-off {
+  border-color: #dde2e6;
+
+  background: #f5f7f8;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--week-off
+.se-att-calendar-day-status i {
+  background: #8b949e;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--week-off
+.se-att-calendar-day-status span {
+  color: #727b85;
+}
+
+
+/* ============================================================
+   HOLIDAY
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--holiday {
+  border-color: #d9d0ee;
+
+  background: #f7f4fc;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--holiday
+.se-att-calendar-day-status i {
+  background: #7650cd;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--holiday
+.se-att-calendar-day-status span {
+  color: #6745b7;
+}
+
+
+/* ============================================================
+   NO CHECKOUT
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--no-checkout {
+  border-color: #edd29c;
+
+  background: #fff8e8;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--no-checkout
+.se-att-calendar-day-status i {
+  background: #c98508;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--no-checkout
+.se-att-calendar-day-status span {
+  color: #a96e08;
+}
+
+
+/* ============================================================
+   NOT MARKED
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--not-marked {
+  border-color: #e7eaed;
+
+  background: #fafbfc;
+}
+
+
+/* ============================================================
+   TODAY
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--today {
+  border-color: #d29a25;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(210, 154, 37, 0.15),
+    0 5px 13px rgba(103, 75, 16, 0.09);
+}
+
+
+/* ============================================================
+   LEGEND
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 7px 12px;
+
+  padding: 10px 13px 12px;
+
+  border-top: 1px solid #e9edf1;
+
+  background: #fafbfc;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-legend > span {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  color: #717a85;
+
+  font-size: 6.5px;
+  line-height: 1;
+
+  font-weight: 750;
+
+  white-space: nowrap;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-legend-dot {
+  width: 6px;
+  height: 6px;
+
+  flex: 0 0 6px;
+
+  border-radius: 50%;
+}
+
+
+.se-people-att-page
+.se-att-calendar-legend-dot--present {
+  background: #1e9d5a;
+}
+
+.se-people-att-page
+.se-att-calendar-legend-dot--absent {
+  background: #e30b19;
+}
+
+.se-people-att-page
+.se-att-calendar-legend-dot--leave {
+  background: #3478df;
+}
+
+.se-people-att-page
+.se-att-calendar-legend-dot--half-day {
+  background: #d57d22;
+}
+
+.se-people-att-page
+.se-att-calendar-legend-dot--week-off {
+  background: #8b949e;
+}
+
+.se-people-att-page
+.se-att-calendar-legend-dot--holiday {
+  background: #7650cd;
+}
+
+.se-people-att-page
+.se-att-calendar-legend-dot--no-checkout {
+  background: #c98508;
+}
+
+
+/* ============================================================
+   5. EMPTY HISTORY
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-empty,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-people-att-loading {
+  min-height: 250px;
+
+  border: 0;
+
+  background: #ffffff;
+}
+
+
+/* ============================================================
+   6. RESPONSIVE
+============================================================ */
+
+@media (max-width: 1180px) {
+
+  .se-people-att-page
+  .se-att-history-workspace,
+
+  .se-people-att-page
+  .se-att-history-workspace--premium {
+    grid-template-columns: 1fr;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-register-v2--compact
+  tbody,
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-people-att-table tbody {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 700px) {
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-register-v2--compact
+  tbody,
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-people-att-table tbody {
+    grid-template-columns: 1fr;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-head {
+    align-items: flex-start;
+    flex-direction: column;
+
+    padding: 15px;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-summary {
+    width: 100%;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-summary-item {
+    flex: 1;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-grid {
+    gap: 3px;
+
+    padding: 8px 6px 10px;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-weekdays {
+    gap: 3px;
+
+    padding: 9px 6px 7px;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-day {
+    min-height: 54px;
+
+    padding: 5px;
+
+    border-radius: 7px;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-day-top strong {
+    font-size: 10px;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-day-status {
+    margin-top: 6px;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-day-status span {
+    font-size: 5.5px;
+  }
+
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-day-time,
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-day-empty,
+
+  .se-people-att-page
+  .se-att-history-workspace
+  .se-att-calendar-today {
+    display: none;
+  }
+
+}
+
+/* ============================================================
+   SE-RMS ATTENDANCE CALENDAR
+   ROUND STATUS + CLICKABLE DAY + PREMIUM DETAIL MODAL
+   FINAL OVERRIDE
+============================================================ */
+
+
+/* ============================================================
+   CLICKABLE DAY
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+button.se-att-calendar-day {
+  appearance: none;
+
+  width: 100%;
+
+  margin: 0;
+
+  font-family: inherit;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--clickable {
+  justify-content: flex-start;
+
+  min-height: 70px;
+
+  outline: none;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--clickable:focus-visible {
+  outline: 2px solid #252c34;
+  outline-offset: 2px;
+}
+
+
+/* ============================================================
+   MAKE DATE MUCH CLEARER
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-top strong {
+  color: #1f252c;
+
+  font-size: 14px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: -0.25px;
+}
+
+
+/* ============================================================
+   REMOVE OLD TEXT / TIME FROM CALENDAR
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-status,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-time,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day-empty {
+  display: none !important;
+}
+
+
+/* ============================================================
+   ROUND STATUS INDICATOR
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-round-status {
+  position: absolute;
+
+  right: 7px;
+  bottom: 7px;
+
+  width: 24px;
+  height: 24px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #e1e5e9;
+  border-radius: 50%;
+
+  background: #f3f5f6;
+
+  box-shadow:
+    0 3px 8px rgba(30, 38, 48, 0.07);
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-round-dot {
+  display: none;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-round-mark {
+  font-size: 9px;
+  line-height: 1;
+
+  font-weight: 950;
+}
+
+
+/* PRESENT */
+
+.se-people-att-page
+.se-att-calendar-round-status--present {
+  border-color: #8dd6aa;
+
+  background: #e7f8ee;
+
+  color: #138348;
+}
+
+
+/* ABSENT */
+
+.se-people-att-page
+.se-att-calendar-round-status--absent {
+  border-color: #efaaa5;
+
+  background: #fff0ef;
+
+  color: #d73e36;
+}
+
+
+/* LEAVE */
+
+.se-people-att-page
+.se-att-calendar-round-status--leave {
+  border-color: #a9c3ee;
+
+  background: #edf3ff;
+
+  color: #376cc2;
+}
+
+
+/* HALF DAY */
+
+.se-people-att-page
+.se-att-calendar-round-status--half-day {
+  border-color: #e8be83;
+
+  background: #fff4e4;
+
+  color: #bb6b17;
+}
+
+
+/* WEEK OFF */
+
+.se-people-att-page
+.se-att-calendar-round-status--week-off {
+  border-color: #d9dee2;
+
+  background: #f1f3f5;
+
+  color: #747e88;
+}
+
+
+/* HOLIDAY */
+
+.se-people-att-page
+.se-att-calendar-round-status--holiday {
+  border-color: #cbbce9;
+
+  background: #f4effd;
+
+  color: #6d4cbb;
+}
+
+
+/* NO CHECKOUT */
+
+.se-people-att-page
+.se-att-calendar-round-status--no-checkout {
+  border-color: #e3b552;
+
+  background: #fff5dc;
+
+  color: #a66c00;
+}
+
+
+/* NO RECORD */
+
+.se-people-att-page
+.se-att-calendar-round-status--not-marked {
+  width: 18px;
+  height: 18px;
+
+  border-color: #e5e8eb;
+
+  background: #f5f6f7;
+
+  color: #a7afb7;
+
+  box-shadow: none;
+}
+
+
+.se-people-att-page
+.se-att-calendar-round-status--not-marked
+.se-att-calendar-round-mark {
+  font-size: 9px;
+}
+
+
+/* ============================================================
+   CLEANER DAY BACKGROUND
+============================================================ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day {
+  position: relative;
+
+  background: #ffffff;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--not-marked {
+  background: #fafbfc;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--present {
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #f4fbf7 100%
+    );
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--absent {
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #fff5f4 100%
+    );
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--leave {
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #f3f6fd 100%
+    );
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--no-checkout {
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #fff8e9 100%
+    );
+}
+
+
+/* ============================================================
+   MODAL BACKDROP
+============================================================ */
+
+.se-att-calendar-modal-backdrop {
+  position: fixed;
+  inset: 0;
+
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background:
+    rgba(18, 23, 29, 0.52);
+
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+
+  animation:
+    seAttCalendarBackdropIn
+    160ms ease both;
+}
+
+
+@keyframes seAttCalendarBackdropIn {
+
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+
+}
+
+
+/* ============================================================
+   MODAL
+============================================================ */
+
+.se-att-calendar-modal {
+  width: min(
+    100%,
+    540px
+  );
+
+  max-height: calc(
+    100vh - 48px
+  );
+
+  overflow-y: auto;
+
+  border: 1px solid #e1e5e8;
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 28px 80px rgba(14, 19, 25, 0.25);
+
+  animation:
+    seAttCalendarModalIn
+    190ms cubic-bezier(
+      0.2,
+      0.8,
+      0.2,
+      1
+    ) both;
+}
+
+
+@keyframes seAttCalendarModalIn {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(12px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+
+/* ============================================================
+   MODAL HEADER
+============================================================ */
+
+.se-att-calendar-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  padding: 20px 20px 18px;
+
+  border-bottom: 1px solid #e9ecef;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #fafbfc 100%
+    );
+}
+
+
+.se-att-calendar-modal-date {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+}
+
+
+.se-att-calendar-modal-date-circle {
+  width: 58px;
+  height: 58px;
+
+  flex: 0 0 58px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #dfe4e8;
+  border-radius: 50%;
+
+  background: #f6f8f9;
+
+  color: #242b33;
+
+  box-shadow:
+    0 5px 15px rgba(31, 39, 48, 0.08);
+}
+
+
+.se-att-calendar-modal-date-circle strong {
+  font-size: 20px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+.se-att-calendar-modal-date-circle span {
+  margin-top: 4px;
+
+  font-size: 6px;
+
+  font-weight: 900;
+  letter-spacing: 0.6px;
+
+  text-transform: uppercase;
+}
+
+
+.se-att-calendar-modal-heading {
+  min-width: 0;
+}
+
+
+.se-att-calendar-modal-heading > span {
+  color: #e30b19;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: 1.35px;
+}
+
+
+.se-att-calendar-modal-heading h3 {
+  margin: 5px 0 0;
+
+  color: #20262e;
+
+  font-size: 18px;
+  line-height: 1.15;
+
+  font-weight: 900;
+  letter-spacing: -0.4px;
+}
+
+
+.se-att-calendar-modal-heading p {
+  margin: 5px 0 0;
+
+  color: #929ba5;
+
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+
+.se-att-calendar-modal-close {
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid #e1e5e8;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #68717c;
+
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+
+.se-att-calendar-modal-close:hover {
+  transform: rotate(4deg);
+
+  background: #f3f5f6;
+
+  color: #222930;
+}
+
+
+/* ============================================================
+   STATUS HERO
+============================================================ */
+
+.se-att-calendar-modal-status {
+  margin: 16px 18px 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 13px;
+
+  border: 1px solid #e3e7ea;
+  border-radius: 14px;
+
+  background: #f8fafb;
+}
+
+
+.se-att-calendar-modal-status-icon {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  font-size: 15px;
+  font-weight: 950;
+
+  box-shadow:
+    0 3px 10px rgba(30, 38, 48, 0.08);
+}
+
+
+.se-att-calendar-modal-status > div:last-child {
+  min-width: 0;
+}
+
+
+.se-att-calendar-modal-status
+> div:last-child
+> span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #939ca6;
+
+  font-size: 6px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+
+.se-att-calendar-modal-status
+> div:last-child
+> strong {
+  display: block;
+
+  color: #252c34;
+
+  font-size: 15px;
+  line-height: 1.15;
+
+  font-weight: 900;
+}
+
+
+.se-att-calendar-modal-status
+> div:last-child
+> small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #858f99;
+
+  font-size: 7px;
+}
+
+
+/* PRESENT */
+
+.se-att-calendar-modal-status--present {
+  border-color: #bce6cc;
+
+  background: #eff9f3;
+}
+
+.se-att-calendar-modal-status--present
+.se-att-calendar-modal-status-icon {
+  color: #16864c;
+}
+
+
+/* ABSENT */
+
+.se-att-calendar-modal-status--absent {
+  border-color: #f0c3c0;
+
+  background: #fff2f1;
+}
+
+.se-att-calendar-modal-status--absent
+.se-att-calendar-modal-status-icon {
+  color: #d1433b;
+}
+
+
+/* LEAVE */
+
+.se-att-calendar-modal-status--leave {
+  border-color: #c7d6f3;
+
+  background: #f1f5fd;
+}
+
+.se-att-calendar-modal-status--leave
+.se-att-calendar-modal-status-icon {
+  color: #3c6ec1;
+}
+
+
+/* NO CHECKOUT */
+
+.se-att-calendar-modal-status--no-checkout {
+  border-color: #ead09c;
+
+  background: #fff8e8;
+}
+
+.se-att-calendar-modal-status--no-checkout
+.se-att-calendar-modal-status-icon {
+  color: #ad7206;
+}
+
+
+/* ============================================================
+   TIME SECTION
+============================================================ */
+
+.se-att-calendar-modal-time-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    26px
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 16px 18px 0;
+}
+
+
+.se-att-calendar-modal-time-card {
+  padding: 14px;
+
+  border: 1px solid #e3e7ea;
+  border-radius: 13px;
+
+  background: #fafbfc;
+}
+
+
+.se-att-calendar-modal-time-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #929ba5;
+
+  font-size: 6px;
+
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+
+.se-att-calendar-modal-time-card strong {
+  display: block;
+
+  color: #20272f;
+
+  font-size: 21px;
+  line-height: 1;
+
+  font-weight: 900;
+  letter-spacing: -0.6px;
+}
+
+
+.se-att-calendar-modal-time-card small {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #9aa2ab;
+
+  font-size: 7px;
+}
+
+
+.se-att-calendar-modal-time-arrow {
+  display: grid;
+  place-items: center;
+
+  color: #a2aab2;
+
+  font-size: 15px;
+}
+
+
+/* ============================================================
+   INFORMATION GRID
+============================================================ */
+
+.se-att-calendar-modal-info-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 8px;
+
+  padding: 10px 18px 0;
+}
+
+
+.se-att-calendar-modal-info {
+  min-width: 0;
+
+  padding: 11px 12px;
+
+  border: 1px solid #e7eaed;
+  border-radius: 11px;
+
+  background: #ffffff;
+}
+
+
+.se-att-calendar-modal-info span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #9aa2ab;
+
+  font-size: 6px;
+
+  font-weight: 900;
+  letter-spacing: 0.85px;
+}
+
+
+.se-att-calendar-modal-info strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #353d46;
+
+  font-size: 9px;
+  line-height: 1.35;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   EMPLOYEE
+============================================================ */
+
+.se-att-calendar-modal-employee {
+  margin: 10px 18px 0;
+
+  padding: 11px 12px;
+
+  border: 1px solid #e7eaed;
+  border-radius: 11px;
+
+  background: #fafbfc;
+}
+
+
+.se-att-calendar-modal-employee > span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #9aa2ab;
+
+  font-size: 6px;
+
+  font-weight: 900;
+  letter-spacing: 0.85px;
+}
+
+
+.se-att-calendar-modal-employee strong {
+  display: block;
+
+  color: #303841;
+
+  font-size: 10px;
+  font-weight: 850;
+}
+
+
+.se-att-calendar-modal-employee small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #989fa8;
+
+  font-size: 7px;
+}
+
+
+/* ============================================================
+   EMPTY DAY
+============================================================ */
+
+.se-att-calendar-modal-empty {
+  margin: 16px 18px 0;
+
+  padding: 28px 20px;
+
+  border: 1px dashed #dfe4e7;
+  border-radius: 14px;
+
+  background: #fafbfc;
+
+  text-align: center;
+}
+
+
+.se-att-calendar-modal-empty-icon {
+  width: 42px;
+  height: 42px;
+
+  margin: 0 auto 10px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #eef1f3;
+
+  color: #737d87;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+
+.se-att-calendar-modal-empty strong {
+  display: block;
+
+  color: #343c45;
+
+  font-size: 12px;
+  font-weight: 850;
+}
+
+
+.se-att-calendar-modal-empty p {
+  max-width: 310px;
+
+  margin: 5px auto 0;
+
+  color: #929aa3;
+
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+
+/* ============================================================
+   FOOTER
+============================================================ */
+
+.se-att-calendar-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+
+  padding: 14px 18px 18px;
+}
+
+
+.se-att-calendar-modal-footer button {
+  min-width: 86px;
+
+  padding: 9px 15px;
+
+  border: 1px solid #252c34;
+  border-radius: 9px;
+
+  background: #252c34;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 8px;
+  font-weight: 850;
+
+  cursor: pointer;
+
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+
+.se-att-calendar-modal-footer button:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 6px 14px rgba(30, 38, 48, 0.17);
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 600px) {
+
+  .se-att-calendar-modal-backdrop {
+    align-items: flex-end;
+
+    padding: 12px;
+  }
+
+
+  .se-att-calendar-modal {
+    width: 100%;
+
+    max-height: 88vh;
+
+    border-radius: 20px;
+  }
+
+
+  .se-att-calendar-modal-head {
+    padding: 16px;
+  }
+
+
+  .se-att-calendar-modal-date-circle {
+    width: 50px;
+    height: 50px;
+
+    flex-basis: 50px;
+  }
+
+
+  .se-att-calendar-modal-heading h3 {
+    font-size: 15px;
+  }
+
+
+  .se-att-calendar-modal-time-grid {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+
+  .se-att-calendar-modal-time-card {
+    padding: 11px;
+  }
+
+
+  .se-att-calendar-modal-time-card strong {
+    font-size: 17px;
+  }
+
+
+  .se-att-calendar-modal-info-grid {
+    grid-template-columns: 1fr;
+
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+
+  .se-att-calendar-modal-status,
+  .se-att-calendar-modal-employee,
+  .se-att-calendar-modal-empty {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+
+  .se-att-calendar-modal-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+}
+/* ============================================================
+   ATTENDANCE CALENDAR — FULL DAY STATUS COLOUR
+   FINAL OVERRIDE
+============================================================ */
+
+
+/* ------------------------------------------------------------
+   BASE DAY
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day {
+  position: relative;
+
+  border: 1px solid #e2e7eb !important;
+  border-radius: 11px !important;
+
+  background: #ffffff !important;
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease !important;
+}
+
+
+/* ------------------------------------------------------------
+   PRESENT
+   FULL BOX GREEN
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--present {
+  background:
+    linear-gradient(
+      145deg,
+      #f1fcf5 0%,
+      #e4f8ec 100%
+    ) !important;
+
+  border-color: #8ed9aa !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(28, 157, 84, 0.03) !important;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--present
+.se-att-calendar-day-top strong {
+  color: #147a42 !important;
+}
+
+
+/* ------------------------------------------------------------
+   ABSENT
+   FULL BOX RED
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--absent {
+  background:
+    linear-gradient(
+      145deg,
+      #fff6f5 0%,
+      #ffe9e7 100%
+    ) !important;
+
+  border-color: #efa9a3 !important;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--absent
+.se-att-calendar-day-top strong {
+  color: #c93c35 !important;
+}
+
+
+/* ------------------------------------------------------------
+   NO ATTENDANCE / NO RECORD
+   TREAT VISUALLY AS ABSENT = RED
+
+   IMPORTANT:
+   this only changes UI colour.
+   Backend status remains NOT_MARKED.
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--not-marked {
+  background:
+    linear-gradient(
+      145deg,
+      #fffafa 0%,
+      #fff0ef 100%
+    ) !important;
+
+  border-color: #f2c4c0 !important;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--not-marked
+.se-att-calendar-day-top strong {
+  color: #bc514b !important;
+}
+
+
+/* make no-record small circle red too */
+
+.se-people-att-page
+.se-att-calendar-round-status--not-marked {
+  width: 20px !important;
+  height: 20px !important;
+
+  border-color: #edb5b1 !important;
+
+  background: #ffe4e2 !important;
+
+  color: #d2443d !important;
+
+  box-shadow: none !important;
+}
+
+
+/* ------------------------------------------------------------
+   LEAVE
+   FULL BOX BLUE
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--leave {
+  background:
+    linear-gradient(
+      145deg,
+      #f5f8ff 0%,
+      #e7efff 100%
+    ) !important;
+
+  border-color: #a9c5f3 !important;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--leave
+.se-att-calendar-day-top strong {
+  color: #3568bd !important;
+}
+
+
+/* ------------------------------------------------------------
+   HALF DAY
+   FULL BOX ORANGE
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--half-day {
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf2 0%,
+      #ffefd9 100%
+    ) !important;
+
+  border-color: #e8bd80 !important;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--half-day
+.se-att-calendar-day-top strong {
+  color: #b56816 !important;
+}
+
+
+/* ------------------------------------------------------------
+   WEEK OFF / SUNDAY
+   FULL BOX GREY
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--week-off {
+  background:
+    linear-gradient(
+      145deg,
+      #f9fafb 0%,
+      #f0f3f5 100%
+    ) !important;
+
+  border-color: #d8dee3 !important;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--week-off
+.se-att-calendar-day-top strong {
+  color: #68737e !important;
+}
+
+
+/* ------------------------------------------------------------
+   HOLIDAY
+   FULL BOX PURPLE
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--holiday {
+  background:
+    linear-gradient(
+      145deg,
+      #fbf9ff 0%,
+      #f0eafd 100%
+    ) !important;
+
+  border-color: #c9b9ea !important;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--holiday
+.se-att-calendar-day-top strong {
+  color: #7150b7 !important;
+}
+
+
+/* ------------------------------------------------------------
+   NO CHECKOUT
+   FULL BOX AMBER
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--no-checkout {
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf0 0%,
+      #fff0cb 100%
+    ) !important;
+
+  border-color: #e4b84e !important;
+}
+
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--no-checkout
+.se-att-calendar-day-top strong {
+  color: #9c6807 !important;
+}
+
+
+/* ------------------------------------------------------------
+   TODAY
+   DARKER BORDER — STATUS COLOUR STILL REMAINS
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--today {
+  border-width: 2px !important;
+
+  box-shadow:
+    0 4px 12px rgba(25, 34, 43, 0.10) !important;
+}
+
+
+/* today + present */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--today.se-att-calendar-day--present {
+  border-color: #20a25d !important;
+
+  box-shadow:
+    0 4px 14px rgba(25, 155, 82, 0.16) !important;
+}
+
+
+/* today + absent/no record */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--today.se-att-calendar-day--absent,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--today.se-att-calendar-day--not-marked {
+  border-color: #df554e !important;
+}
+
+
+/* ------------------------------------------------------------
+   TODAY BADGE
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-today {
+  padding: 2px 5px !important;
+
+  border-radius: 999px !important;
+
+  background: #252c34 !important;
+
+  color: #ffffff !important;
+
+  font-size: 5px !important;
+  line-height: 1 !important;
+
+  font-weight: 900 !important;
+  letter-spacing: 0.45px !important;
+}
+
+
+/* ------------------------------------------------------------
+   HOVER
+------------------------------------------------------------ */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--clickable:hover {
+  z-index: 2;
+
+  transform: translateY(-2px) !important;
+
+  box-shadow:
+    0 7px 18px rgba(25, 34, 43, 0.12) !important;
+}
+
+
+/* present hover */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--present:hover {
+  border-color: #48bd78 !important;
+}
+
+
+/* absent/no-record hover */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--absent:hover,
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--not-marked:hover {
+  border-color: #e27670 !important;
+}
+
+
+/* leave hover */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--leave:hover {
+  border-color: #739de2 !important;
+}
+
+
+/* no checkout hover */
+
+.se-people-att-page
+.se-att-history-workspace
+.se-att-calendar-day--no-checkout:hover {
+  border-color: #dca322 !important;
+}
+/* =========================================================
+   SE-RMS ATTENDANCE — WORKFORCE REGISTER V4
+   ADD AT ABSOLUTE END OF Attendance.css
+========================================================= */
+
+
+/* =========================================================
+   SUMMARY / DRILL-DOWN CARDS
+========================================================= */
+
+.se-att-workforce-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 0 0 20px;
+}
+
+.se-att-workforce-card {
+  position: relative;
+  min-width: 0;
+  min-height: 126px;
+  padding: 18px 18px 16px;
+  border: 1px solid #e6e9ef;
+  border-radius: 18px;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.se-att-workforce-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 3px;
+  border-radius: 0 0 8px 8px;
+  background: #d5dae3;
+}
+
+.se-att-workforce-card:hover {
+  transform: translateY(-2px);
+  border-color: #cfd5df;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+
+.se-att-workforce-card.is-active {
+  border-color: #182334;
+  box-shadow: 0 15px 34px rgba(15, 23, 42, 0.13);
+}
+
+.se-att-workforce-card-label {
+  display: block;
+  margin-bottom: 11px;
+  color: #778195;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.se-att-workforce-card strong {
+  display: block;
+  color: #182334;
+  font-size: 29px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.se-att-workforce-card small {
+  display: block;
+  margin-top: 9px;
+  color: #9098a7;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+
+/* PRESENT */
+
+.se-att-workforce-card--present::before {
+  background: #0da66f;
+}
+
+.se-att-workforce-card--present.is-active {
+  background:
+    linear-gradient(
+      145deg,
+      #f3fffa 0%,
+      #ffffff 75%
+    );
+}
+
+
+/* ABSENT */
+
+.se-att-workforce-card--absent::before {
+  background: #ef3340;
+}
+
+.se-att-workforce-card--absent.is-active {
+  background:
+    linear-gradient(
+      145deg,
+      #fff7f7 0%,
+      #ffffff 75%
+    );
+}
+
+
+/* LATE */
+
+.se-att-workforce-card--late::before {
+  background: #f0a51a;
+}
+
+.se-att-workforce-card--late.is-active {
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf0 0%,
+      #ffffff 75%
+    );
+}
+
+
+/* WFH */
+
+.se-att-workforce-card--wfh::before {
+  background: #3b82f6;
+}
+
+
+/* FIELD */
+
+.se-att-workforce-card--field::before {
+  background: #7c5ce7;
+}
+
+
+/* ON DUTY */
+
+.se-att-workforce-card--duty::before {
+  background: #0f766e;
+}
+
+
+/* =========================================================
+   MAIN REGISTER CARD
+========================================================= */
+
+.se-att-register-v4 {
+  border: 1px solid #dfe4ec !important;
+  border-radius: 22px !important;
+  background: #ffffff !important;
+  overflow: hidden !important;
+  box-shadow:
+    0 14px 40px rgba(15, 23, 42, 0.07) !important;
+}
+
+
+/* =========================================================
+   DARK REGISTER HEADER
+========================================================= */
+
+.se-att-register-v4-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 26px;
+  background:
+    linear-gradient(
+      135deg,
+      #111927 0%,
+      #1b2739 55%,
+      #202d41 100%
+    );
+  overflow: hidden;
+}
+
+.se-att-register-v4-head::after {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  top: -160px;
+  right: 90px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.035);
+  pointer-events: none;
+}
+
+.se-att-register-v4-head-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.se-att-register-v4-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #ff4b55;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.se-att-register-v4-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.se-att-register-v4-title-row h2 {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-size: 22px !important;
+  line-height: 1.15 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em;
+}
+
+.se-att-register-v4-head-copy p {
+  margin: 8px 0 0;
+  color: #9faabc;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.se-att-register-v4-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: #b9c4d4;
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.se-att-register-v4-live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c982;
+  box-shadow: 0 0 0 4px rgba(34, 201, 130, 0.12);
+}
+
+.se-att-register-v4-count {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  min-width: 105px;
+  padding: 13px 17px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.065);
+  text-align: right;
+}
+
+.se-att-register-v4-count strong {
+  display: block;
+  color: #ffffff;
+  font-size: 23px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.se-att-register-v4-count span {
+  display: block;
+  margin-top: 5px;
+  color: #aeb9ca;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.se-att-register-v4-table-wrap {
+  position: relative;
+  width: 100%;
+  max-height: 650px;
+  overflow: auto !important;
+  overscroll-behavior: contain;
+  background: #ffffff;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.se-att-register-v4-table {
+  width: 100%;
+  min-width: 1260px;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+
+/* =========================================================
+   STICKY TABLE HEADER
+========================================================= */
+
+.se-att-register-v4-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.se-att-register-v4-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 21;
+  height: 48px;
+  padding: 0 15px !important;
+  border-right: 1px solid #273448 !important;
+  border-bottom: 1px solid #273448 !important;
+  background: #1b2637 !important;
+  color: #b8c2d1 !important;
+  font-size: 9px !important;
+  line-height: 48px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.se-att-register-v4-table thead th:first-child {
+  padding-left: 22px !important;
+}
+
+.se-att-register-v4-table thead th:last-child {
+  border-right: 0 !important;
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.se-att-register-v4-table tbody td {
+  padding: 14px 15px !important;
+  border-right: 1px solid #edf0f4 !important;
+  border-bottom: 1px solid #e8ecf1 !important;
+  background: #ffffff;
+  vertical-align: middle;
+}
+
+.se-att-register-v4-table tbody td:first-child {
+  padding-left: 22px !important;
+}
+
+.se-att-register-v4-table tbody td:last-child {
+  border-right: 0 !important;
+}
+
+.se-att-register-v4-row {
+  transition:
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.se-att-register-v4-row:hover td {
+  background: #f8fafc !important;
+}
+
+.se-att-register-v4-row:focus {
+  outline: none;
+}
+
+.se-att-register-v4-row:focus td {
+  background: #f6f8fb !important;
+}
+
+
+/* =========================================================
+   LATE ROW
+========================================================= */
+
+.se-att-register-v4-row--late td:first-child {
+  box-shadow:
+    inset 3px 0 0 #f0a51a;
+}
+
+
+/* =========================================================
+   EMPLOYEE
+========================================================= */
+
+.se-att-register-v4 .se-att-register-v3-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 12px;
+  background: #1b2637;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.se-att-register-v4 .se-att-register-v3-person-copy strong {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  color: #202a3a;
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.se-att-register-v4 .se-att-register-v3-person-copy small {
+  display: block;
+  margin-top: 4px;
+  color: #8a94a5;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.se-att-register-v4-status-stack {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.se-att-register-v4-late-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 23px;
+  padding: 0 8px;
+  border: 1px solid #f5d78e;
+  border-radius: 999px;
+  background: #fff8e6;
+  color: #a96800;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   CHECK-IN / CHECK-OUT
+========================================================= */
+
+.se-att-register-v4 .se-att-register-v3-time {
+  min-width: 74px;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.se-att-register-v4-time--empty {
+  color: #8fa0b5 !important;
+  background: #f4f7fa !important;
+}
+
+
+/* =========================================================
+   WORKING
+========================================================= */
+
+.se-att-register-v4-working {
+  color: #263143;
+  font-size: 11px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   EXCEPTIONS
+========================================================= */
+
+.se-att-register-v4-exceptions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.se-att-register-v4-exception {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: #f3f5f8;
+  color: #667085;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.se-att-register-v4-exception.is-late {
+  background: #fff5dd;
+  color: #a96800;
+}
+
+.se-att-register-v4-normal {
+  color: #7b8697;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   VIEW BUTTON
+========================================================= */
+
+.se-att-register-v4-view-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  border: 1px solid #e1e6ed;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #667085;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.se-att-register-v4-view-button:hover {
+  border-color: #1b2637;
+  background: #1b2637;
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.se-att-register-v4-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 15px 20px;
+  border-top: 1px solid #e6eaf0;
+  background: #fafbfc;
+}
+
+.se-att-register-v4-pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #7d8796;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.se-att-register-v4-pagination-info strong {
+  color: #263143;
+  font-weight: 900;
+}
+
+.se-att-register-v4-pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.se-att-register-v4-pagination-actions button {
+  min-width: 31px;
+  height: 31px;
+  padding: 0 10px;
+  border: 1px solid #dfe4eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #536074;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.se-att-register-v4-pagination-actions button:hover:not(:disabled) {
+  border-color: #1b2637;
+  background: #1b2637;
+  color: #ffffff;
+}
+
+.se-att-register-v4-pagination-actions button.is-active {
+  border-color: #1b2637;
+  background: #1b2637;
+  color: #ffffff;
+}
+
+.se-att-register-v4-pagination-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.se-att-register-v4-page-gap {
+  padding: 0 3px;
+  color: #98a1af;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1450px) {
+  .se-att-workforce-summary {
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(160px, 1fr)
+      );
+  }
+}
+
+
+@media (max-width: 900px) {
+  .se-att-workforce-summary {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .se-att-register-v4-head {
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  .se-att-register-v4-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .se-att-register-v4-count {
+    min-width: 85px;
+  }
+
+  .se-att-register-v4-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
+@media (max-width: 560px) {
+  .se-att-workforce-summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+
+  .se-att-workforce-card {
+    min-height: 110px;
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .se-att-workforce-card strong {
+    font-size: 24px;
+  }
+
+  .se-att-register-v4-head {
+    gap: 12px;
+    padding: 18px 15px;
+  }
+
+  .se-att-register-v4-title-row h2 {
+    font-size: 18px !important;
+  }
+
+  .se-att-register-v4-head-copy p {
+    display: none;
+  }
+
+  .se-att-register-v4-count {
+    min-width: 70px;
+    padding: 11px;
+  }
+
+  .se-att-register-v4-count strong {
+    font-size: 19px;
+  }
+
+  .se-att-register-v4-table-wrap {
+    max-height: 590px;
+  }
+}
+/* =========================================================
+   SE-RMS ATTENDANCE REGISTER V4.1
+   FINAL COMPACT / MANAGEMENT INSIGHT REFINEMENT
+
+   ADD AT ABSOLUTE END OF Attendance.css
+========================================================= */
+
+
+/* =========================================================
+   1. FIVE SUMMARY CARDS
+   On Duty removed from UI.
+========================================================= */
+
+.se-att-workforce-summary {
+  grid-template-columns:
+    repeat(
+      5,
+      minmax(0, 1fr)
+    ) !important;
+
+  gap: 12px !important;
+}
+
+
+/* Slightly more premium + compact cards */
+
+.se-att-workforce-card {
+  min-height: 116px !important;
+  padding:
+    17px
+    17px
+    15px !important;
+
+  border-radius: 16px !important;
+}
+
+.se-att-workforce-card::before {
+  left: 16px !important;
+  right: 16px !important;
+}
+
+.se-att-workforce-card-label {
+  margin-bottom: 10px !important;
+
+  font-size: 9px !important;
+  letter-spacing: 0.13em !important;
+}
+
+.se-att-workforce-card strong {
+  font-size: 27px !important;
+}
+
+.se-att-workforce-card small {
+  margin-top: 8px !important;
+  font-size: 10px !important;
+}
+
+
+/* =========================================================
+   2. REGISTER HEADER
+   Slightly shorter so more table is visible.
+========================================================= */
+
+.se-att-register-v4-head {
+  padding:
+    20px
+    24px !important;
+}
+
+.se-att-register-v4-title-row h2 {
+  font-size: 20px !important;
+}
+
+.se-att-register-v4-head-copy p {
+  margin-top: 6px !important;
+}
+
+.se-att-register-v4-count {
+  min-width: 94px !important;
+
+  padding:
+    11px
+    15px !important;
+}
+
+.se-att-register-v4-count strong {
+  font-size: 21px !important;
+}
+
+
+/* =========================================================
+   3. TABLE
+
+   Previous table:
+   min-width: 1260px
+
+   This was unnecessarily wide and contributed to the
+   horizontal hanging feeling.
+
+   Keep enough width for useful insight without wasting
+   space on Employee / Date / Office.
+========================================================= */
+
+.se-att-register-v4-table {
+  width: 100% !important;
+
+  min-width: 1110px !important;
+
+  table-layout: fixed !important;
+}
+
+
+/* =========================================================
+   4. COLUMN WIDTHS
+
+   Employee was consuming too much width.
+========================================================= */
+
+
+/* Employee */
+
+.se-att-register-v4-table th:nth-child(1),
+.se-att-register-v4-table td:nth-child(1) {
+  width: 190px !important;
+}
+
+
+/* Date */
+
+.se-att-register-v4-table th:nth-child(2),
+.se-att-register-v4-table td:nth-child(2) {
+  width: 92px !important;
+}
+
+
+/* Status */
+
+.se-att-register-v4-table th:nth-child(3),
+.se-att-register-v4-table td:nth-child(3) {
+  width: 90px !important;
+}
+
+
+/* Mode */
+
+.se-att-register-v4-table th:nth-child(4),
+.se-att-register-v4-table td:nth-child(4) {
+  width: 76px !important;
+}
+
+
+/* Office */
+
+.se-att-register-v4-table th:nth-child(5),
+.se-att-register-v4-table td:nth-child(5) {
+  width: 82px !important;
+}
+
+
+/* Shift */
+
+.se-att-register-v4-table th:nth-child(6),
+.se-att-register-v4-table td:nth-child(6) {
+  width: 112px !important;
+}
+
+
+/* Check In */
+
+.se-att-register-v4-table th:nth-child(7),
+.se-att-register-v4-table td:nth-child(7) {
+  width: 92px !important;
+}
+
+
+/* Check Out */
+
+.se-att-register-v4-table th:nth-child(8),
+.se-att-register-v4-table td:nth-child(8) {
+  width: 92px !important;
+}
+
+
+/* Working */
+
+.se-att-register-v4-table th:nth-child(9),
+.se-att-register-v4-table td:nth-child(9) {
+  width: 76px !important;
+}
+
+
+/* Exception */
+
+.se-att-register-v4-table th:nth-child(10),
+.se-att-register-v4-table td:nth-child(10) {
+  width: 118px !important;
+}
+
+
+/* Source */
+
+.se-att-register-v4-table th:nth-child(11),
+.se-att-register-v4-table td:nth-child(11) {
+  width: 88px !important;
+}
+
+
+/* Action */
+
+.se-att-register-v4-table th:nth-child(12),
+.se-att-register-v4-table td:nth-child(12) {
+  width: 48px !important;
+}
+
+
+/* =========================================================
+   5. TABLE CELL SPACING
+   More data visible without making UI cramped.
+========================================================= */
+
+.se-att-register-v4-table thead th {
+  padding:
+    0
+    11px !important;
+
+  font-size: 8px !important;
+
+  letter-spacing:
+    0.12em !important;
+}
+
+.se-att-register-v4-table thead th:first-child {
+  padding-left: 18px !important;
+}
+
+
+.se-att-register-v4-table tbody td {
+  padding:
+    12px
+    11px !important;
+}
+
+.se-att-register-v4-table tbody td:first-child {
+  padding-left: 18px !important;
+}
+
+
+/* =========================================================
+   6. EMPLOYEE COLUMN
+   Compact but name remains readable.
+========================================================= */
+
+.se-att-register-v4
+.se-att-register-v3-avatar {
+  width: 36px !important;
+  height: 36px !important;
+
+  flex:
+    0
+    0
+    36px !important;
+
+  border-radius: 11px !important;
+
+  font-size: 10px !important;
+}
+
+
+.se-att-register-v4
+.se-att-register-v3-person {
+  gap: 9px !important;
+}
+
+
+.se-att-register-v4
+.se-att-register-v3-person-copy {
+  min-width: 0 !important;
+}
+
+
+.se-att-register-v4
+.se-att-register-v3-person-copy strong {
+  max-width: 126px !important;
+
+  font-size: 11px !important;
+
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+
+.se-att-register-v4
+.se-att-register-v3-person-copy small {
+  margin-top: 3px !important;
+
+  font-size: 8px !important;
+}
+
+
+/* =========================================================
+   7. DATE
+========================================================= */
+
+.se-att-register-v4
+.se-att-register-v3-date {
+  font-size: 9px !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   8. SHIFT
+========================================================= */
+
+.se-att-register-v4
+.se-att-register-v3-shift strong {
+  display: block !important;
+
+  overflow: hidden !important;
+
+  font-size: 9px !important;
+
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+
+.se-att-register-v4
+.se-att-register-v3-shift small {
+  display: block !important;
+
+  margin-top: 3px !important;
+
+  font-size: 7px !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   9. CHECK IN / CHECK OUT
+========================================================= */
+
+.se-att-register-v4
+.se-att-register-v3-time {
+  min-width: 64px !important;
+
+  padding:
+    7px
+    7px !important;
+
+  font-size: 9px !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   10. WORKING HOURS
+========================================================= */
+
+.se-att-register-v4-working {
+  font-size: 10px !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   11. EXCEPTION COLUMN
+
+   Small management indicators rather than a large stack.
+========================================================= */
+
+.se-att-register-v4-exceptions {
+  display: flex !important;
+
+  align-items: flex-start !important;
+
+  flex-direction: column !important;
+
+  gap: 4px !important;
+}
+
+
+.se-att-register-v4-exception {
+  min-height: 20px !important;
+
+  max-width: 100% !important;
+
+  padding:
+    0
+    7px !important;
+
+  border-radius: 6px !important;
+
+  font-size: 8px !important;
+
+  overflow: hidden !important;
+
+  text-overflow: ellipsis !important;
+
+  white-space: nowrap !important;
+}
+
+
+.se-att-register-v4-exception.is-late {
+  background: #fff5dc !important;
+  color: #9a6400 !important;
+}
+
+
+.se-att-register-v4-normal {
+  font-size: 9px !important;
+}
+
+
+/* =========================================================
+   12. OFFICE / SOURCE
+========================================================= */
+
+.se-att-register-v4
+.se-att-register-v3-office,
+.se-att-register-v4
+.se-att-register-v3-source {
+  display: block !important;
+
+  max-width: 100% !important;
+
+  overflow: hidden !important;
+
+  font-size: 8px !important;
+
+  text-overflow: ellipsis !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   13. ACTION BUTTON
+========================================================= */
+
+.se-att-register-v4-view-button {
+  width: 29px !important;
+  height: 29px !important;
+
+  border-radius: 8px !important;
+}
+
+
+/* =========================================================
+   14. ROW HEIGHT
+
+   Keeps table information-dense and suitable for HR /
+   management insight.
+========================================================= */
+
+.se-att-register-v4-table tbody tr {
+  height: 66px !important;
+}
+
+
+/* =========================================================
+   15. TABLE SCROLL
+
+   Keep vertical register scrolling but make horizontal
+   scrolling much less likely on normal desktop widths.
+========================================================= */
+
+.se-att-register-v4-table-wrap {
+  max-height: 640px !important;
+
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+
+  scrollbar-width: thin;
+}
+
+
+/* =========================================================
+   16. STICKY EMPLOYEE COLUMN
+
+   Employee identity remains visible if horizontal scroll
+   is needed on a smaller laptop.
+========================================================= */
+
+.se-att-register-v4-table thead th:first-child {
+  position: sticky !important;
+
+  left: 0 !important;
+
+  z-index: 30 !important;
+
+  background: #1b2637 !important;
+
+  box-shadow:
+    1px
+    0
+    0
+    #273448 !important;
+}
+
+
+.se-att-register-v4-table tbody td:first-child {
+  position: sticky !important;
+
+  left: 0 !important;
+
+  z-index: 5 !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    1px
+    0
+    0
+    #edf0f4 !important;
+}
+
+
+.se-att-register-v4-row:hover td:first-child {
+  background: #f8fafc !important;
+}
+
+
+/* =========================================================
+   17. LAPTOP
+========================================================= */
+
+@media (max-width: 1450px) {
+
+  .se-att-workforce-summary {
+    grid-template-columns:
+      repeat(
+        5,
+        minmax(0, 1fr)
+      ) !important;
+  }
+
+  .se-att-workforce-card {
+    padding:
+      15px
+      14px !important;
+  }
+
+  .se-att-workforce-card strong {
+    font-size: 25px !important;
+  }
+
+}
+
+
+/* =========================================================
+   18. TABLET
+========================================================= */
+
+@media (max-width: 1050px) {
+
+  .se-att-workforce-summary {
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(0, 1fr)
+      ) !important;
+  }
+
+}
+
+
+/* =========================================================
+   19. MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+
+  .se-att-workforce-summary {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      ) !important;
+  }
+
+  .se-att-workforce-card {
+    min-height: 104px !important;
+  }
+
+  .se-att-register-v4-table {
+    min-width: 1050px !important;
+  }
+
+}

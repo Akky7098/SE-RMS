@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -15,80 +16,186 @@ import {
 
 import "./Employees.css";
 
+
 /* =========================================================
    HELPERS
 ========================================================= */
 
-const formatDate =
-  (
-    value
-  ) => {
-    if (!value) {
-      return "—";
+const formatDate = (value) => {
+  if (!value) {
+    return "Not available";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not available";
+  }
+
+  return new Intl.DateTimeFormat(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
     }
+  ).format(date);
+};
 
-    const date =
-      new Date(
-        value
-      );
 
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return "—";
-    }
+const pretty = (value) => {
+  if (!value) {
+    return "Not assigned";
+  }
 
-    return new Intl
-      .DateTimeFormat(
-        "en-IN",
-        {
-          day:
-            "2-digit",
+  return String(value)
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(
+      /\b\w/g,
+      (character) =>
+        character.toUpperCase()
+    );
+};
 
-          month:
-            "long",
 
-          year:
-            "numeric",
-        }
-      )
-      .format(
-        date
-      );
-  };
+const initials = (name) => {
+  const parts = String(
+    name || "Employee"
+  )
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 
-const pretty =
-  (
-    value
-  ) =>
-    String(
-      value ||
-      ""
-    )
-      .replaceAll(
-        "_",
-        " "
-      )
-      .toLowerCase()
-      .replace(
-        /\b\w/g,
-        (
-          character
-        ) =>
-          character
-            .toUpperCase()
-      );
+  if (!parts.length) {
+    return "E";
+  }
+
+  if (parts.length === 1) {
+    return parts[0]
+      .charAt(0)
+      .toUpperCase();
+  }
+
+  return (
+    parts[0].charAt(0) +
+    parts[parts.length - 1].charAt(0)
+  ).toUpperCase();
+};
+
+
+const displayValue = (
+  value,
+  fallback = "Not assigned"
+) => {
+  if (
+    value === null ||
+    value === undefined ||
+    String(value).trim() === ""
+  ) {
+    return fallback;
+  }
+
+  return value;
+};
+
+
+const companyName = (employee) => {
+  return (
+    employee?.companyName ||
+    pretty(employee?.companyCode) ||
+    "Not assigned"
+  );
+};
+
+
+const departmentName = (employee) => {
+  return (
+    employee?.departmentName ||
+    employee?.department?.name ||
+    "Not assigned"
+  );
+};
+
+
+const reportingManagerName = (
+  employee
+) => {
+  return (
+    employee?.reportingManagerName ||
+    employee?.reportsTo?.fullName ||
+    employee?.reportingManager?.fullName ||
+    "Not assigned"
+  );
+};
+
+
+const DetailItem = ({
+  label,
+  value,
+  wide = false,
+  mono = false,
+}) => {
+  return (
+    <div
+      className={[
+        "employee-detail-item",
+        wide
+          ? "employee-detail-item-wide"
+          : "",
+        mono
+          ? "is-mono"
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <span>{label}</span>
+
+      <strong>
+        {displayValue(value)}
+      </strong>
+    </div>
+  );
+};
+
+
+const SectionCard = ({
+  eyebrow,
+  title,
+  children,
+  className = "",
+}) => {
+  return (
+    <section
+      className={[
+        "employee-detail-section-card",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <div className="employee-detail-section-heading">
+        <div>
+          <span>{eyebrow}</span>
+          <h2>{title}</h2>
+        </div>
+      </div>
+
+      <div className="employee-detail-section-grid">
+        {children}
+      </div>
+    </section>
+  );
+};
+
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 function EmployeeDetailPage() {
-  const {
-    employeeId,
-  } =
+  const { employeeId } =
     useParams();
 
   const navigate =
@@ -97,104 +204,131 @@ function EmployeeDetailPage() {
   const [
     employee,
     setEmployee,
-  ] =
-    useState(
-      null
-    );
+  ] = useState(null);
 
   const [
     loading,
     setLoading,
-  ] =
-    useState(
-      true
-    );
+  ] = useState(true);
 
   const [
     error,
     setError,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
-  /* =====================================================
-     LOAD
-  ===================================================== */
 
-  const load =
-    useCallback(
-      async () => {
-        try {
-          setLoading(
-            true
+  /* =======================================================
+     LOAD EMPLOYEE
+  ======================================================= */
+
+  const load = useCallback(
+    async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const result =
+          await getEmployeeById(
+            employeeId
           );
 
-          setError(
-            ""
-          );
-
-          const result =
-            await getEmployeeById(
-              employeeId
-            );
-
-          setEmployee(
-            result
-          );
-        } catch (
+        setEmployee(
+          result?.employee ||
+          result?.data ||
+          result ||
+          null
+        );
+      } catch (requestError) {
+        setError(
           requestError
-        ) {
-          setError(
-            requestError
-              ?.response
-              ?.data
-              ?.message ||
-            requestError
-              ?.message ||
-            "Employee could not be loaded."
-          );
-        } finally {
-          setLoading(
-            false
-          );
-        }
-      },
-      [
-        employeeId,
-      ]
-    );
-
-  useEffect(
-    () => {
-      load();
+            ?.response
+            ?.data
+            ?.message ||
+          requestError?.message ||
+          "Employee could not be loaded."
+        );
+      } finally {
+        setLoading(false);
+      }
     },
-    [
-      load,
-    ]
+    [employeeId]
   );
 
-  /* =====================================================
-     LOADING
-  ===================================================== */
 
-  if (
-    loading
-  ) {
+  useEffect(() => {
+    load();
+  }, [load]);
+
+
+  /* =======================================================
+     DERIVED DATA
+  ======================================================= */
+
+  const status =
+    String(
+      employee?.status ||
+      "ACTIVE"
+    ).toUpperCase();
+
+
+  const onboarding =
+    status === "ONBOARDING" ||
+    Boolean(
+      employee?.onboardingId ||
+      employee?.onboarding?._id
+    );
+
+
+  const employeeDepartment =
+    useMemo(
+      () =>
+        employee
+          ? departmentName(employee)
+          : "Not assigned",
+      [employee]
+    );
+
+
+  const employeeManager =
+    useMemo(
+      () =>
+        employee
+          ? reportingManagerName(
+              employee
+            )
+          : "Not assigned",
+      [employee]
+    );
+
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (loading) {
     return (
       <div className="employee-detail-page">
-
         <div className="employee-detail-loading">
-          Loading employee profile...
-        </div>
+          <span className="employee-detail-loader" />
 
+          <div>
+            <strong>
+              Loading employee
+            </strong>
+
+            <small>
+              Preparing employee profile...
+            </small>
+          </div>
+        </div>
       </div>
     );
   }
 
-  /* =====================================================
+
+  /* =======================================================
      ERROR
-  ===================================================== */
+  ======================================================= */
 
   if (
     error ||
@@ -202,8 +336,10 @@ function EmployeeDetailPage() {
   ) {
     return (
       <div className="employee-detail-page">
-
         <div className="employee-detail-error">
+          <div className="employee-detail-error-icon">
+            !
+          </div>
 
           <strong>
             Employee profile unavailable
@@ -211,135 +347,130 @@ function EmployeeDetailPage() {
 
           <span>
             {error ||
-              "Employee not found."}
+              "Employee record was not found."}
           </span>
 
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                "/people/employees"
-              )
-            }
-          >
-            Return to Employees
-          </button>
+          <div className="employee-detail-error-actions">
+            <button
+              type="button"
+              onClick={load}
+            >
+              Try Again
+            </button>
 
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  "/people/employees"
+                )
+              }
+            >
+              Employee Directory
+            </button>
+          </div>
         </div>
-
       </div>
     );
   }
 
-  const onboarding =
-    String(
-      employee?.status ||
-      ""
-    ).toUpperCase() ===
-      "ONBOARDING" ||
-    Boolean(
-      employee
-        ?.onboardingId
-    );
 
-  /* =====================================================
+  /* =======================================================
      UI
-  ===================================================== */
+  ======================================================= */
 
   return (
     <div className="employee-detail-page">
 
       {/* =================================================
-          BACK
-      ================================================== */}
+          TOP NAVIGATION
+      ================================================= */}
 
-      <button
-        type="button"
-        className="employees-back"
-        onClick={() =>
-          navigate(
-            "/people/employees"
-          )
-        }
-      >
-        ← Employee Directory
-      </button>
+      <div className="employee-detail-topbar">
+        <button
+          type="button"
+          className="employees-back"
+          onClick={() =>
+            navigate(
+              "/people/employees"
+            )
+          }
+        >
+          <span>←</span>
+          Employee Directory
+        </button>
+      </div>
+
 
       {/* =================================================
           PROFILE HERO
-      ================================================== */}
+      ================================================= */}
 
-      <section className="employee-profile-hero">
+      <section className="employee-profile-hero employee-profile-hero-clean">
 
         <div className="employee-profile-main">
 
           <div className="employee-profile-avatar">
 
-            {employee
-              ?.profilePhotoUrl ? (
+            {employee?.profilePhotoUrl ? (
               <img
                 src={
-                  employee
-                    .profilePhotoUrl
+                  employee.profilePhotoUrl
                 }
-                alt=""
+                alt={
+                  employee.fullName ||
+                  "Employee"
+                }
               />
             ) : (
-              String(
-                employee
-                  ?.fullName ||
-                  "E"
-              )
-                .slice(
-                  0,
-                  1
-                )
-                .toUpperCase()
+              <span>
+                {initials(
+                  employee.fullName
+                )}
+              </span>
             )}
 
           </div>
 
-          <div>
 
-            <span>
+          <div className="employee-profile-copy">
+
+            <span className="employee-profile-eyebrow">
               EMPLOYEE PROFILE
             </span>
 
             <h1>
-              {employee
-                .fullName}
+              {employee.fullName ||
+                "Employee"}
             </h1>
 
             <p>
-              {employee
-                .designation}
-              {" · "}
-              {employee
-                .departmentName}
+              {displayValue(
+                employee.designation
+              )}
+
+              <span>•</span>
+
+              {employeeDepartment}
             </p>
+
 
             <div className="employee-profile-tags">
 
               <strong>
-                {employee
-                  .employeeCode ||
+                {employee.employeeCode ||
                   "No Employee ID"}
               </strong>
 
-              <span>
-                {pretty(
-                  employee
-                    .status
-                )}
+              <span
+                className={`is-${status.toLowerCase()}`}
+              >
+                {pretty(status)}
               </span>
 
-              {employee
-                .workLocation ? (
+              {employee.workLocation ? (
                 <span>
-                  {
-                    employee
-                      .workLocation
-                  }
+                  {employee.workLocation}
                 </span>
               ) : null}
 
@@ -349,33 +480,19 @@ function EmployeeDetailPage() {
 
         </div>
 
-        <div className="employee-profile-actions">
 
-          {onboarding ? (
-            <button
-              type="button"
-              className="employee-profile-onboarding"
-              onClick={() =>
-                navigate(
-                  `/people/employees/${employeeId}/onboarding`
-                )
-              }
-            >
-              Continue Onboarding
-              <span>
-                →
-              </span>
-            </button>
-          ) : null}
+        <div className="employee-profile-actions">
 
           <button
             type="button"
+            className="employee-profile-edit-button"
             onClick={() =>
               navigate(
                 `/people/employees/${employeeId}/edit`
               )
             }
           >
+            <span>✎</span>
             Edit Employee
           </button>
 
@@ -383,371 +500,302 @@ function EmployeeDetailPage() {
 
       </section>
 
-      {/* =================================================
-          QUICK INFORMATION
-      ================================================== */}
-
-      <section className="employee-detail-stat-grid">
-
-        <article>
-
-          <span>
-            OFFICIAL EMAIL
-          </span>
-
-          <strong>
-            {employee
-              .officialEmail ||
-              "Not assigned"}
-          </strong>
-
-        </article>
-
-        <article>
-
-          <span>
-            MOBILE
-          </span>
-
-          <strong>
-            {employee
-              .mobileNumber ||
-              "—"}
-          </strong>
-
-        </article>
-
-        <article>
-
-          <span>
-            JOINING DATE
-          </span>
-
-          <strong>
-            {formatDate(
-              employee
-                .joiningDate
-            )}
-          </strong>
-
-        </article>
-
-        <article>
-
-          <span>
-            EMPLOYMENT
-          </span>
-
-          <strong>
-            {pretty(
-              employee
-                .employmentType
-            )}
-          </strong>
-
-        </article>
-
-      </section>
 
       {/* =================================================
-          RECORD
-      ================================================== */}
+          PRIMARY RECORD
+      ================================================= */}
 
-      <section className="employee-record-layout">
+      <div className="employee-detail-content-layout">
 
-        <div className="employee-record-card">
 
-          <div className="employee-record-heading">
+        {/* ===============================================
+            ORGANISATION
+        =============================================== */}
 
-            <div>
-
-              <span>
-                EMPLOYEE MASTER
-              </span>
-
-              <h2>
-                Employment Details
-              </h2>
-
-            </div>
-
-          </div>
-
-          <div className="employee-record-grid">
-
-            <div>
-
-              <span>
-                Employee ID
-              </span>
-
-              <strong>
-                {employee
-                  .employeeCode ||
-                  "—"}
-              </strong>
-
-            </div>
-
-            <div>
-
-              <span>
-                Company
-              </span>
-
-              <strong>
-                {employee
-                  .companyCode ||
-                  "—"}
-              </strong>
-
-            </div>
-
-            <div>
-
-              <span>
-                Department
-              </span>
-
-              <strong>
-                {employee
-                  .departmentName ||
-                  "—"}
-              </strong>
-
-            </div>
-
-            <div>
-
-              <span>
-                Designation
-              </span>
-
-              <strong>
-                {employee
-                  .designation ||
-                  "—"}
-              </strong>
-
-            </div>
-
-            <div>
-
-              <span>
-                Work Location
-              </span>
-
-              <strong>
-                {employee
-                  .workLocation ||
-                  "—"}
-              </strong>
-
-            </div>
-
-            <div>
-
-              <span>
-                Reporting Manager
-              </span>
-
-              <strong>
-                {employee
-                  .reportingManagerName ||
-                  "—"}
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* =================================================
-            CONTACT
-        ================================================== */}
-
-        <div className="employee-record-card">
-
-          <div className="employee-record-heading">
-
-            <div>
-
-              <span>
-                COMMUNICATION
-              </span>
-
-              <h2>
-                Contact Details
-              </h2>
-
-            </div>
-
-          </div>
-
-          <div className="employee-record-stack">
-
-            <div>
-
-              <span>
-                Official Email
-              </span>
-
-              <strong>
-                {employee
-                  .officialEmail ||
-                  "Not assigned"}
-              </strong>
-
-            </div>
-
-            <div>
-
-              <span>
-                Personal Email
-              </span>
-
-              <strong>
-                {employee
-                  .personalEmail ||
-                  "—"}
-              </strong>
-
-            </div>
-
-            <div>
-
-              <span>
-                Mobile Number
-              </span>
-
-              <strong>
-                {employee
-                  .mobileNumber ||
-                  "—"}
-              </strong>
-
-            </div>
-
-            <div>
-
-              <span>
-                Biometric ID
-              </span>
-
-              <strong>
-                {employee
-                  .biometricCode ||
-                  "Not linked"}
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* =================================================
-          ACTION CARDS
-      ================================================== */}
-
-      <section className="employee-profile-modules">
-
-        <button
-          type="button"
-          onClick={() =>
-            navigate(
-              `/people/employees/${employeeId}/onboarding`
-            )
-          }
+        <SectionCard
+          eyebrow="WORK PROFILE"
+          title="Organisation"
+          className="employee-detail-section-primary"
         >
 
-          <span>
-            O
-          </span>
+          <DetailItem
+            label="Employee ID"
+            value={
+              employee.employeeCode
+            }
+            mono
+          />
+
+          <DetailItem
+            label="Company"
+            value={
+              companyName(employee)
+            }
+          />
+
+          <DetailItem
+            label="Department"
+            value={
+              employeeDepartment
+            }
+          />
+
+          <DetailItem
+            label="Designation"
+            value={
+              employee.designation
+            }
+          />
+
+          <DetailItem
+            label="Organisation Unit"
+            value={
+              employee.orgUnit?.name ||
+              employee.orgUnitName ||
+              employee.orgUnitCode
+            }
+          />
+
+          <DetailItem
+            label="Reporting Manager"
+            value={
+              employeeManager
+            }
+          />
+
+          <DetailItem
+            label="Work Location"
+            value={
+              employee.workLocation
+            }
+          />
+
+          <DetailItem
+            label="Status"
+            value={
+              pretty(status)
+            }
+          />
+
+        </SectionCard>
+
+
+        {/* ===============================================
+            CONTACT
+        =============================================== */}
+
+        <SectionCard
+          eyebrow="CONTACT"
+          title="Communication"
+        >
+
+          <DetailItem
+            label="Mobile Number"
+            value={
+              employee.mobileNumber
+                ? `+91 ${employee.mobileNumber}`
+                : "Not assigned"
+            }
+          />
+
+          <DetailItem
+            label="Official Email"
+            value={
+              employee.officialEmail
+            }
+          />
+
+          <DetailItem
+            label="Personal Email"
+            value={
+              employee.personalEmail
+            }
+          />
+
+          <DetailItem
+            label="Biometric ID"
+            value={
+              employee.biometricCode
+            }
+            mono
+          />
+
+        </SectionCard>
+
+
+        {/* ===============================================
+            EMPLOYMENT
+        =============================================== */}
+
+        <SectionCard
+          eyebrow="EMPLOYMENT"
+          title="Employment Information"
+        >
+
+          <DetailItem
+            label="Joining Date"
+            value={formatDate(
+              employee.joiningDate
+            )}
+          />
+
+          <DetailItem
+            label="Employment Type"
+            value={pretty(
+              employee.employmentType
+            )}
+          />
+
+          <DetailItem
+            label="Employee Status"
+            value={pretty(status)}
+          />
+
+          {employee.exitDate ? (
+            <DetailItem
+              label="Exit Date"
+              value={formatDate(
+                employee.exitDate
+              )}
+            />
+          ) : null}
+
+        </SectionCard>
+
+      </div>
+
+
+      {/* =================================================
+          EMPLOYEE WORKSPACE
+      ================================================= */}
+
+      <section className="employee-profile-workspace">
+
+        <div className="employee-profile-workspace-heading">
 
           <div>
+            <span>
+              EMPLOYEE WORKSPACE
+            </span>
 
-            <strong>
-              Onboarding
-            </strong>
+            <h2>
+              Manage Employee
+            </h2>
 
-            <small>
-              Access, documents, assets and activation
-            </small>
-
+            <p>
+              Continue with the employee's operational records.
+            </p>
           </div>
 
-          <b>
-            →
-          </b>
+        </div>
 
-        </button>
 
-        <button
-  type="button"
-  onClick={() =>
-    navigate(
-      `/people/employees/${employeeId}/documents`
-    )
-  }
->
+        <div className="employee-profile-modules employee-profile-modules-clean">
 
-  <span>
-    D
-  </span>
 
-  <div>
+          {/* ONBOARDING */}
 
-    <strong>
-      Documents
-    </strong>
+          <button
+            type="button"
+            className={
+              onboarding
+                ? "is-priority"
+                : ""
+            }
+            onClick={() =>
+              navigate(
+                `/people/employees/${employeeId}/onboarding`
+              )
+            }
+          >
 
-    <small>
-      Permanent employee document vault
-    </small>
+            <span className="employee-module-icon">
+              O
+            </span>
 
-  </div>
+            <div>
+              <strong>
+                {onboarding
+                  ? "Continue Onboarding"
+                  : "Onboarding"}
+              </strong>
 
-  <b>
-    →
-  </b>
+              <small>
+                Access, assets and employee activation
+              </small>
+            </div>
 
-</button>
+            <b>→</b>
 
-        <button
-  type="button"
-  onClick={() =>
-    navigate(
-      `/people/employees/${employeeId}/hierarchy`
-    )
-  }
->
-  <span>
-    H
-  </span>
+          </button>
 
-  <div>
-    <strong>
-      Reporting Hierarchy
-    </strong>
 
-    <small>
-      Head, managers, seniors and team structure
-    </small>
-  </div>
+          {/* DOCUMENTS */}
 
-  <b>
-    →
-  </b>
-</button>
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                `/people/employees/${employeeId}/documents`
+              )
+            }
+          >
+
+            <span className="employee-module-icon">
+              D
+            </span>
+
+            <div>
+              <strong>
+                Documents
+              </strong>
+
+              <small>
+                Employee document records and files
+              </small>
+            </div>
+
+            <b>→</b>
+
+          </button>
+
+
+          {/* HIERARCHY */}
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                `/people/employees/${employeeId}/hierarchy`
+              )
+            }
+          >
+
+            <span className="employee-module-icon">
+              H
+            </span>
+
+            <div>
+              <strong>
+                Reporting Hierarchy
+              </strong>
+
+              <small>
+                Manager, reporting line and team structure
+              </small>
+            </div>
+
+            <b>→</b>
+
+          </button>
+
+        </div>
 
       </section>
 
     </div>
   );
 }
+
 
 export default EmployeeDetailPage;

@@ -17,125 +17,102 @@ import {
 import "./Employees.css";
 
 /* =========================================================
-   CONSTANTS
+   CONFIG
 ========================================================= */
 
-const PAGE_SIZE =
-  20;
+const PAGE_SIZE = 50;
 
-/*
- * IMPORTANT:
- *
- * Dashboard already uses:
- *
- * ?app=people&page=employees
- *
- * Therefore Employee Directory pagination MUST NOT use
- * the "page" query key.
- *
- * We use "p" only for directory pagination.
- *
- * Example:
- *
- * /dashboard?app=people&page=employees&p=2
- */
-const PAGINATION_QUERY_KEY =
-  "p";
+const PAGINATION_QUERY_KEY = "p";
 
 /* =========================================================
    HELPERS
 ========================================================= */
 
-const pretty =
-  (
-    value
-  ) =>
-    String(
-      value ||
-        ""
+const pretty = (value) =>
+  String(value || "")
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(
+      /\b\w/g,
+      (character) =>
+        character.toUpperCase()
+    );
+
+const formatDate = (value) => {
+  if (!value) {
+    return "—";
+  }
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
     )
-      .replaceAll(
-        "_",
-        " "
-      )
-      .toLowerCase()
-      .replace(
-        /\b\w/g,
-        (
-          character
-        ) =>
-          character
-            .toUpperCase()
-      );
+  ) {
+    return "—";
+  }
 
-const formatDate =
-  (
-    value
-  ) => {
-    if (!value) {
-      return "—";
+  return new Intl.DateTimeFormat(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     }
+  ).format(date);
+};
 
-    const date =
-      new Date(
-        value
-      );
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return "—";
-    }
-
-    return new Intl
-      .DateTimeFormat(
-        "en-IN",
-        {
-          day:
-            "2-digit",
-
-          month:
-            "short",
-
-          year:
-            "numeric",
-        }
-      )
-      .format(
-        date
-      );
-  };
-
-const initials =
-  (
-    name
-  ) =>
-    String(
-      name ||
-        "E"
+const initials = (name) =>
+  String(name || "E")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(
+      (part) =>
+        part[0]?.toUpperCase()
     )
-      .split(
-        " "
-      )
-      .filter(
-        Boolean
-      )
-      .slice(
-        0,
-        2
-      )
-      .map(
-        (
-          item
-        ) =>
-          item[0]
-            ?.toUpperCase()
-      )
-      .join(
-        ""
-      );
+    .join("");
+
+const getEmployeeId = (
+  employee
+) =>
+  employee?._id ||
+  employee?.id ||
+  "";
+
+const getDepartment = (
+  employee
+) =>
+  employee?.departmentName ||
+  employee?.department?.name ||
+  employee?.orgUnitCode ||
+  "—";
+
+const getReportingManager = (
+  employee
+) =>
+  employee?.reportingManagerName ||
+  employee?.reportsTo?.fullName ||
+  employee?.reportsToName ||
+  "—";
+
+const getMobile = (
+  employee
+) =>
+  employee?.mobileNumber ||
+  employee?.phone ||
+  "—";
+
+const getCompany = (
+  employee
+) =>
+  pretty(
+    employee?.companyCode ||
+      ""
+  );
 
 /* =========================================================
    COMPONENT
@@ -148,44 +125,32 @@ function EmployeeListPage() {
   const [
     searchParams,
     setSearchParams,
-  ] =
-    useSearchParams();
+  ] = useSearchParams();
 
   const [
     loading,
     setLoading,
-  ] =
-    useState(
-      true
-    );
+  ] = useState(true);
 
   const [
     records,
     setRecords,
-  ] =
-    useState(
-      []
-    );
+  ] = useState([]);
 
   const [
     pagination,
     setPagination,
-  ] =
-    useState({
-      page: 1,
-      pages: 1,
-      total: 0,
-      limit:
-        PAGE_SIZE,
-    });
+  ] = useState({
+    page: 1,
+    pages: 1,
+    total: 0,
+    limit: PAGE_SIZE,
+  });
 
   const [
     error,
     setError,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
   /* =====================================================
      QUERY STATE
@@ -194,53 +159,25 @@ function EmployeeListPage() {
   const search =
     searchParams.get(
       "search"
-    ) ||
-    "";
+    ) || "";
 
   const status =
     searchParams.get(
       "status"
-    ) ||
-    "";
+    ) || "";
 
-  const department =
-    searchParams.get(
-      "department"
-    ) ||
-    "";
-
-  /*
-   * Keep existing view behaviour unchanged.
-   *
-   * Later, when OnboardingListPage is finished,
-   * the dedicated onboarding sidebar will use that page.
-   */
-  const view =
-    searchParams.get(
-      "view"
-    ) ||
-    "all";
-
-  /*
-   * DO NOT read dashboard's "page" query.
-   *
-   * page=employees belongs to DashboardWeb.
-   * p=1, p=2, etc belongs to this directory.
-   */
   const rawPage =
     Number(
       searchParams.get(
         PAGINATION_QUERY_KEY
-      ) ||
-        1
+      ) || 1
     );
 
   const page =
     Number.isFinite(
       rawPage
     ) &&
-    rawPage >
-      0
+    rawPage > 0
       ? rawPage
       : 1;
 
@@ -251,74 +188,36 @@ function EmployeeListPage() {
   const [
     searchInput,
     setSearchInput,
-  ] =
-    useState(
-      search
-    );
+  ] = useState(search);
 
-  useEffect(
-    () => {
-      setSearchInput(
-        search
-      );
-    },
-    [
-      search,
-    ]
-  );
+  useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
 
   /* =====================================================
-     LOAD
+     LOAD EMPLOYEES
   ===================================================== */
 
   const load =
     useCallback(
       async () => {
         try {
-          setLoading(
-            true
-          );
-
-          setError(
-            ""
-          );
+          setLoading(true);
+          setError("");
 
           const params = {
             page,
-            limit:
-              PAGE_SIZE,
+            limit: PAGE_SIZE,
           };
 
-          if (
-            search
-          ) {
+          if (search) {
             params.search =
               search;
           }
 
-          if (
-            status
-          ) {
+          if (status) {
             params.status =
               status;
-          }
-
-          if (
-            department
-          ) {
-            params.department =
-              department;
-          }
-
-          /*
-           * Keep existing onboarding filter functionality.
-           */
-          if (
-            view ===
-            "onboarding"
-          ) {
-            params.onboarding =
-              true;
           }
 
           const result =
@@ -335,18 +234,19 @@ function EmployeeListPage() {
           );
 
           setPagination(
-            result?.pagination ||
-              {
-                page,
-                pages: 1,
-                total: 0,
-                limit:
-                  PAGE_SIZE,
-              }
+            result?.pagination || {
+              page,
+              pages: 1,
+              total: 0,
+              limit:
+                PAGE_SIZE,
+            }
           );
         } catch (
           requestError
         ) {
+          setRecords([]);
+
           setError(
             requestError
               ?.response
@@ -357,255 +257,198 @@ function EmployeeListPage() {
               "Employee directory could not be loaded."
           );
         } finally {
-          setLoading(
-            false
-          );
+          setLoading(false);
         }
       },
       [
         page,
         search,
         status,
-        department,
-        view,
       ]
     );
 
-  useEffect(
-    () => {
-      load();
-    },
-    [
-      load,
-    ]
-  );
+  useEffect(() => {
+    load();
+  }, [load]);
 
   /* =====================================================
-     LOCAL METRICS
+     GLOBAL VALUE WE CAN TRUST
 
-     Functionality kept exactly as before.
+     pagination.total is returned by backend for the
+     complete filtered query.
+
+     DO NOT calculate Active/Leaders/etc from records,
+     because records contains only current 20 rows.
   ===================================================== */
 
-  const metrics =
-    useMemo(
-      () => {
-        const active =
-          records.filter(
-            (
-              employee
-            ) =>
-              String(
-                employee?.status ||
-                  ""
-              ).toUpperCase() ===
-              "ACTIVE"
-          ).length;
-
-        const onboarding =
-          records.filter(
-            (
-              employee
-            ) =>
-              String(
-                employee
-                  ?.status ||
-                  ""
-              ).toUpperCase() ===
-                "ONBOARDING" ||
-              Boolean(
-                employee
-                  ?.onboardingId
-              )
-          ).length;
-
-        const managers =
-          records.filter(
-            (
-              employee
-            ) =>
-              [
-                "HEAD",
-                "MANAGER",
-              ].includes(
-                String(
-                  employee?.role ||
-                    ""
-                ).toUpperCase()
-              )
-          ).length;
-
-        return {
-          total:
-            pagination?.total ||
-            records.length,
-
-          active,
-
-          onboarding,
-
-          managers,
-        };
-      },
-      [
-        records,
-        pagination,
-      ]
+  const totalEmployees =
+    Number(
+      pagination?.total || 0
     );
+
+  /* =====================================================
+     CURRENT PAGE INFORMATION
+  ===================================================== */
+
+  const range =
+    useMemo(() => {
+      if (
+        !totalEmployees
+      ) {
+        return {
+          from: 0,
+          to: 0,
+        };
+      }
+
+      const from =
+        (pagination.page - 1) *
+          pagination.limit +
+        1;
+
+      const to =
+        Math.min(
+          pagination.page *
+            pagination.limit,
+          totalEmployees
+        );
+
+      return {
+        from,
+        to,
+      };
+    }, [
+      pagination,
+      totalEmployees,
+    ]);
 
   /* =====================================================
      QUERY UPDATE
 
      IMPORTANT:
-     Preserve:
-       app=people
-       page=employees
-
-     Filters only manipulate their own query keys.
+     page=employees belongs to Dashboard.
+     p= is directory pagination.
   ===================================================== */
 
-  const updateQuery =
-    (
-      key,
-      value
-    ) => {
-      const next =
-        new URLSearchParams(
-          searchParams
-        );
-
-      if (
-        value
-      ) {
-        next.set(
-          key,
-          value
-        );
-      } else {
-        next.delete(
-          key
-        );
-      }
-
-      /*
-       * Whenever a filter/search/view changes,
-       * return directory pagination to page 1.
-       *
-       * Do NOT overwrite dashboard's `page=employees`.
-       */
-      if (
-        key !==
-        PAGINATION_QUERY_KEY
-      ) {
-        next.set(
-          PAGINATION_QUERY_KEY,
-          "1"
-        );
-      }
-
-      setSearchParams(
-        next
+  const updateQuery = (
+    key,
+    value
+  ) => {
+    const next =
+      new URLSearchParams(
+        searchParams
       );
-    };
+
+    if (value) {
+      next.set(
+        key,
+        value
+      );
+    } else {
+      next.delete(key);
+    }
+
+    if (
+      key !==
+      PAGINATION_QUERY_KEY
+    ) {
+      next.set(
+        PAGINATION_QUERY_KEY,
+        "1"
+      );
+    }
+
+    setSearchParams(next);
+  };
 
   /* =====================================================
-     SEARCH SUBMIT
+     SEARCH
   ===================================================== */
 
-  const submitSearch =
-    (
-      event
-    ) => {
-      event
-        .preventDefault();
+  const submitSearch = (
+    event
+  ) => {
+    event.preventDefault();
 
-      updateQuery(
-        "search",
-        searchInput.trim()
-      );
-    };
+    updateQuery(
+      "search",
+      searchInput.trim()
+    );
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+
+    updateQuery(
+      "search",
+      ""
+    );
+  };
 
   /* =====================================================
      PAGINATION
   ===================================================== */
 
-  const changePage =
-    (
-      nextPage
-    ) => {
-      if (
-        nextPage <
-          1 ||
-        nextPage >
-          pagination.pages
-      ) {
-        return;
-      }
+  const changePage = (
+    nextPage
+  ) => {
+    if (
+      nextPage < 1 ||
+      nextPage >
+        pagination.pages
+    ) {
+      return;
+    }
 
-      updateQuery(
-        PAGINATION_QUERY_KEY,
-        String(
-          nextPage
-        )
-      );
-    };
+    updateQuery(
+      PAGINATION_QUERY_KEY,
+      String(nextPage)
+    );
+  };
 
   /* =====================================================
      NAVIGATION
   ===================================================== */
 
-  const openPeopleOverview =
-    () => {
-      navigate(
-        "/dashboard?app=people&page=overview"
-      );
-    };
-
   const openCreateEmployee =
     () => {
-      /*
-       * Keep existing Create Employee page functionality
-       * unchanged for this round.
-       */
       navigate(
         "/people/employees/new"
       );
     };
 
-  const openEmployee =
-    (
-      employeeId
-    ) => {
-      if (
-        !employeeId
-      ) {
-        return;
-      }
+  const openEmployee = (
+    employeeId
+  ) => {
+    if (!employeeId) {
+      return;
+    }
 
-      /*
-       * Keep existing employee detail route unchanged.
-       */
-      navigate(
-        `/people/employees/${employeeId}`
+    navigate(
+      `/people/employees/${employeeId}`
+    );
+  };
+
+  /* =====================================================
+     KEYBOARD ROW OPEN
+  ===================================================== */
+
+  const handleRowKeyDown = (
+    event,
+    employeeId
+  ) => {
+    if (
+      event.key ===
+        "Enter" ||
+      event.key === " "
+    ) {
+      event.preventDefault();
+
+      openEmployee(
+        employeeId
       );
-    };
-
-  const openEmployeeOnboarding =
-    (
-      employeeId
-    ) => {
-      if (
-        !employeeId
-      ) {
-        return;
-      }
-
-      /*
-       * Keep existing individual onboarding route unchanged.
-       */
-      navigate(
-        `/people/employees/${employeeId}/onboarding`
-      );
-    };
+    }
+  };
 
   /* =====================================================
      UI
@@ -615,189 +458,120 @@ function EmployeeListPage() {
     <div className="employees-page">
 
       {/* =================================================
-          HEADER
-      ================================================== */}
+          HERO HEADER
+      ================================================= */}
 
-      <section className="employees-header">
+      <section className="employees-hero">
 
-        <div>
+        <div className="employees-hero-glow employees-hero-glow--one" />
 
-          <button
-            type="button"
-            className="employees-back"
-            onClick={
-              openPeopleOverview
-            }
-          >
-            ← People
-          </button>
+        <div className="employees-hero-glow employees-hero-glow--two" />
 
-          <span className="employees-eyebrow">
-            EMPLOYEE DIRECTORY
-          </span>
+        <div className="employees-hero-grid" />
 
-          <h1>
-            People Directory
-          </h1>
+        <div className="employees-hero-content">
 
-          <p>
-            Search employees, review hierarchy,
-            track onboarding and maintain the
-            permanent employee record.
-          </p>
+          <div className="employees-hero-main">
 
-        </div>
+            <div className="employees-hero-icon">
+              <span>
+                E
+              </span>
+            </div>
 
-        <button
-          type="button"
-          className="employees-create-button"
-          onClick={
-            openCreateEmployee
-          }
-        >
-          <span>
-            +
-          </span>
+            <div>
 
-          Add Employee
-        </button>
+              <div className="employees-hero-eyebrow">
+                PEOPLE
+                <span />
+                EMPLOYEE MASTER
+              </div>
 
-      </section>
+              <h1>
+                Employees
+              </h1>
 
-      {/* =================================================
-          SUMMARY
-      ================================================== */}
+            </div>
 
-      <section className="employees-summary">
+          </div>
 
-        <div>
+          <div className="employees-hero-actions">
 
-          <span>
-            TOTAL PEOPLE
-          </span>
+            <div className="employees-total-pill">
 
-          <strong>
-            {metrics.total}
-          </strong>
+              <span className="employees-total-dot" />
 
-          <small>
-            Employee records
-          </small>
+              <div>
+                <small>
+                  TOTAL EMPLOYEES
+                </small>
 
-        </div>
+                <strong>
+                  {loading
+                    ? "—"
+                    : totalEmployees}
+                </strong>
+              </div>
 
-        <div>
-
-          <span>
-            ACTIVE
-          </span>
-
-          <strong>
-            {metrics.active}
-          </strong>
-
-          <small>
-            Current workforce
-          </small>
-
-        </div>
-
-        <div className="employees-summary--onboarding">
-
-          <span>
-            ONBOARDING
-          </span>
-
-          <strong>
-            {metrics.onboarding}
-          </strong>
-
-          <small>
-            Formalities pending
-          </small>
-
-        </div>
-
-        <div>
-
-          <span>
-            LEADERS
-          </span>
-
-          <strong>
-            {metrics.managers}
-          </strong>
-
-          <small>
-            Heads & managers
-          </small>
-
-        </div>
-
-      </section>
-
-      {/* =================================================
-          DIRECTORY CARD
-      ================================================== */}
-
-      <section className="employees-directory">
-
-        {/* ===============================================
-            TOOLBAR
-        ================================================ */}
-
-        <div className="employees-toolbar">
-
-          <div className="employees-tabs">
+            </div>
 
             <button
               type="button"
-              className={
-                view ===
-                "all"
-                  ? "is-active"
-                  : ""
-              }
-              onClick={() =>
-                updateQuery(
-                  "view",
-                  "all"
-                )
+              className="employees-create-button"
+              onClick={
+                openCreateEmployee
               }
             >
-              All Employees
-            </button>
+              <span>
+                +
+              </span>
 
-            <button
-              type="button"
-              className={
-                view ===
-                "onboarding"
-                  ? "is-active"
-                  : ""
-              }
-              onClick={() =>
-                updateQuery(
-                  "view",
-                  "onboarding"
-                )
-              }
-            >
-              Onboarding
-
-              {metrics.onboarding >
-              0 ? (
-                <span>
-                  {
-                    metrics.onboarding
-                  }
-                </span>
-              ) : null}
+              Add Employee
             </button>
 
           </div>
 
+        </div>
+
+      </section>
+
+      {/* =================================================
+          DIRECTORY
+      ================================================= */}
+
+      <section className="employees-directory">
+
+        {/* ===============================================
+            DIRECTORY HEADER
+        ================================================ */}
+
+        <div className="employees-directory-header">
+
+          <div className="employees-directory-title">
+
+            <div>
+              <h2>
+                Employee Directory
+              </h2>
+
+              {!loading &&
+              !error ? (
+                <span>
+                  {totalEmployees}
+                  {" "}
+                  {totalEmployees ===
+                  1
+                    ? "employee"
+                    : "employees"}
+                </span>
+              ) : null}
+            </div>
+
+          </div>
+
           <div className="employees-toolbar-actions">
+
+            {/* SEARCH */}
 
             <form
               className="employees-search"
@@ -806,11 +580,12 @@ function EmployeeListPage() {
               }
             >
 
-              <span>
+              <span className="employees-search-icon">
                 ⌕
               </span>
 
               <input
+                type="search"
                 value={
                   searchInput
                 }
@@ -823,22 +598,18 @@ function EmployeeListPage() {
                       .value
                   )
                 }
-                placeholder="Search name, ID, email, designation..."
+                placeholder="Search employee..."
+                aria-label="Search employees"
               />
 
               {searchInput ? (
                 <button
                   type="button"
-                  onClick={() => {
-                    setSearchInput(
-                      ""
-                    );
-
-                    updateQuery(
-                      "search",
-                      ""
-                    );
-                  }}
+                  className="employees-search-clear"
+                  onClick={
+                    clearSearch
+                  }
+                  aria-label="Clear search"
                 >
                   ×
                 </button>
@@ -846,51 +617,115 @@ function EmployeeListPage() {
 
             </form>
 
-            <select
-              value={
-                status
-              }
-              onChange={(
-                event
-              ) =>
-                updateQuery(
-                  "status",
+            {/* STATUS FILTER */}
+
+            <div className="employees-filter-wrap">
+
+              <select
+                className="employees-status-filter"
+                value={
+                  status
+                }
+                onChange={(
                   event
-                    .target
-                    .value
-                )
-              }
-            >
+                ) =>
+                  updateQuery(
+                    "status",
+                    event
+                      .target
+                      .value
+                  )
+                }
+                aria-label="Filter by employee status"
+              >
+                <option value="">
+                  All Status
+                </option>
 
-              <option value="">
-                All Status
-              </option>
+                <option value="ACTIVE">
+                  Active
+                </option>
 
-              <option value="ACTIVE">
-                Active
-              </option>
+                <option value="ONBOARDING">
+                  Onboarding
+                </option>
 
-              <option value="ONBOARDING">
-                Onboarding
-              </option>
+                <option value="NOTICE_PERIOD">
+                  Notice Period
+                </option>
 
-              <option value="NOTICE_PERIOD">
-                Notice Period
-              </option>
+                <option value="INACTIVE">
+                  Inactive
+                </option>
 
-              <option value="INACTIVE">
-                Inactive
-              </option>
+                <option value="EXITED">
+                  Exited
+                </option>
+              </select>
 
-              <option value="EXITED">
-                Exited
-              </option>
-
-            </select>
+            </div>
 
           </div>
 
         </div>
+
+        {/* ===============================================
+            ACTIVE FILTER BAR
+        ================================================ */}
+
+        {(search ||
+          status) && (
+          <div className="employees-active-filters">
+
+            <span>
+              Filtered results
+            </span>
+
+            {search ? (
+              <button
+                type="button"
+                onClick={
+                  clearSearch
+                }
+              >
+                Search:
+                {" "}
+                <strong>
+                  {search}
+                </strong>
+
+                <span>
+                  ×
+                </span>
+              </button>
+            ) : null}
+
+            {status ? (
+              <button
+                type="button"
+                onClick={() =>
+                  updateQuery(
+                    "status",
+                    ""
+                  )
+                }
+              >
+                Status:
+                {" "}
+                <strong>
+                  {pretty(
+                    status
+                  )}
+                </strong>
+
+                <span>
+                  ×
+                </span>
+              </button>
+            ) : null}
+
+          </div>
+        )}
 
         {/* ===============================================
             ERROR
@@ -899,13 +734,15 @@ function EmployeeListPage() {
         {error ? (
           <div className="employees-error">
 
-            <strong>
-              Employee directory unavailable
-            </strong>
+            <div>
+              <strong>
+                Unable to load employees
+              </strong>
 
-            <span>
-              {error}
-            </span>
+              <span>
+                {error}
+              </span>
+            </div>
 
             <button
               type="button"
@@ -913,7 +750,7 @@ function EmployeeListPage() {
                 load
               }
             >
-              Retry
+              Try Again
             </button>
 
           </div>
@@ -929,7 +766,6 @@ function EmployeeListPage() {
             <table className="employees-table">
 
               <thead>
-
                 <tr>
 
                   <th>
@@ -937,15 +773,19 @@ function EmployeeListPage() {
                   </th>
 
                   <th>
-                    Employee ID
+                    ID / Company
                   </th>
 
                   <th>
-                    Department / Role
+                    Department / Designation
                   </th>
 
                   <th>
                     Reporting To
+                  </th>
+
+                  <th>
+                    Mobile
                   </th>
 
                   <th>
@@ -956,59 +796,55 @@ function EmployeeListPage() {
                     Status
                   </th>
 
-                  <th aria-label="Actions" />
+                  <th
+                    aria-label="Open employee"
+                  />
 
                 </tr>
-
               </thead>
 
               <tbody>
 
+                {/* =======================================
+                    LOADING
+                ======================================== */}
+
                 {loading ? (
                   Array.from({
-                    length: 7,
+                    length: 8,
                   }).map(
                     (
                       _,
                       index
                     ) => (
                       <tr
-                        key={
-                          `loading-${index}`
-                        }
+                        key={`employee-loading-${index}`}
                         className="employees-loading-row"
                       >
-
-                        <td
-                          colSpan={7}
-                        >
-                          <div />
+                        <td colSpan={8}>
+                          <div className="employees-row-skeleton" />
                         </td>
-
                       </tr>
                     )
                   )
                 ) : records.length ? (
+
+                  /* =====================================
+                     RECORDS
+                  ====================================== */
+
                   records.map(
                     (
                       employee
                     ) => {
                       const employeeId =
-                        employee
-                          ?._id ||
-                        employee
-                          ?.id;
+                        getEmployeeId(
+                          employee
+                        );
 
-                      const onboarding =
-                        String(
+                      const reportingManager =
+                        getReportingManager(
                           employee
-                            ?.status ||
-                            ""
-                        ).toUpperCase() ===
-                          "ONBOARDING" ||
-                        Boolean(
-                          employee
-                            ?.onboardingId
                         );
 
                       return (
@@ -1016,12 +852,25 @@ function EmployeeListPage() {
                           key={
                             employeeId
                           }
+                          className="employees-data-row"
+                          role="button"
+                          tabIndex={0}
                           onClick={() =>
                             openEmployee(
                               employeeId
                             )
                           }
+                          onKeyDown={(
+                            event
+                          ) =>
+                            handleRowKeyDown(
+                              event,
+                              employeeId
+                            )
+                          }
                         >
+
+                          {/* EMPLOYEE */}
 
                           <td>
 
@@ -1039,15 +888,17 @@ function EmployeeListPage() {
                                     alt=""
                                   />
                                 ) : (
-                                  initials(
-                                    employee
-                                      ?.fullName
-                                  )
+                                  <span>
+                                    {initials(
+                                      employee
+                                        ?.fullName
+                                    )}
+                                  </span>
                                 )}
 
                               </div>
 
-                              <div>
+                              <div className="employees-person-copy">
 
                                 <strong>
                                   {employee
@@ -1069,127 +920,165 @@ function EmployeeListPage() {
 
                           </td>
 
-                          <td>
-
-                            <strong className="employees-code">
-                              {employee
-                                ?.employeeCode ||
-                                "—"}
-                            </strong>
-
-                            <small className="employees-company">
-                              {employee
-                                ?.companyCode ||
-                                ""}
-                            </small>
-
-                          </td>
+                          {/* ID + COMPANY */}
 
                           <td>
 
-                            <strong>
-                              {employee
-                                ?.designation ||
-                                "—"}
-                            </strong>
+                            <div className="employees-id-cell">
 
-                            <small>
-                              {employee
-                                ?.departmentName ||
-                                employee
-                                  ?.orgUnitCode ||
-                                "—"}
-                            </small>
+                              <strong className="employees-code">
+                                {employee
+                                  ?.employeeCode ||
+                                  "—"}
+                              </strong>
+
+                              <small>
+                                {getCompany(
+                                  employee
+                                ) || "—"}
+                              </small>
+
+                            </div>
 
                           </td>
+
+                          {/* DEPARTMENT + DESIGNATION */}
 
                           <td>
 
-                            <strong>
-                              {employee
-                                ?.reportingManagerName ||
-                                "—"}
-                            </strong>
+                            <div className="employees-role-cell">
 
-                            <small>
-                              Reporting Manager
-                            </small>
+                              <strong>
+                                {getDepartment(
+                                  employee
+                                )}
+                              </strong>
+
+                              <small>
+                                {employee
+                                  ?.designation ||
+                                  "—"}
+                              </small>
+
+                            </div>
 
                           </td>
+
+                          {/* REPORTING */}
 
                           <td>
 
-                            <strong>
-                              {formatDate(
-                                employee
-                                  ?.joiningDate
-                              )}
-                            </strong>
+                            {reportingManager !==
+                            "—" ? (
+                              <div className="employees-manager">
 
-                            <small>
-                              Joined
-                            </small>
+                                <div className="employees-manager-avatar">
+                                  {initials(
+                                    reportingManager
+                                  )}
+                                </div>
+
+                                <div>
+                                  <strong>
+                                    {
+                                      reportingManager
+                                    }
+                                  </strong>
+
+                                  <small>
+                                    Reporting Manager
+                                  </small>
+                                </div>
+
+                              </div>
+                            ) : (
+                              <span className="employees-empty-value">
+                                —
+                              </span>
+                            )}
 
                           </td>
+
+                          {/* MOBILE */}
+
+                          <td>
+
+                            <div className="employees-contact-cell">
+
+                              <strong>
+                                {getMobile(
+                                  employee
+                                )}
+                              </strong>
+
+                            </div>
+
+                          </td>
+
+                          {/* JOINING */}
+
+                          <td>
+
+                            <div className="employees-date-cell">
+
+                              <strong>
+                                {formatDate(
+                                  employee
+                                    ?.joiningDate
+                                )}
+                              </strong>
+
+                            </div>
+
+                          </td>
+
+                          {/* STATUS */}
 
                           <td>
 
                             <span
-                              className={
-                                `employees-status employees-status--${String(
-                                  onboarding
-                                    ? "ONBOARDING"
-                                    : employee
-                                        ?.status ||
-                                      "ACTIVE"
-                                ).toLowerCase()}`
-                              }
+                              className={`employees-status employees-status--${String(
+                                employee
+                                  ?.status ||
+                                  "ACTIVE"
+                              ).toLowerCase()}`}
                             >
+                              <i />
+
                               {pretty(
-                                onboarding
-                                  ? "ONBOARDING"
-                                  : employee
-                                      ?.status ||
-                                    "ACTIVE"
+                                employee
+                                  ?.status ||
+                                  "ACTIVE"
                               )}
                             </span>
 
                           </td>
+
+                          {/* DRILL DOWN */}
 
                           <td>
 
                             <button
                               type="button"
                               className="employees-row-action"
+                              aria-label={`Open ${
+                                employee
+                                  ?.fullName ||
+                                "employee"
+                              }`}
                               onClick={(
                                 event
                               ) => {
-                                event
-                                  .stopPropagation();
-
-                                if (
-                                  onboarding
-                                ) {
-                                  openEmployeeOnboarding(
-                                    employeeId
-                                  );
-
-                                  return;
-                                }
+                                event.stopPropagation();
 
                                 openEmployee(
                                   employeeId
                                 );
                               }}
                             >
-                              {onboarding
-                                ? "Continue"
-                                : "Open"}
-
                               <span>
                                 →
                               </span>
-
                             </button>
 
                           </td>
@@ -1199,15 +1088,17 @@ function EmployeeListPage() {
                     }
                   )
                 ) : (
-                  <tr>
 
-                    <td
-                      colSpan={7}
-                    >
+                  /* =====================================
+                     EMPTY
+                  ====================================== */
+
+                  <tr>
+                    <td colSpan={8}>
 
                       <div className="employees-empty">
 
-                        <div>
+                        <div className="employees-empty-icon">
                           E
                         </div>
 
@@ -1216,13 +1107,60 @@ function EmployeeListPage() {
                         </strong>
 
                         <span>
-                          Change your filters or create a new employee record.
+                          {search ||
+                          status
+                            ? "No employee matches the selected filters."
+                            : "No employee records are available."}
                         </span>
+
+                        {(search ||
+                          status) ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next =
+                                new URLSearchParams(
+                                  searchParams
+                                );
+
+                              next.delete(
+                                "search"
+                              );
+
+                              next.delete(
+                                "status"
+                              );
+
+                              next.set(
+                                PAGINATION_QUERY_KEY,
+                                "1"
+                              );
+
+                              setSearchInput(
+                                ""
+                              );
+
+                              setSearchParams(
+                                next
+                              );
+                            }}
+                          >
+                            Clear Filters
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={
+                              openCreateEmployee
+                            }
+                          >
+                            Add Employee
+                          </button>
+                        )}
 
                       </div>
 
                     </td>
-
                   </tr>
                 )}
 
@@ -1239,73 +1177,95 @@ function EmployeeListPage() {
 
         {!loading &&
         !error &&
-        pagination.total >
-          0 ? (
+        totalEmployees > 0 ? (
           <div className="employees-pagination">
 
-            <div>
+            <div className="employees-pagination-info">
 
-              Showing page{" "}
+              <span>
+                Showing
+              </span>
+
               <strong>
-                {
-                  pagination.page
-                }
-              </strong>
-              {" of "}
-              <strong>
-                {
-                  pagination.pages
-                }
+                {range.from}
+                {"–"}
+                {range.to}
               </strong>
 
               <span>
-                {pagination.total}
-                {" total employees"}
+                of
+              </span>
+
+              <strong>
+                {totalEmployees}
+              </strong>
+
+              <span>
+                employees
               </span>
 
             </div>
 
-            <div>
+            {pagination.pages >
+            1 ? (
+              <div className="employees-pagination-controls">
 
-              <button
-                type="button"
-                onClick={() =>
-                  changePage(
-                    pagination.page -
-                      1
-                  )
-                }
-                disabled={
-                  pagination.page <=
-                  1
-                }
-              >
-                ← Previous
-              </button>
+                <button
+                  type="button"
+                  className="employees-pagination-arrow"
+                  onClick={() =>
+                    changePage(
+                      pagination.page -
+                        1
+                    )
+                  }
+                  disabled={
+                    pagination.page <=
+                    1
+                  }
+                  aria-label="Previous page"
+                >
+                  ←
+                </button>
 
-              <span>
-                {
-                  pagination.page
-                }
-              </span>
+                <div className="employees-page-number">
+                  <strong>
+                    {
+                      pagination.page
+                    }
+                  </strong>
 
-              <button
-                type="button"
-                onClick={() =>
-                  changePage(
-                    pagination.page +
-                      1
-                  )
-                }
-                disabled={
-                  pagination.page >=
-                  pagination.pages
-                }
-              >
-                Next →
-              </button>
+                  <span>
+                    /
+                  </span>
 
-            </div>
+                  <span>
+                    {
+                      pagination.pages
+                    }
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  className="employees-pagination-arrow"
+                  onClick={() =>
+                    changePage(
+                      pagination.page +
+                        1
+                    )
+                  }
+                  disabled={
+                    pagination.page >=
+                    pagination.pages
+                  }
+                  aria-label="Next page"
+                >
+                  →
+                </button>
+
+              </div>
+            ) : null}
 
           </div>
         ) : null}

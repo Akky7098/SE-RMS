@@ -875,32 +875,26 @@ const CandidateActionPanel = ({
         </span>
 
         <div className="se-candidate-action-label">
-          <strong>
-            {state?.completed
-              ? `${label} Complete`
-              : label}
-          </strong>
+  <strong>
+    {state?.completed
+      ? `${label} Complete`
+      : label}
+  </strong>
 
-          {subtitle ? (
-            <small>
-              {
-                subtitle
-              }
-            </small>
-          ) : recommended &&
-            state?.enabled ? (
-            <small>
-              Next recommended step
-            </small>
-          ) : !state?.enabled &&
-            state?.reason ? (
-            <small>
-              {
-                state.reason
-              }
-            </small>
-          ) : null}
-        </div>
+  {subtitle ? (
+    <small>
+      {subtitle}
+    </small>
+  ) : recommended && state?.enabled ? (
+    <small>
+      Next Step
+    </small>
+  ) : state?.completed ? (
+    <small>
+      Completed
+    </small>
+  ) : null}
+</div>
       </button>
     );
   };

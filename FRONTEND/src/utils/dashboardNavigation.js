@@ -69,28 +69,28 @@ export const DASHBOARD_APPS = [
     ],
 
     items: [
-      {
-        code: "RECRUITMENT_OVERVIEW",
+      // {
+      //   code: "RECRUITMENT_OVERVIEW",
 
-        label: "Overview",
+      //   label: "Overview",
 
-        icon: "◫",
+      //   icon: "◫",
 
-        path:
-          "/dashboard?app=recruitment&page=overview",
+      //   path:
+      //     "/dashboard?app=recruitment&page=overview",
 
-        module: "RECRUITMENT",
+      //   module: "RECRUITMENT",
 
-        section: "",
+      //   section: "",
 
-        allowedRoles: [
-          "SUPER_ADMIN",
-          "ADMIN",
-          "HEAD",
-          "MANAGER",
-          "EMPLOYEE",
-        ],
-      },
+      //   allowedRoles: [
+      //     "SUPER_ADMIN",
+      //     "ADMIN",
+      //     "HEAD",
+      //     "MANAGER",
+      //     "EMPLOYEE",
+      //   ],
+      // },
 
       {
         code: "MANPOWER_REQUESTS",
@@ -110,8 +110,8 @@ export const DASHBOARD_APPS = [
           "SUPER_ADMIN",
           "ADMIN",
           "HEAD",
-          "MANAGER",
-          "EMPLOYEE",
+          // "MANAGER",
+          // "EMPLOYEE",
         ],
       },
 
@@ -133,8 +133,8 @@ export const DASHBOARD_APPS = [
           "SUPER_ADMIN",
           "ADMIN",
           "HEAD",
-          "MANAGER",
-          "EMPLOYEE",
+          // "MANAGER",
+          // "EMPLOYEE",
         ],
       },
 
@@ -184,28 +184,28 @@ export const DASHBOARD_APPS = [
         ],
       },
 
-      {
-        code: "FOLLOW_UPS",
+      // {
+      //   code: "FOLLOW_UPS",
 
-        label: "Follow-ups",
+      //   label: "Follow-ups",
 
-        icon: "↻",
+      //   icon: "↻",
 
-        path:
-          "/dashboard?app=recruitment&page=follow-ups",
+      //   path:
+      //     "/dashboard?app=recruitment&page=follow-ups",
 
-        module: "RECRUITMENT",
+      //   module: "RECRUITMENT",
 
-        section: "CANDIDATES",
+      //   section: "CANDIDATES",
 
-        allowedRoles: [
-          "SUPER_ADMIN",
-          "ADMIN",
-          "HEAD",
-          "MANAGER",
-          "EMPLOYEE",
-        ],
-      },
+      //   allowedRoles: [
+      //     "SUPER_ADMIN",
+      //     "ADMIN",
+      //     "HEAD",
+      //     "MANAGER",
+      //     "EMPLOYEE",
+      //   ],
+      // },
 
       {
         code: "INTERVIEWS",
@@ -318,28 +318,28 @@ export const DASHBOARD_APPS = [
          OVERVIEW
       ===================================================== */
 
-      {
-        code: "PEOPLE_OVERVIEW",
+      // {
+      //   code: "PEOPLE_OVERVIEW",
 
-        label: "Overview",
+      //   label: "Overview",
 
-        icon: "◫",
+      //   icon: "◫",
 
-        path:
-          "/dashboard?app=people&page=overview",
+      //   path:
+      //     "/dashboard?app=people&page=overview",
 
-        module: "EMPLOYEE",
+      //   module: "EMPLOYEE",
 
-        section: "",
+      //   section: "",
 
-        allowedRoles: [
-          "SUPER_ADMIN",
-          "ADMIN",
-          "HEAD",
-          "MANAGER",
-          "EMPLOYEE",
-        ],
-      },
+      //   allowedRoles: [
+      //     "SUPER_ADMIN",
+      //     "ADMIN",
+      //     "HEAD",
+      //     "MANAGER",
+      //     "EMPLOYEE",
+      //   ],
+      // },
 
       /* =====================================================
          WORKFORCE

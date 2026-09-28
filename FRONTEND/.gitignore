@@ -54,3 +54,15 @@ Desktop.ini
 *.backup
 *.swp
 *.swo
+
+# ==========================================================
+# VIDEO FILES
+# Keep videos locally but do not push them to Git
+# ==========================================================
+
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mkv
+*.m4v

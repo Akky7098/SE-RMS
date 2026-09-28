@@ -1369,21 +1369,7 @@ function OfferWorkspace({
               HR verification is complete. Prepare the controlled company Offer Letter using the candidate information already available in SE-RMS.
             </p>
 
-            <div className="selection-offer-ready-points">
-
-              <span>
-                ✓ Candidate details pre-filled
-              </span>
-
-              <span>
-                ✓ Company legal template locked
-              </span>
-
-              <span>
-                ✓ Unique reference generated automatically
-              </span>
-
-            </div>
+           
 
           </div>
 

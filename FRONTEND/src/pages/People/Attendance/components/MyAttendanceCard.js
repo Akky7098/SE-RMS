@@ -3,6 +3,7 @@ import React from "react";
 import AttendanceStatusBadge from "./AttendanceStatusBadge";
 
 import {
+  attendanceSource,
   formatMinutes,
   formatTime,
   workModeLabel,
@@ -23,86 +24,157 @@ function MyAttendanceCard({
     loading
   ) {
     return (
-      <section className="se-people-att-my-card">
+      <section className="se-people-att-my-card se-att-my-card-v3">
+
         <div className="se-people-att-loading">
+
           <span />
 
           Loading your attendance…
+
         </div>
+
       </section>
     );
   }
 
+  const firstIn =
+    attendance?.firstInAt ||
+    attendance?.firstIn?.time ||
+    null;
+
+  const lastOut =
+    attendance?.lastOutAt ||
+    attendance?.lastOut?.time ||
+    null;
+
+  const started =
+    Boolean(
+      firstIn
+    );
+
+  const completed =
+    Boolean(
+      lastOut
+    );
+
   return (
-    <section className="se-people-att-my-card">
+    <section className="se-people-att-my-card se-att-my-card-v3">
 
-      <div className="se-people-att-my-copy">
+      <div className="se-att-my-card-top">
 
-        <span>
-          MY ATTENDANCE
-        </span>
+        <div className="se-people-att-my-copy">
 
-        <h2>
-          Today's working day
-        </h2>
+          <span>
+            TODAY
+          </span>
 
-        <p>
-          Your biometric and approved web attendance are combined into one daily record.
-        </p>
+          <h2>
+            My attendance
+          </h2>
+
+          <p>
+            Your approved web attendance and mapped biometric attendance appear in one daily record.
+          </p>
+
+        </div>
+
+        <div
+          className={`se-att-my-state ${
+            completed
+              ? "completed"
+              : started
+                ? "working"
+                : "idle"
+          }`}
+        >
+
+          <i />
+
+          <div>
+
+            <small>
+              WORKDAY
+            </small>
+
+            <strong>
+              {completed
+                ? "Completed"
+                : started
+                  ? "In progress"
+                  : "Not started"}
+            </strong>
+
+          </div>
+
+        </div>
 
       </div>
 
-      <div className="se-people-att-my-grid">
+      <div className="se-people-att-my-grid se-att-my-grid-v3">
 
-        <article>
+        <article className="se-att-my-stat se-att-my-stat--status">
+
           <small>
             STATUS
           </small>
 
           <AttendanceStatusBadge
             status={
-              attendance
-                ?.presenceStatus ||
+              attendance?.presenceStatus ||
               "NOT_MARKED"
             }
           />
+
         </article>
 
-        <article>
+        <article className="se-att-my-stat se-att-my-stat--in">
+
           <small>
             CHECK IN
           </small>
 
           <strong>
             {formatTime(
-              attendance?.firstInAt ||
-              attendance?.firstIn
-                ?.time
+              firstIn
             )}
           </strong>
+
+          <span>
+            First valid punch
+          </span>
+
         </article>
 
-        <article>
+        <article className="se-att-my-stat se-att-my-stat--out">
+
           <small>
             CHECK OUT
           </small>
 
           <strong>
             {formatTime(
-              attendance?.lastOutAt ||
-              attendance?.lastOut
-                ?.time
+              lastOut
             )}
           </strong>
+
+          <span>
+            {started &&
+            !completed
+              ? "Awaiting checkout"
+              : "Final valid punch"}
+          </span>
+
         </article>
 
         <article
-          className={
+          className={`se-att-my-stat ${
             liveWorkedTime
               ? "se-att-my-stat--working"
               : ""
-          }
+          }`}
         >
+
           <small>
             WORKING
           </small>
@@ -115,20 +187,21 @@ function MyAttendanceCard({
             }
           >
             {liveWorkedTime ||
-              formatMinutes(
-                attendance
-                  ?.totalWorkingMinutes
-              )}
+            formatMinutes(
+              attendance?.totalWorkingMinutes
+            )}
           </strong>
 
-          {liveWorkedTime ? (
-            <span className="se-att-my-live-working-label">
-              LIVE · HH:MM:SS
-            </span>
-          ) : null}
+          <span>
+            {liveWorkedTime
+              ? "Live duration"
+              : "Recorded duration"}
+          </span>
+
         </article>
 
-        <article>
+        <article className="se-att-my-stat">
+
           <small>
             MODE
           </small>
@@ -138,22 +211,33 @@ function MyAttendanceCard({
               attendance?.workMode
             )}
           </strong>
+
+          <span>
+            {attendanceSource(
+              attendance
+            )}
+          </span>
+
         </article>
 
-        <article>
+        <article className="se-att-my-stat">
+
           <small>
             SHIFT
           </small>
 
           <strong>
-            {
-              attendance
-                ?.shiftName ||
-              attendance
-                ?.shiftCode ||
-              "—"
-            }
+            {attendance?.shiftName ||
+            attendance?.shiftCode ||
+            "—"}
           </strong>
+
+          <span>
+            {attendance?.officeName ||
+            attendance?.workLocation ||
+            "Assigned workplace"}
+          </span>
+
         </article>
 
       </div>
@@ -161,6 +245,7 @@ function MyAttendanceCard({
       {canRegularize &&
       attendance?._id ? (
         <div className="se-people-att-my-actions">
+
           <button
             type="button"
             className="se-people-att-secondary-btn"
@@ -172,6 +257,7 @@ function MyAttendanceCard({
           >
             Request Regularization
           </button>
+
         </div>
       ) : null}
 

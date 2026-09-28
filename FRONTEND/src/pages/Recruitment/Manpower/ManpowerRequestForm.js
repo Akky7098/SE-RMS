@@ -9,6 +9,7 @@ import api from "../../../services/api";
 
 import {
   createManpowerRequirement,
+  getActiveOffices,
 } from "../../../services/manpowerService";
 
 import {
@@ -32,14 +33,24 @@ const EMPTY_FORM = {
 
   maximumExperienceYears: "",
 
-  budgetMin: "",
+  monthlySalaryMin: "",
 
-  budgetMax: "",
+  monthlySalaryMax: "",
 
   currency: "INR",
 
   employmentType: "FULL_TIME",
 
+  shiftAvailability: "DAY",
+
+  officeId: "",
+
+  /*
+   * Keep readable location because the current production
+   * backend already accepts location.
+   *
+   * officeId is used by the frontend Office dropdown.
+   */
   location: "",
 
   requiredByDate: "",
@@ -51,10 +62,6 @@ const EMPTY_FORM = {
 
 /* =========================================================
    VALIDATION CONFIG
-
-   Keep frontend constraints centralized here.
-
-   Backend remains the final authority.
 ========================================================= */
 
 const FORM_RULES = {
@@ -66,13 +73,11 @@ const FORM_RULES = {
 
   minimumExperience: 0,
 
-  minimumPackage: 0,
+  minimumSalary: 0,
 };
 
 /* =========================================================
    REQUIRED FIELDS
-
-   Centralized instead of repeating required logic.
 ========================================================= */
 
 const REQUIRED_FIELDS = [
@@ -84,7 +89,7 @@ const REQUIRED_FIELDS = [
 
   "requiredByDate",
 
-  "location",
+  "officeId",
 
   "reason",
 ];
@@ -200,8 +205,6 @@ const toNullableNumber = (
 
 /* =========================================================
    CURRENCY FORMATTER
-
-   Uses Intl instead of manually hardcoding separators.
 ========================================================= */
 
 const formatAmount = (
@@ -353,15 +356,6 @@ const normalizeDepartmentList =
 
 /* =========================================================
    VALIDATION ENGINE
-
-   Pure function.
-   No React state mutation here.
-
-   This allows:
-   - live validation
-   - submit validation
-   - summary validation
-   - unit testing later
 ========================================================= */
 
 const getFormErrors = (
@@ -430,9 +424,6 @@ const getFormErrors = (
 
   /* =====================================================
      EXPERIENCE
-
-     Cross-field validation runs immediately once both
-     fields contain values.
   ===================================================== */
 
   const minimumExperience =
@@ -498,72 +489,69 @@ const getFormErrors = (
   }
 
   /* =====================================================
-     LOCATION
+     WORK LOCATION
   ===================================================== */
 
   if (
     !String(
-      form.location ||
+      form.officeId ||
         ""
     ).trim()
   ) {
-    errors.location =
-      "Work location is required.";
+    errors.officeId =
+      "Select the work location.";
   }
 
   /* =====================================================
-     PACKAGE
-
-     No arbitrary package ceiling.
-     We only protect data consistency.
+     MONTHLY SALARY
   ===================================================== */
 
-  const budgetMin =
+  const monthlySalaryMin =
     toNullableNumber(
-      form.budgetMin
+      form.monthlySalaryMin
     );
 
-  const budgetMax =
+  const monthlySalaryMax =
     toNullableNumber(
-      form.budgetMax
+      form.monthlySalaryMax
     );
 
   if (
-    budgetMin !==
+    monthlySalaryMin !==
       null &&
-    budgetMin <
-      FORM_RULES.minimumPackage
+    monthlySalaryMin <
+      FORM_RULES.minimumSalary
   ) {
-    errors.budgetMin =
-      "Minimum annual package cannot be negative.";
+    errors.monthlySalaryMin =
+      "Minimum monthly salary cannot be negative.";
   }
 
   if (
-    budgetMax !==
+    monthlySalaryMax !==
       null &&
-    budgetMax <
-      FORM_RULES.minimumPackage
+    monthlySalaryMax <
+      FORM_RULES.minimumSalary
   ) {
-    errors.budgetMax =
-      "Maximum annual package cannot be negative.";
+    errors.monthlySalaryMax =
+      "Maximum monthly salary cannot be negative.";
   }
 
   if (
-    budgetMin !==
+    monthlySalaryMin !==
       null &&
-    budgetMax !==
+    monthlySalaryMax !==
       null &&
-    budgetMax <
-      budgetMin
+    monthlySalaryMax <
+      monthlySalaryMin
   ) {
-    errors.budgetMin =
-      "Minimum package cannot exceed maximum package.";
+    errors.monthlySalaryMin =
+      "Minimum salary cannot exceed maximum salary.";
 
-    errors.budgetMax =
-      `Maximum package must be at least ${formatAmount(
-        budgetMin,
+    errors.monthlySalaryMax =
+      `Maximum salary must be at least ${formatAmount(
+        monthlySalaryMin,
         form.currency
-      )}.`;
+      )} per month.`;
   }
 
   /* =====================================================
@@ -636,6 +624,10 @@ const ManpowerRequestForm = ({
     false
   );
 
+  /* =========================================================
+     DEPARTMENTS
+  ========================================================= */
+
   const [
     departments,
     setDepartments,
@@ -656,6 +648,35 @@ const ManpowerRequestForm = ({
   ] = useState(
     ""
   );
+
+  /* =========================================================
+     OFFICES
+  ========================================================= */
+
+  const [
+    offices,
+    setOffices,
+  ] = useState(
+    []
+  );
+
+  const [
+    loadingOffices,
+    setLoadingOffices,
+  ] = useState(
+    false
+  );
+
+  const [
+    officeError,
+    setOfficeError,
+  ] = useState(
+    ""
+  );
+
+  /* =========================================================
+     NOTIFICATION
+  ========================================================= */
 
   const [
     notification,
@@ -686,7 +707,8 @@ const ManpowerRequestForm = ({
 
   const isSuperAdmin =
     String(
-      storedUser?.role ||
+      storedUser?.systemRole ||
+        storedUser?.role ||
         ""
     ).toUpperCase() ===
     "SUPER_ADMIN";
@@ -719,6 +741,10 @@ const ManpowerRequestForm = ({
     );
 
     setDepartmentError(
+      ""
+    );
+
+    setOfficeError(
       ""
     );
   }, [
@@ -923,6 +949,155 @@ const ManpowerRequestForm = ({
   ]);
 
   /* =========================================================
+     LOAD ACTIVE OFFICES
+  ========================================================= */
+
+  useEffect(() => {
+    if (
+      !open
+    ) {
+      return;
+    }
+
+    let active =
+      true;
+
+    const loadOffices =
+      async () => {
+        try {
+          setLoadingOffices(
+            true
+          );
+
+          setOfficeError(
+            ""
+          );
+
+          const records =
+            await getActiveOffices();
+
+          if (
+            !active
+          ) {
+            return;
+          }
+
+          const normalized =
+            (
+              Array.isArray(
+                records
+              )
+                ? records
+                : []
+            )
+              .filter(
+                (
+                  office
+                ) =>
+                  office &&
+                  String(
+                    office.status ||
+                      "ACTIVE"
+                  ).toUpperCase() ===
+                    "ACTIVE"
+              )
+              .sort(
+                (
+                  a,
+                  b
+                ) =>
+                  String(
+                    a?.name ||
+                      ""
+                  ).localeCompare(
+                    String(
+                      b?.name ||
+                        ""
+                    )
+                  )
+              );
+
+          setOffices(
+            normalized
+          );
+
+          setForm(
+            (
+              current
+            ) => {
+              if (
+                current.officeId
+              ) {
+                return current;
+              }
+
+              /*
+               * Automatically select only when there is
+               * exactly one active Office.
+               */
+              if (
+                normalized.length ===
+                1
+              ) {
+                return {
+                  ...current,
+
+                  officeId:
+                    normalized[0]?._id ||
+                    "",
+
+                  location:
+  normalized[0]?.shortLocation ||
+  normalized[0]?.city ||
+  normalized[0]?.name ||
+  "",
+                };
+              }
+
+              return current;
+            }
+          );
+        } catch (
+          error
+        ) {
+          if (
+            !active
+          ) {
+            return;
+          }
+
+          setOffices(
+            []
+          );
+
+          setOfficeError(
+            getApiErrorMessage(
+              error,
+              "Work locations could not be loaded."
+            )
+          );
+        } finally {
+          if (
+            active
+          ) {
+            setLoadingOffices(
+              false
+            );
+          }
+        }
+      };
+
+    loadOffices();
+
+    return () => {
+      active =
+        false;
+    };
+  }, [
+    open,
+  ]);
+
+  /* =========================================================
      DERIVED SKILLS
   ========================================================= */
 
@@ -951,7 +1126,7 @@ const ManpowerRequestForm = ({
     );
 
   /* =========================================================
-     DEPARTMENT
+     SELECTED DEPARTMENT
   ========================================================= */
 
   const selectedDepartment =
@@ -976,29 +1151,110 @@ const ManpowerRequestForm = ({
     );
 
   /* =========================================================
-     PACKAGE PREVIEW
+     SELECTED OFFICE
   ========================================================= */
 
-  const minimumPackagePreview =
-    form.budgetMin
+  const selectedOffice =
+    useMemo(
+      () =>
+        offices.find(
+          (
+            item
+          ) =>
+            String(
+              item?._id
+            ) ===
+            String(
+              form.officeId
+            )
+        ) ||
+        null,
+      [
+        offices,
+        form.officeId,
+      ]
+    );
+
+  /* =========================================================
+     MONTHLY SALARY
+  ========================================================= */
+
+  const monthlySalaryMin =
+    toNullableNumber(
+      form.monthlySalaryMin
+    );
+
+  const monthlySalaryMax =
+    toNullableNumber(
+      form.monthlySalaryMax
+    );
+
+  /* =========================================================
+     ANNUAL PACKAGE
+
+     Existing backend expects budgetMin/budgetMax as
+     annual values.
+
+     We therefore calculate annual package here and keep
+     the current backend contract unchanged.
+  ========================================================= */
+
+  const annualBudgetMin =
+    monthlySalaryMin !==
+    null
+      ? monthlySalaryMin *
+        12
+      : null;
+
+  const annualBudgetMax =
+    monthlySalaryMax !==
+    null
+      ? monthlySalaryMax *
+        12
+      : null;
+
+  /* =========================================================
+     SALARY PREVIEWS
+  ========================================================= */
+
+  const minimumMonthlyPreview =
+    monthlySalaryMin !==
+    null
       ? formatAmount(
-          form.budgetMin,
+          monthlySalaryMin,
+          form.currency
+        )
+      : "";
+
+  const maximumMonthlyPreview =
+    monthlySalaryMax !==
+    null
+      ? formatAmount(
+          monthlySalaryMax,
+          form.currency
+        )
+      : "";
+
+  const minimumPackagePreview =
+    annualBudgetMin !==
+    null
+      ? formatAmount(
+          annualBudgetMin,
           form.currency
         )
       : "";
 
   const maximumPackagePreview =
-    form.budgetMax
+    annualBudgetMax !==
+    null
       ? formatAmount(
-          form.budgetMax,
+          annualBudgetMax,
           form.currency
         )
       : "";
 
   /* =========================================================
      LIVE VALIDATION
-
-     Recalculates automatically whenever form changes.
   ========================================================= */
 
   const allErrors =
@@ -1015,13 +1271,7 @@ const ManpowerRequestForm = ({
     );
 
   /* =========================================================
-     FIELDS THAT SHOULD SHOW ERRORS
-
-     Required fields:
-     only after touch / submit.
-
-     Cross-field errors:
-     show immediately once both values exist.
+     VISIBLE ERRORS
   ========================================================= */
 
   const visibleErrors =
@@ -1037,38 +1287,37 @@ const ManpowerRequestForm = ({
             key,
             message,
           ]) => {
-            const crossFieldImmediate =
+            const salaryCrossField =
               (
-                (
-                  key ===
-                    "budgetMin" ||
-                  key ===
-                    "budgetMax"
-                ) &&
-                form.budgetMin !==
-                  "" &&
-                form.budgetMax !==
-                  ""
-              ) ||
+                key ===
+                  "monthlySalaryMin" ||
+                key ===
+                  "monthlySalaryMax"
+              ) &&
+              form.monthlySalaryMin !==
+                "" &&
+              form.monthlySalaryMax !==
+                "";
+
+            const experienceCrossField =
               (
-                (
-                  key ===
-                    "minimumExperienceYears" ||
-                  key ===
-                    "maximumExperienceYears"
-                ) &&
-                form.minimumExperienceYears !==
-                  "" &&
-                form.maximumExperienceYears !==
-                  ""
-              );
+                key ===
+                  "minimumExperienceYears" ||
+                key ===
+                  "maximumExperienceYears"
+              ) &&
+              form.minimumExperienceYears !==
+                "" &&
+              form.maximumExperienceYears !==
+                "";
 
             if (
               attemptedSubmit ||
               touched[
                 key
               ] ||
-              crossFieldImmediate
+              salaryCrossField ||
+              experienceCrossField
             ) {
               output[
                 key
@@ -1084,8 +1333,8 @@ const ManpowerRequestForm = ({
         allErrors,
         attemptedSubmit,
         touched,
-        form.budgetMin,
-        form.budgetMax,
+        form.monthlySalaryMin,
+        form.monthlySalaryMax,
         form.minimumExperienceYears,
         form.maximumExperienceYears,
       ]
@@ -1127,7 +1376,8 @@ const ManpowerRequestForm = ({
   const isFormValid =
     issueCount ===
       0 &&
-    !departmentError;
+    !departmentError &&
+    !officeError;
 
   /* =========================================================
      LIVE STATUS ITEMS
@@ -1230,19 +1480,31 @@ const ManpowerRequestForm = ({
         }
 
         if (
-          form.budgetMin &&
-          form.budgetMax
+          selectedOffice
+        ) {
+          items.push({
+            tone:
+              "success",
+
+            text:
+              selectedOffice.name,
+          });
+        }
+
+        if (
+          form.monthlySalaryMin &&
+          form.monthlySalaryMax
         ) {
           if (
-            allErrors.budgetMin ||
-            allErrors.budgetMax
+            allErrors.monthlySalaryMin ||
+            allErrors.monthlySalaryMax
           ) {
             items.push({
               tone:
                 "error",
 
               text:
-                "Package range invalid",
+                "Salary range invalid",
             });
           } else {
             items.push({
@@ -1250,7 +1512,15 @@ const ManpowerRequestForm = ({
                 "success",
 
               text:
-                `${minimumPackagePreview} – ${maximumPackagePreview}`,
+                `${minimumMonthlyPreview} – ${maximumMonthlyPreview} / month`,
+            });
+
+            items.push({
+              tone:
+                "success",
+
+              text:
+                `${minimumPackagePreview} – ${maximumPackagePreview} / year`,
             });
           }
         }
@@ -1259,13 +1529,16 @@ const ManpowerRequestForm = ({
       },
       [
         selectedDepartment,
+        selectedOffice,
         form.numberOfOpenings,
         form.minimumExperienceYears,
         form.maximumExperienceYears,
         form.requiredByDate,
-        form.budgetMin,
-        form.budgetMax,
+        form.monthlySalaryMin,
+        form.monthlySalaryMax,
         allErrors,
+        minimumMonthlyPreview,
+        maximumMonthlyPreview,
         minimumPackagePreview,
         maximumPackagePreview,
       ]
@@ -1461,6 +1734,19 @@ const ManpowerRequestForm = ({
         return;
       }
 
+      /*
+       * IMPORTANT:
+       *
+       * Current production backend receives:
+       *
+       * budgetMin / budgetMax = ANNUAL PACKAGE
+       * location = readable Office name
+       *
+       * officeId and shiftAvailability remain in the frontend
+       * until backend schema/validation is updated in the next
+       * step.
+       */
+
       const payload = {
         department:
           form.department,
@@ -1488,15 +1774,14 @@ const ManpowerRequestForm = ({
             form.maximumExperienceYears
           ) ?? 0,
 
+        /*
+         * Monthly salary × 12.
+         */
         budgetMin:
-          toNullableNumber(
-            form.budgetMin
-          ),
+          annualBudgetMin,
 
         budgetMax:
-          toNullableNumber(
-            form.budgetMax
-          ),
+          annualBudgetMax,
 
         currency:
           form.currency,
@@ -1504,6 +1789,9 @@ const ManpowerRequestForm = ({
         employmentType:
           form.employmentType,
 
+        /*
+         * Existing backend compatibility.
+         */
         location:
           String(
             form.location
@@ -2080,16 +2368,16 @@ const ManpowerRequestForm = ({
                 </section>
 
                 {/* ===============================================
-                    PACKAGE
+                    COMPENSATION
                 ================================================ */}
 
                 <section
                   className={`se-mpr-form-section se-mpr-package-section ${
-                    allErrors.budgetMin ||
-                    allErrors.budgetMax
+                    allErrors.monthlySalaryMin ||
+                    allErrors.monthlySalaryMax
                       ? "has-error"
-                      : form.budgetMin &&
-                          form.budgetMax
+                      : form.monthlySalaryMin &&
+                          form.monthlySalaryMax
                         ? "is-valid"
                         : ""
                   }`}
@@ -2101,12 +2389,13 @@ const ManpowerRequestForm = ({
 
                     <div>
                       <strong>
-                        Annual Package Range
+                        Compensation
                       </strong>
 
                       <p>
-                        Enter yearly CTC/package,
-                        not monthly salary.
+                        Enter monthly salary.
+                        Annual package is calculated
+                        automatically.
                       </p>
                     </div>
                   </div>
@@ -2114,17 +2403,21 @@ const ManpowerRequestForm = ({
                   <div className="se-mpr-package-heading">
                     <div>
                       <span>
-                        YEARLY PACKAGE
+                        ANNUAL PACKAGE · AUTO CALCULATED
                       </span>
 
-                      {(allErrors.budgetMin ||
-                        allErrors.budgetMax) &&
-                      form.budgetMin &&
-                      form.budgetMax ? (
+                      {(allErrors.monthlySalaryMin ||
+                        allErrors.monthlySalaryMax) &&
+                      form.monthlySalaryMin &&
+                      form.monthlySalaryMax ? (
                         <small className="invalid">
                           Invalid range
                         </small>
-                      ) : null}
+                      ) : (
+                        <small>
+                          Monthly salary × 12
+                        </small>
+                      )}
                     </div>
 
                     <strong>
@@ -2185,20 +2478,20 @@ const ManpowerRequestForm = ({
 
                     <label>
                       <span>
-                        Minimum Annual Package
+                        Minimum Monthly Salary
                       </span>
 
                       <input
-                        name="budgetMin"
+                        name="monthlySalaryMin"
                         type="text"
                         inputMode="numeric"
                         autoComplete="off"
                         value={
-                          form.budgetMin
+                          form.monthlySalaryMin
                         }
                         className={
                           fieldError(
-                            "budgetMin"
+                            "monthlySalaryMin"
                           )
                             ? "invalid"
                             : ""
@@ -2208,14 +2501,14 @@ const ManpowerRequestForm = ({
                         }
                         onBlur={() =>
                           markTouched(
-                            "budgetMin"
+                            "monthlySalaryMin"
                           )
                         }
                         onChange={(
                           event
                         ) =>
                           updateField(
-                            "budgetMin",
+                            "monthlySalaryMin",
                             sanitizeInteger(
                               event
                                 .target
@@ -2223,42 +2516,42 @@ const ManpowerRequestForm = ({
                             )
                           )
                         }
-                        placeholder="300000"
+                        placeholder="20000"
                       />
 
                       {fieldError(
-                        "budgetMin"
+                        "monthlySalaryMin"
                       ) ? (
                         <small className="se-mpr-field-error">
                           {fieldError(
-                            "budgetMin"
+                            "monthlySalaryMin"
                           )}
                         </small>
                       ) : (
                         <small>
-                          {minimumPackagePreview
-                            ? `${minimumPackagePreview} / year`
-                            : "Example: ₹3,00,000 / year"}
+                          {minimumMonthlyPreview
+                            ? `${minimumMonthlyPreview} / month`
+                            : "Example: ₹20,000 / month"}
                         </small>
                       )}
                     </label>
 
                     <label>
                       <span>
-                        Maximum Annual Package
+                        Maximum Monthly Salary
                       </span>
 
                       <input
-                        name="budgetMax"
+                        name="monthlySalaryMax"
                         type="text"
                         inputMode="numeric"
                         autoComplete="off"
                         value={
-                          form.budgetMax
+                          form.monthlySalaryMax
                         }
                         className={
                           fieldError(
-                            "budgetMax"
+                            "monthlySalaryMax"
                           )
                             ? "invalid"
                             : ""
@@ -2268,14 +2561,14 @@ const ManpowerRequestForm = ({
                         }
                         onBlur={() =>
                           markTouched(
-                            "budgetMax"
+                            "monthlySalaryMax"
                           )
                         }
                         onChange={(
                           event
                         ) =>
                           updateField(
-                            "budgetMax",
+                            "monthlySalaryMax",
                             sanitizeInteger(
                               event
                                 .target
@@ -2283,26 +2576,61 @@ const ManpowerRequestForm = ({
                             )
                           )
                         }
-                        placeholder="500000"
+                        placeholder="25000"
                       />
 
                       {fieldError(
-                        "budgetMax"
+                        "monthlySalaryMax"
                       ) ? (
                         <small className="se-mpr-field-error">
                           {fieldError(
-                            "budgetMax"
+                            "monthlySalaryMax"
                           )}
                         </small>
                       ) : (
                         <small>
-                          {maximumPackagePreview
-                            ? `${maximumPackagePreview} / year`
-                            : "Example: ₹5,00,000 / year"}
+                          {maximumMonthlyPreview
+                            ? `${maximumMonthlyPreview} / month`
+                            : "Example: ₹25,000 / month"}
                         </small>
                       )}
                     </label>
                   </div>
+
+                  {(minimumPackagePreview ||
+                    maximumPackagePreview) ? (
+                    <div className="se-mpr-automation-note">
+                      <span className="se-mpr-automation-icon">
+                        ₹
+                      </span>
+
+                      <div>
+                        <strong>
+                          Annual Package Automatically Calculated
+                        </strong>
+
+                        <p>
+                          {minimumMonthlyPreview ||
+                            "—"}{" "}
+                          / month →{" "}
+                          <strong>
+                            {minimumPackagePreview ||
+                              "—"}
+                          </strong>{" "}
+                          / year
+                          {" · "}
+                          {maximumMonthlyPreview ||
+                            "—"}{" "}
+                          / month →{" "}
+                          <strong>
+                            {maximumPackagePreview ||
+                              "—"}
+                          </strong>{" "}
+                          / year
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
                 </section>
               </div>
 
@@ -2497,8 +2825,8 @@ const ManpowerRequestForm = ({
                       </strong>
 
                       <p>
-                        Employment type, target date
-                        and work location.
+                        Employment type, shift availability,
+                        target date and work location.
                       </p>
                     </div>
                   </div>
@@ -2549,6 +2877,65 @@ const ManpowerRequestForm = ({
                         </option>
                       </select>
                     </label>
+
+                    {/* =========================================
+                        SHIFT AVAILABILITY
+                    ========================================== */}
+
+                    <label>
+                      <span>
+                        Shift Availability *
+                      </span>
+
+                      <select
+                        name="shiftAvailability"
+                        value={
+                          form.shiftAvailability
+                        }
+                        disabled={
+                          submitting
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          updateField(
+                            "shiftAvailability",
+                            event
+                              .target
+                              .value
+                          )
+                        }
+                      >
+                        <option value="DAY">
+                          Day Shift Only
+                        </option>
+
+                        <option value="NIGHT">
+                          Night Shift Only
+                        </option>
+
+                        <option value="FLEXIBLE">
+                          Day / Night - Flexible
+                        </option>
+
+                        <option value="GENERAL">
+                          General Shift
+                        </option>
+
+                        <option value="ANY">
+                          Any Shift
+                        </option>
+                      </select>
+
+                      <small>
+                        Actual employee shift can be
+                        assigned after joining.
+                      </small>
+                    </label>
+
+                    {/* =========================================
+                        REQUIRED BY
+                    ========================================== */}
 
                     <label>
                       <span>
@@ -2606,54 +2993,151 @@ const ManpowerRequestForm = ({
                       )}
                     </label>
 
-                    <label className="wide">
+                    {/* =========================================
+                        OFFICE / WORK LOCATION
+                    ========================================== */}
+
+                    <label>
                       <span>
                         Work Location *
                       </span>
 
-                      <input
-                        name="location"
-                        type="text"
+                      <select
+                        name="officeId"
                         value={
-                          form.location
+                          form.officeId
                         }
                         className={
                           fieldError(
-                            "location"
+                            "officeId"
                           )
                             ? "invalid"
                             : ""
                         }
                         disabled={
+                          loadingOffices ||
                           submitting
                         }
                         onBlur={() =>
                           markTouched(
-                            "location"
+                            "officeId"
                           )
                         }
                         onChange={(
                           event
-                        ) =>
-                          updateField(
-                            "location",
+                        ) => {
+                          const officeId =
                             event
                               .target
-                              .value
-                          )
-                        }
-                        placeholder="Example: Sonipat"
-                      />
+                              .value;
+
+                          const office =
+                            offices.find(
+                              (
+                                item
+                              ) =>
+                                String(
+                                  item?._id
+                                ) ===
+                                String(
+                                  officeId
+                                )
+                            );
+
+                          /*
+                           * officeId:
+                           * canonical Office master reference
+                           *
+                           * location:
+                           * readable value for current backend
+                           */
+                          setForm(
+                            (
+                              current
+                            ) => ({
+                              ...current,
+
+                              officeId,
+
+                              location:
+  office?.shortLocation ||
+  office?.city ||
+  office?.name ||
+  "",
+                            })
+                          );
+
+                          if (
+                            notification
+                              ?.type ===
+                            "error"
+                          ) {
+                            setNotification(
+                              null
+                            );
+                          }
+                        }}
+                      >
+                        <option value="">
+                          {loadingOffices
+                            ? "Loading offices..."
+                            : "Select work location"}
+                        </option>
+
+                        {offices.map(
+  (
+    office
+  ) => (
+    <option
+      key={
+        office._id
+      }
+      value={
+        office._id
+      }
+    >
+      {
+        office.shortLocation ||
+        office.city ||
+        office.name
+      }
+    </option>
+  )
+)}
+                      </select>
 
                       {fieldError(
-                        "location"
+                        "officeId"
                       ) ? (
                         <small className="se-mpr-field-error">
                           {fieldError(
-                            "location"
+                            "officeId"
                           )}
                         </small>
-                      ) : null}
+                      ) : officeError ? (
+                        <small className="se-mpr-field-error">
+                          {
+                            officeError
+                          }
+                        </small>
+                      ) : selectedOffice ? (
+                        <small className="se-mpr-field-success">
+                          ✓ Work location linked to{" "}
+                          <strong>
+                            {
+                              selectedOffice.name
+                            }
+                          </strong>
+
+                          {selectedOffice.code
+                            ? ` · ${selectedOffice.code}`
+                            : ""}
+                        </small>
+                      ) : (
+                        <small>
+                          Select from the active Office master.
+                        </small>
+                      )}
                     </label>
                   </div>
                 </section>
@@ -2890,8 +3374,12 @@ const ManpowerRequestForm = ({
                     disabled={
                       submitting ||
                       loadingDepartments ||
+                      loadingOffices ||
                       Boolean(
                         departmentError
+                      ) ||
+                      Boolean(
+                        officeError
                       )
                     }
                   >

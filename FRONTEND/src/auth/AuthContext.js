@@ -43,8 +43,10 @@ export const AuthProvider = ({
   const [access, setAccess] =
     useState(null);
 
-  const [authLoading, setAuthLoading] =
-    useState(true);
+  const [
+    authLoading,
+    setAuthLoading,
+  ] = useState(true);
 
   /* =========================================================
      STORAGE
@@ -100,8 +102,13 @@ export const AuthProvider = ({
           "true"
         );
 
-        setUser(loggedUser);
-        setAccess(accessData);
+        setUser(
+          loggedUser
+        );
+
+        setAccess(
+          accessData
+        );
       },
       []
     );
@@ -116,7 +123,9 @@ export const AuthProvider = ({
         accessToken,
         fallbackUser
       ) => {
-        if (accessToken) {
+        if (
+          accessToken
+        ) {
           localStorage.setItem(
             STORAGE_KEYS.token,
             accessToken
@@ -133,12 +142,16 @@ export const AuthProvider = ({
           ]);
 
         const currentUser =
-          userResponse?.data?.data
+          userResponse
+            ?.data
+            ?.data
             ?.user ||
           fallbackUser;
 
         const currentAccess =
-          accessResponse?.data?.data;
+          accessResponse
+            ?.data
+            ?.data;
 
         if (
           !currentUser ||
@@ -149,12 +162,23 @@ export const AuthProvider = ({
           );
         }
 
+        const token =
+          accessToken ||
+          localStorage.getItem(
+            STORAGE_KEYS.token
+          );
+
+        if (
+          !token
+        ) {
+          throw new Error(
+            "Access token is missing"
+          );
+        }
+
         saveSession({
           accessToken:
-            accessToken ||
-            localStorage.getItem(
-              STORAGE_KEYS.token
-            ),
+            token,
 
           user:
             currentUser,
@@ -171,7 +195,9 @@ export const AuthProvider = ({
             currentAccess,
         };
       },
-      [saveSession]
+      [
+        saveSession,
+      ]
     );
 
   /* =========================================================
@@ -186,35 +212,60 @@ export const AuthProvider = ({
       ) => {
         clearStoredSession();
 
-        const response =
-          await loginUser({
-            email:
-              email.trim(),
+        try {
+          const response =
+            await loginUser({
+              email:
+                String(
+                  email ||
+                    ""
+                )
+                  .trim()
+                  .toLowerCase(),
 
-            password,
-          });
+              password,
+            });
 
-        const accessToken =
-          response?.data?.data
-            ?.accessToken;
+          const accessToken =
+            response
+              ?.data
+              ?.data
+              ?.accessToken;
 
-        const loggedUser =
-          response?.data?.data
-            ?.user;
+          const loggedUser =
+            response
+              ?.data
+              ?.data
+              ?.user;
 
-        if (
-          !accessToken ||
-          !loggedUser
-        ) {
-          throw new Error(
-            "Invalid login response"
+          if (
+            !accessToken ||
+            !loggedUser
+          ) {
+            throw new Error(
+              "Invalid login response"
+            );
+          }
+
+          return await loadSessionData(
+            accessToken,
+            loggedUser
           );
-        }
+        } catch (
+          error
+        ) {
+          clearStoredSession();
 
-        return loadSessionData(
-          accessToken,
-          loggedUser
-        );
+          setUser(
+            null
+          );
+
+          setAccess(
+            null
+          );
+
+          throw error;
+        }
       },
       [
         clearStoredSession,
@@ -224,6 +275,10 @@ export const AuthProvider = ({
 
   /* =========================================================
      GOOGLE LOGIN
+
+     Google authenticates identity.
+     Backend decides whether that exact email is an
+     authorised SE-RMS user.
   ========================================================= */
 
   const googleLogin =
@@ -233,32 +288,60 @@ export const AuthProvider = ({
       ) => {
         clearStoredSession();
 
-        const response =
-          await loginWithGoogle(
-            credential
+        try {
+          if (
+            !credential
+          ) {
+            throw new Error(
+              "Google credential is missing"
+            );
+          }
+
+          const response =
+            await loginWithGoogle(
+              credential
+            );
+
+          const accessToken =
+            response
+              ?.data
+              ?.data
+              ?.accessToken;
+
+          const loggedUser =
+            response
+              ?.data
+              ?.data
+              ?.user;
+
+          if (
+            !accessToken ||
+            !loggedUser
+          ) {
+            throw new Error(
+              "Invalid Google login response"
+            );
+          }
+
+          return await loadSessionData(
+            accessToken,
+            loggedUser
           );
-
-        const accessToken =
-          response?.data?.data
-            ?.accessToken;
-
-        const loggedUser =
-          response?.data?.data
-            ?.user;
-
-        if (
-          !accessToken ||
-          !loggedUser
+        } catch (
+          error
         ) {
-          throw new Error(
-            "Invalid Google login response"
-          );
-        }
+          clearStoredSession();
 
-        return loadSessionData(
-          accessToken,
-          loggedUser
-        );
+          setUser(
+            null
+          );
+
+          setAccess(
+            null
+          );
+
+          throw error;
+        }
       },
       [
         clearStoredSession,
@@ -275,7 +358,9 @@ export const AuthProvider = ({
       async () => {
         try {
           await logoutUser();
-        } catch (error) {
+        } catch (
+          error
+        ) {
           console.warn(
             "Server logout failed:",
             error?.message
@@ -283,11 +368,18 @@ export const AuthProvider = ({
         } finally {
           clearStoredSession();
 
-          setUser(null);
-          setAccess(null);
+          setUser(
+            null
+          );
+
+          setAccess(
+            null
+          );
         }
       },
-      [clearStoredSession]
+      [
+        clearStoredSession,
+      ]
     );
 
   /* =========================================================
@@ -295,6 +387,9 @@ export const AuthProvider = ({
   ========================================================= */
 
   useEffect(() => {
+    let mounted =
+      true;
+
     const restoreSession =
       async () => {
         try {
@@ -303,11 +398,9 @@ export const AuthProvider = ({
               STORAGE_KEYS.token
             );
 
-          if (!token) {
-            setAuthLoading(
-              false
-            );
-
+          if (
+            !token
+          ) {
             return;
           }
 
@@ -315,19 +408,39 @@ export const AuthProvider = ({
             token,
             null
           );
-        } catch (error) {
+        } catch (
+          error
+        ) {
           clearStoredSession();
 
-          setUser(null);
-          setAccess(null);
+          if (
+            mounted
+          ) {
+            setUser(
+              null
+            );
+
+            setAccess(
+              null
+            );
+          }
         } finally {
-          setAuthLoading(
-            false
-          );
+          if (
+            mounted
+          ) {
+            setAuthLoading(
+              false
+            );
+          }
         }
       };
 
     restoreSession();
+
+    return () => {
+      mounted =
+        false;
+    };
   }, [
     clearStoredSession,
     loadSessionData,
@@ -339,7 +452,9 @@ export const AuthProvider = ({
 
   const hasModule =
     useCallback(
-      (module) => {
+      (
+        module
+      ) => {
         if (
           access?.fullAccess
         ) {
@@ -347,12 +462,16 @@ export const AuthProvider = ({
         }
 
         return Boolean(
-          access?.modules?.includes(
-            module
-          )
+          access
+            ?.modules
+            ?.includes(
+              module
+            )
         );
       },
-      [access]
+      [
+        access,
+      ]
     );
 
   const hasPermission =
@@ -368,35 +487,51 @@ export const AuthProvider = ({
         }
 
         return Boolean(
-          access?.permissions?.some(
-            (permission) =>
-              permission.module ===
-                module &&
-              permission.action ===
-                action &&
-              permission.scope !==
-                "NONE"
-          )
+          access
+            ?.permissions
+            ?.some(
+              (
+                permission
+              ) =>
+                permission
+                  .module ===
+                  module &&
+                permission
+                  .action ===
+                  action &&
+                permission
+                  .scope !==
+                  "NONE"
+            )
         );
       },
-      [access]
+      [
+        access,
+      ]
     );
 
   return (
     <AuthContext.Provider
       value={{
         user,
+
         access,
+
         authLoading,
 
         isAuthenticated:
-          Boolean(user),
+          Boolean(
+            user
+          ),
 
         login,
+
         googleLogin,
+
         logout,
 
         hasModule,
+
         hasPermission,
       }}
     >
@@ -405,17 +540,20 @@ export const AuthProvider = ({
   );
 };
 
-export const useAuth = () => {
-  const context =
-    useContext(
-      AuthContext
-    );
+export const useAuth =
+  () => {
+    const context =
+      useContext(
+        AuthContext
+      );
 
-  if (!context) {
-    throw new Error(
-      "useAuth must be used inside AuthProvider"
-    );
-  }
+    if (
+      !context
+    ) {
+      throw new Error(
+        "useAuth must be used inside AuthProvider"
+      );
+    }
 
-  return context;
-};
+    return context;
+  };

@@ -10086,3 +10086,2328 @@ button:disabled {
       none;
   }
 }
+
+/* =========================================================
+   SHIFT MANAGEMENT — HEADER V9
+   GRAPHITE + WARM TAUPE
+   NO BLUE / GREEN / RED / PURPLE
+========================================================= */
+
+.se-shift-page .se-shift-header {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+
+  min-height: 108px;
+  padding: 17px 30px;
+
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+
+  background:
+    radial-gradient(
+      circle at 88% 15%,
+      rgba(194, 169, 135, 0.16),
+      transparent 26%
+    ),
+    radial-gradient(
+      circle at 54% 130%,
+      rgba(174, 153, 127, 0.09),
+      transparent 34%
+    ),
+    linear-gradient(
+      118deg,
+      #171817 0%,
+      #24231f 48%,
+      #39352f 100%
+    );
+
+  box-shadow:
+    0 13px 34px
+    rgba(24, 23, 20, 0.18);
+
+  overflow: hidden;
+  isolation: isolate;
+}
+
+
+/* =========================================================
+   FAST WORKFORCE STREAM
+
+   Tiny marks continuously travel left -> right.
+   This reads as movement / shifts, NOT loading.
+========================================================= */
+
+.se-shift-page .se-shift-header::before {
+  content:
+    "›   ›  ›    ›   › ›     ›  ›   ›     › ›  ›    ›   ›     › ›    ›  ›     ›   › ›    ›   ›  ›     › ›   ›     ›  ›    › ›     ›   ›";
+
+  position: absolute;
+
+  z-index: 0;
+
+  left: -110%;
+  bottom: 12px;
+
+  width: 210%;
+
+  white-space: nowrap;
+
+  color:
+    rgba(219, 201, 176, 0.14);
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  font-size: 17px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 10px;
+
+  pointer-events: none;
+
+  transform:
+    skewX(-14deg);
+
+  animation:
+    seShiftWorkforceStream
+    5.2s linear infinite;
+}
+
+
+.se-shift-page .se-shift-header::after {
+  content:
+    "› ›   ›    › ›     ›   › ›   ›     › ›    ›  ›    › ›   ›     ›   › ›    › ›   ›    › ›     ›   ›";
+
+  position: absolute;
+
+  z-index: 0;
+
+  left: -120%;
+  top: 17px;
+
+  width: 220%;
+
+  white-space: nowrap;
+
+  color:
+    rgba(255, 245, 230, 0.065);
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  font-size: 11px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 15px;
+
+  pointer-events: none;
+
+  transform:
+    skewX(-12deg);
+
+  animation:
+    seShiftWorkforceStreamFast
+    3.8s linear infinite;
+}
+
+
+@keyframes seShiftWorkforceStream {
+  0% {
+    transform:
+      translateX(0)
+      skewX(-14deg);
+  }
+
+  100% {
+    transform:
+      translateX(52%)
+      skewX(-14deg);
+  }
+}
+
+
+@keyframes seShiftWorkforceStreamFast {
+  0% {
+    transform:
+      translateX(0)
+      skewX(-12deg);
+  }
+
+  100% {
+    transform:
+      translateX(58%)
+      skewX(-12deg);
+  }
+}
+
+
+/* =========================================================
+   HEADER CONTENT ABOVE ANIMATION
+========================================================= */
+
+.se-shift-page
+.se-shift-header-left,
+.se-shift-page
+.se-shift-header-actions {
+  position: relative;
+  z-index: 4;
+}
+
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.se-shift-page .se-shift-back {
+  position: relative;
+  z-index: 5;
+
+  width: 46px;
+  height: 46px;
+
+  flex: 0 0 46px;
+
+  display: grid;
+  place-items: center;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.13);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.065);
+
+  color: #ffffff;
+
+  backdrop-filter:
+    blur(10px);
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+
+.se-shift-page
+.se-shift-back:hover {
+  transform:
+    translateX(-3px);
+
+  background:
+    rgba(255, 255, 255, 0.11);
+
+  border-color:
+    rgba(255, 255, 255, 0.24);
+}
+
+
+/* =========================================================
+   PEOPLE · ATTENDANCE
+========================================================= */
+
+.se-shift-page
+.se-shift-title-block
+> span {
+  display: block;
+
+  color: #d0b997;
+
+  font-size: 9px;
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: 1.9px;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   TITLE ROW
+========================================================= */
+
+.se-shift-page
+.se-shift-title-row {
+  margin-top: 7px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+}
+
+
+/* =========================================================
+   REMOVE REFRESH / LOADING ORBIT VISUALLY
+
+   Keep DOM untouched.
+========================================================= */
+
+.se-shift-page
+.se-shift-running-orbit {
+  position: relative;
+
+  width: 24px;
+  height: 24px;
+
+  flex: 0 0 24px;
+
+  display: grid;
+  place-items: center;
+
+  border: 0;
+  border-radius: 7px;
+
+  background:
+    rgba(210, 188, 157, 0.11);
+
+  overflow: hidden;
+}
+
+
+/* shift lanes instead of spinning circle */
+
+.se-shift-page
+.se-shift-running-orbit::before {
+  content: "";
+
+  position: absolute;
+
+  width: 13px;
+  height: 2px;
+
+  left: -8px;
+  top: 7px;
+
+  border: 0;
+  border-radius: 99px;
+
+  background: #d0b997;
+
+  animation:
+    seShiftMiniLane
+    1.1s linear infinite;
+}
+
+
+.se-shift-page
+.se-shift-running-orbit::after {
+  content: "";
+
+  position: absolute;
+
+  width: 9px;
+  height: 2px;
+
+  left: -6px;
+  bottom: 7px;
+
+  border-radius: 99px;
+
+  background:
+    rgba(238, 223, 202, 0.72);
+
+  animation:
+    seShiftMiniLane
+    0.78s linear infinite
+    0.25s;
+}
+
+
+.se-shift-page
+.se-shift-running-orbit i {
+  position: static;
+
+  width: 4px;
+  height: 4px;
+
+  margin: 0;
+
+  border-radius: 1px;
+
+  background: #eadbc6;
+
+  box-shadow: none;
+
+  transform: rotate(45deg);
+
+  animation:
+    seShiftMiniMarker
+    1.25s ease-in-out infinite;
+}
+
+
+@keyframes seShiftMiniLane {
+  from {
+    transform:
+      translateX(0);
+  }
+
+  to {
+    transform:
+      translateX(38px);
+  }
+}
+
+
+@keyframes seShiftMiniMarker {
+  0%,
+  100% {
+    opacity: 0.45;
+
+    transform:
+      translateX(-2px)
+      rotate(45deg);
+  }
+
+  50% {
+    opacity: 1;
+
+    transform:
+      translateX(3px)
+      rotate(45deg);
+  }
+}
+
+
+/* =========================================================
+   SHIFT MANAGEMENT TITLE
+========================================================= */
+
+.se-shift-page
+.se-shift-title-row h1 {
+  position: relative;
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 28px;
+  line-height: 1.08;
+
+  font-weight: 790;
+
+  letter-spacing: -0.8px;
+
+  overflow: hidden;
+
+  text-shadow:
+    0 1px 1px
+    rgba(0, 0, 0, 0.12);
+}
+
+
+/* moving light THROUGH title */
+
+.se-shift-page
+.se-shift-title-row h1::after {
+  content: "";
+
+  position: absolute;
+
+  top: -20%;
+  bottom: -20%;
+
+  left: -35%;
+
+  width: 24%;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(234, 219, 198, 0.42),
+      transparent
+    );
+
+  transform:
+    skewX(-22deg);
+
+  pointer-events: none;
+
+  animation:
+    seShiftTitleSweep
+    3.4s ease-in-out infinite;
+}
+
+
+@keyframes seShiftTitleSweep {
+  0% {
+    left: -35%;
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.8;
+  }
+
+  52% {
+    left: 112%;
+    opacity: 0.65;
+  }
+
+  53%,
+  100% {
+    left: 112%;
+    opacity: 0;
+  }
+}
+
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.se-shift-page
+.se-shift-title-block p {
+  margin: 6px 0 0;
+
+  color:
+    rgba(255, 255, 255, 0.58);
+
+  font-size: 11px;
+  line-height: 1.35;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
+
+.se-shift-page
+.se-shift-header-actions {
+  display: flex;
+  align-items: stretch;
+
+  gap: 9px;
+}
+
+
+/* =========================================================
+   NIGHT SHIFT PDF
+========================================================= */
+
+.se-shift-page
+.se-shift-header-pdf {
+  min-height: 52px;
+
+  padding:
+    7px 14px
+    7px 8px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.14);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.075);
+
+  color: #ffffff;
+
+  cursor: pointer;
+
+  backdrop-filter:
+    blur(12px);
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+
+.se-shift-page
+.se-shift-header-pdf:hover {
+  transform:
+    translateY(-2px);
+
+  background:
+    rgba(255, 255, 255, 0.12);
+
+  border-color:
+    rgba(255, 255, 255, 0.23);
+}
+
+
+.se-shift-page
+.se-shift-header-pdf-icon {
+  width: 37px;
+  height: 37px;
+
+  flex: 0 0 37px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #a68d6e,
+      #75614c
+    );
+
+  color: #ffffff;
+
+  font-size: 18px;
+  font-weight: 800;
+
+  box-shadow:
+    0 7px 18px
+    rgba(57, 49, 40, 0.24);
+}
+
+
+.se-shift-page
+.se-shift-header-pdf strong,
+.se-shift-page
+.se-shift-header-pdf small {
+  display: block;
+}
+
+
+.se-shift-page
+.se-shift-header-pdf strong {
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 760;
+}
+
+
+.se-shift-page
+.se-shift-header-pdf small {
+  margin-top: 2px;
+
+  color:
+    rgba(255, 255, 255, 0.52);
+
+  font-size: 9px;
+  font-weight: 650;
+}
+
+
+/* =========================================================
+   REFRESH — MUST LOOK LIKE A BUTTON, NOT ANIMATION
+========================================================= */
+
+.se-shift-page
+.se-shift-header
+.se-shift-refresh {
+  min-height: 52px;
+
+  padding: 0 15px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.13);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.055);
+
+  color:
+    rgba(255, 255, 255, 0.87);
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  backdrop-filter:
+    blur(10px);
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+
+.se-shift-page
+.se-shift-header
+.se-shift-refresh:hover {
+  transform:
+    translateY(-1px);
+
+  background:
+    rgba(255, 255, 255, 0.105);
+}
+
+
+/* =========================================================
+   REMOVE ALL PREVIOUS SPINNING ANIMATION
+========================================================= */
+
+.se-shift-page
+.se-shift-header
+.se-shift-running-orbit::before,
+.se-shift-page
+.se-shift-header
+.se-shift-running-orbit i {
+  border-style: solid;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .se-shift-page
+  .se-shift-header {
+    padding:
+      14px 16px;
+
+    min-height: 98px;
+  }
+
+  .se-shift-page
+  .se-shift-title-row h1 {
+    font-size: 23px;
+  }
+
+  .se-shift-page
+  .se-shift-header-pdf
+  > span:last-child {
+    display: none;
+  }
+
+  .se-shift-page
+  .se-shift-header-pdf {
+    padding: 7px;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .se-shift-page
+  .se-shift-header {
+    min-height: 90px;
+  }
+
+  .se-shift-page
+  .se-shift-title-block p {
+    display: none;
+  }
+
+  .se-shift-page
+  .se-shift-header
+  .se-shift-refresh {
+    width: 43px;
+    min-height: 43px;
+
+    padding: 0;
+
+    justify-content: center;
+
+    font-size: 0;
+  }
+
+  .se-shift-page
+  .se-shift-header-pdf {
+    min-height: 43px;
+  }
+
+  .se-shift-page
+  .se-shift-header-pdf-icon {
+    width: 31px;
+    height: 31px;
+
+    flex-basis: 31px;
+  }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+
+  .se-shift-page
+  .se-shift-header::before,
+
+  .se-shift-page
+  .se-shift-header::after,
+
+  .se-shift-page
+  .se-shift-title-row h1::after,
+
+  .se-shift-page
+  .se-shift-running-orbit::before,
+
+  .se-shift-page
+  .se-shift-running-orbit::after,
+
+  .se-shift-page
+  .se-shift-running-orbit i {
+    animation: none !important;
+  }
+}
+/* =========================================================
+   V9 NAV — MATCH NEW HEADER
+========================================================= */
+
+.se-shift-page
+.se-shift-tabs-v7
+button:hover {
+  border-color: #d6cdc1;
+
+  background: #fcfaf7;
+
+  box-shadow:
+    0 7px 18px
+    rgba(59, 52, 44, 0.06);
+}
+
+
+.se-shift-page
+.se-shift-tabs-v7
+button.active {
+  border-color: #d8cbbc;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f8f4ee,
+      #ffffff
+    );
+
+  box-shadow:
+    inset 3px 0 0 #92795d,
+    0 7px 20px
+    rgba(69, 59, 48, 0.07);
+}
+
+
+.se-shift-page
+.se-shift-tabs-v7
+button.active
+> span {
+  background: #eee5d9;
+
+  color: #735e47;
+}
+/* =========================================================
+   FINAL OVERRIDE
+   SHIFT MANAGEMENT — POND + 5 LARGE SWIMMING FISH
+   ADD AT ABSOLUTE END OF Shift.css
+========================================================= */
+
+
+/* =========================================================
+   1. HEADER POND BACKGROUND
+========================================================= */
+
+.se-shift-page .se-shift-header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+
+  overflow: hidden;
+
+  background:
+    /* soft water glow */
+    radial-gradient(
+      ellipse at 18% 115%,
+      rgba(207, 187, 157, 0.13) 0%,
+      transparent 32%
+    ),
+
+    radial-gradient(
+      ellipse at 76% -20%,
+      rgba(226, 211, 187, 0.10) 0%,
+      transparent 35%
+    ),
+
+    /* subtle pond rings */
+    repeating-radial-gradient(
+      ellipse at 50% 115%,
+      transparent 0,
+      transparent 28px,
+      rgba(255, 255, 255, 0.018) 29px,
+      transparent 31px
+    ),
+
+    /* main graphite / warm stone */
+    linear-gradient(
+      118deg,
+      #171817 0%,
+      #22221f 42%,
+      #2c2a26 70%,
+      #3b3731 100%
+    ) !important;
+
+  border-bottom:
+    1px solid
+    rgba(222, 207, 183, 0.15);
+}
+
+
+/* =========================================================
+   2. THREE LARGE FISH — TOP/MIDDLE
+========================================================= */
+
+.se-shift-page .se-shift-header::before {
+  content: "➤      ➤      ➤" !important;
+
+  position: absolute;
+
+  left: -65%;
+  top: 13px;
+
+  z-index: 1;
+
+  width: max-content;
+
+  display: block;
+
+  white-space: nowrap;
+
+  color:
+    rgba(226, 207, 178, 0.20);
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  font-size: 40px;
+  font-weight: 400;
+
+  line-height: 1;
+
+  letter-spacing: 150px;
+
+  text-shadow:
+    -8px 0 0
+    rgba(226, 207, 178, 0.055);
+
+  opacity: 1;
+
+  pointer-events: none;
+
+  will-change: transform;
+
+  animation:
+    seShiftFishSwimTop
+    18s
+    linear
+    infinite !important;
+}
+
+
+/* =========================================================
+   3. TWO LARGE FISH — LOWER LAYER
+========================================================= */
+
+.se-shift-page .se-shift-header::after {
+  content: "➤          ➤" !important;
+
+  position: absolute;
+
+  left: -48%;
+  bottom: 11px;
+
+  z-index: 1;
+
+  width: max-content;
+
+  display: block;
+
+  white-space: nowrap;
+
+  color:
+    rgba(238, 223, 199, 0.14);
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  font-size: 33px;
+  font-weight: 400;
+
+  line-height: 1;
+
+  letter-spacing: 230px;
+
+  opacity: 1;
+
+  pointer-events: none;
+
+  will-change: transform;
+
+  animation:
+    seShiftFishSwimBottom
+    23s
+    linear
+    infinite !important;
+
+  animation-delay: -8s !important;
+}
+
+
+/* =========================================================
+   4. TOP FISH MOVEMENT
+========================================================= */
+
+@keyframes seShiftFishSwimTop {
+
+  0% {
+    transform:
+      translate3d(0, 0, 0);
+  }
+
+  20% {
+    transform:
+      translate3d(35vw, 3px, 0);
+  }
+
+  40% {
+    transform:
+      translate3d(70vw, -3px, 0);
+  }
+
+  60% {
+    transform:
+      translate3d(105vw, 3px, 0);
+  }
+
+  80% {
+    transform:
+      translate3d(140vw, -2px, 0);
+  }
+
+  100% {
+    transform:
+      translate3d(175vw, 0, 0);
+  }
+}
+
+
+/* =========================================================
+   5. BOTTOM FISH MOVEMENT
+========================================================= */
+
+@keyframes seShiftFishSwimBottom {
+
+  0% {
+    transform:
+      translate3d(0, 0, 0);
+  }
+
+  25% {
+    transform:
+      translate3d(42vw, -3px, 0);
+  }
+
+  50% {
+    transform:
+      translate3d(84vw, 3px, 0);
+  }
+
+  75% {
+    transform:
+      translate3d(126vw, -2px, 0);
+  }
+
+  100% {
+    transform:
+      translate3d(168vw, 0, 0);
+  }
+}
+
+
+/* =========================================================
+   6. WATER / POND RIPPLE BEHIND TITLE
+========================================================= */
+
+.se-shift-page .se-shift-header-left {
+  position: relative;
+  z-index: 5;
+}
+
+.se-shift-page .se-shift-header-left::before {
+  content: "";
+
+  position: absolute;
+
+  left: -80px;
+  top: -52px;
+
+  z-index: -1;
+
+  width: 760px;
+  height: 175px;
+
+  pointer-events: none;
+
+  background:
+    repeating-radial-gradient(
+      ellipse at 32% 100%,
+      transparent 0,
+      transparent 30px,
+      rgba(224, 208, 182, 0.04) 31px,
+      transparent 34px
+    );
+
+  animation:
+    seShiftPondRipple
+    6s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+
+@keyframes seShiftPondRipple {
+
+  0% {
+    transform:
+      translateX(-20px)
+      scaleX(0.96);
+
+    opacity: 0.45;
+  }
+
+  100% {
+    transform:
+      translateX(35px)
+      scaleX(1.05);
+
+    opacity: 0.9;
+  }
+}
+
+
+/* =========================================================
+   7. KEEP ALL REAL HEADER CONTENT ABOVE ANIMATION
+========================================================= */
+
+.se-shift-page .se-shift-header-left,
+.se-shift-page .se-shift-header-actions,
+.se-shift-page .se-shift-back {
+  position: relative;
+  z-index: 10;
+}
+
+
+/* =========================================================
+   8. HEADER TEXT — CORRECT FOR DARK BACKGROUND
+========================================================= */
+
+.se-shift-page
+.se-shift-header-left
+> div
+> span {
+  color: #cbb794 !important;
+}
+
+.se-shift-page
+.se-shift-header-left
+h1 {
+  color: #ffffff !important;
+}
+
+.se-shift-page
+.se-shift-header-left
+p {
+  color:
+    rgba(255, 255, 255, 0.62) !important;
+}
+
+
+/* =========================================================
+   9. BACK BUTTON
+========================================================= */
+
+.se-shift-page .se-shift-back {
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.15) !important;
+
+  background:
+    rgba(255, 255, 255, 0.07) !important;
+
+  color: #ffffff !important;
+
+  backdrop-filter:
+    blur(8px);
+}
+
+.se-shift-page
+.se-shift-back:hover {
+  border-color:
+    rgba(224, 207, 180, 0.34) !important;
+
+  background:
+    rgba(255, 255, 255, 0.12) !important;
+}
+
+
+/* =========================================================
+   10. REFRESH BUTTON
+========================================================= */
+
+.se-shift-page
+.se-shift-header
+.se-shift-refresh {
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.15) !important;
+
+  background:
+    rgba(255, 255, 255, 0.075) !important;
+
+  color:
+    rgba(255, 255, 255, 0.82) !important;
+
+  backdrop-filter:
+    blur(9px);
+}
+
+.se-shift-page
+.se-shift-header
+.se-shift-refresh:hover {
+  background:
+    rgba(255, 255, 255, 0.13) !important;
+
+  color: #ffffff !important;
+}
+
+
+/* =========================================================
+   11. PDF / PRIMARY HEADER ACTION
+========================================================= */
+
+.se-shift-page
+.se-shift-header
+.se-shift-create {
+  border:
+    1px solid
+    rgba(223, 205, 176, 0.25) !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8d7658,
+      #6f5e49
+    ) !important;
+
+  color: #ffffff !important;
+
+  box-shadow:
+    0 8px 22px
+    rgba(0, 0, 0, 0.20) !important;
+}
+
+.se-shift-page
+.se-shift-header
+.se-shift-create:hover {
+  transform:
+    translateY(-1px);
+
+  background:
+    linear-gradient(
+      135deg,
+      #9a8261,
+      #77634c
+    ) !important;
+}
+
+
+/* =========================================================
+   12. MOBILE — KEEP ANIMATION CLEAN
+========================================================= */
+
+@media (max-width: 760px) {
+
+  .se-shift-page
+  .se-shift-header::before {
+    font-size: 31px;
+
+    letter-spacing: 90px;
+
+    animation-duration:
+      16s !important;
+  }
+
+  .se-shift-page
+  .se-shift-header::after {
+    font-size: 26px;
+
+    letter-spacing: 130px;
+
+    animation-duration:
+      20s !important;
+  }
+
+}
+
+
+/* =========================================================
+   13. ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .se-shift-page
+  .se-shift-header::before,
+
+  .se-shift-page
+  .se-shift-header::after,
+
+  .se-shift-page
+  .se-shift-header-left::before {
+    animation: none !important;
+  }
+
+}
+/* =========================================================
+   FINAL FISH FIX
+   REPLACES ARROWS WITH REAL CSS FISH
+   ADD AT ABSOLUTE END OF Shift.css
+========================================================= */
+
+
+/* =========================================================
+   FISH 1 — LARGE
+========================================================= */
+
+.se-shift-page .se-shift-header::before {
+  content: "" !important;
+
+  position: absolute !important;
+
+  left: -120px !important;
+  top: 19px !important;
+
+  z-index: 1 !important;
+
+  width: 72px !important;
+  height: 34px !important;
+
+  /* FISH BODY */
+  background:
+    radial-gradient(
+      circle at 72% 38%,
+      rgba(32, 29, 24, 0.75) 0 2px,
+      transparent 3px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(177, 153, 118, 0.32),
+      rgba(224, 205, 177, 0.46)
+    ) !important;
+
+  border-radius:
+    60% 48% 48% 60% /
+    50% 50% 50% 50% !important;
+
+  letter-spacing: 0 !important;
+  font-size: 0 !important;
+
+  box-shadow:
+    inset 0 0 8px rgba(255, 255, 255, 0.10),
+    0 2px 7px rgba(0, 0, 0, 0.12) !important;
+
+  opacity: 1 !important;
+
+  pointer-events: none !important;
+
+  will-change: transform !important;
+
+  /* TRIANGULAR TAIL */
+  clip-path: polygon(
+    0 50%,
+    15% 34%,
+    15% 12%,
+    36% 30%,
+    100% 15%,
+    88% 50%,
+    100% 85%,
+    36% 70%,
+    15% 88%,
+    15% 66%
+  ) !important;
+
+  animation:
+    seRealFishSwimOne
+    16s
+    linear
+    infinite !important;
+}
+
+
+/* =========================================================
+   FISH 2 — SLIGHTLY SMALLER
+========================================================= */
+
+.se-shift-page .se-shift-header::after {
+  content: "" !important;
+
+  position: absolute !important;
+
+  left: -150px !important;
+  bottom: 13px !important;
+
+  z-index: 1 !important;
+
+  width: 58px !important;
+  height: 27px !important;
+
+  background:
+    radial-gradient(
+      circle at 72% 38%,
+      rgba(30, 28, 24, 0.70) 0 2px,
+      transparent 3px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(153, 132, 101, 0.24),
+      rgba(235, 218, 190, 0.36)
+    ) !important;
+
+  border-radius:
+    60% 48% 48% 60% /
+    50% 50% 50% 50% !important;
+
+  font-size: 0 !important;
+  letter-spacing: 0 !important;
+
+  clip-path: polygon(
+    0 50%,
+    15% 34%,
+    15% 12%,
+    36% 30%,
+    100% 15%,
+    88% 50%,
+    100% 85%,
+    36% 70%,
+    15% 88%,
+    15% 66%
+  ) !important;
+
+  opacity: 0.72 !important;
+
+  pointer-events: none !important;
+
+  will-change: transform !important;
+
+  animation:
+    seRealFishSwimTwo
+    21s
+    linear
+    infinite !important;
+
+  animation-delay:
+    -9s !important;
+}
+
+
+/* =========================================================
+   FISH 1 SWIM
+========================================================= */
+
+@keyframes seRealFishSwimOne {
+
+  0% {
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      )
+      rotate(0deg);
+  }
+
+  20% {
+    transform:
+      translate3d(
+        32vw,
+        4px,
+        0
+      )
+      rotate(2deg);
+  }
+
+  40% {
+    transform:
+      translate3d(
+        64vw,
+        -4px,
+        0
+      )
+      rotate(-2deg);
+  }
+
+  60% {
+    transform:
+      translate3d(
+        96vw,
+        3px,
+        0
+      )
+      rotate(1deg);
+  }
+
+  80% {
+    transform:
+      translate3d(
+        128vw,
+        -3px,
+        0
+      )
+      rotate(-1deg);
+  }
+
+  100% {
+    transform:
+      translate3d(
+        160vw,
+        0,
+        0
+      )
+      rotate(0deg);
+  }
+}
+
+
+/* =========================================================
+   FISH 2 SWIM
+========================================================= */
+
+@keyframes seRealFishSwimTwo {
+
+  0% {
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      )
+      rotate(-1deg);
+  }
+
+  25% {
+    transform:
+      translate3d(
+        40vw,
+        -3px,
+        0
+      )
+      rotate(1deg);
+  }
+
+  50% {
+    transform:
+      translate3d(
+        80vw,
+        4px,
+        0
+      )
+      rotate(-2deg);
+  }
+
+  75% {
+    transform:
+      translate3d(
+        120vw,
+        -2px,
+        0
+      )
+      rotate(2deg);
+  }
+
+  100% {
+    transform:
+      translate3d(
+        160vw,
+        0,
+        0
+      )
+      rotate(0deg);
+  }
+}
+
+
+/* =========================================================
+   KEEP HEADER CONTENT ABOVE FISH
+========================================================= */
+
+.se-shift-page .se-shift-header-left,
+.se-shift-page .se-shift-header-actions,
+.se-shift-page .se-shift-back {
+  position: relative !important;
+  z-index: 10 !important;
+}
+/* =========================================================
+   SHIFT HEADER V11
+   REAL KOI / POND FISH
+   ADD AT ABSOLUTE END OF Shift.css
+========================================================= */
+
+
+/* =========================================================
+   DISABLE PREVIOUS ::BEFORE / ::AFTER FISH
+========================================================= */
+
+.se-shift-page .se-shift-header::before,
+.se-shift-page .se-shift-header::after {
+  content: none !important;
+  display: none !important;
+}
+
+
+/* =========================================================
+   POND LAYER
+========================================================= */
+
+.se-shift-page .se-shift-header {
+  position: sticky;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 30% 120%,
+      rgba(207, 187, 157, 0.12),
+      transparent 34%
+    ),
+    radial-gradient(
+      ellipse at 78% -30%,
+      rgba(230, 215, 191, 0.08),
+      transparent 36%
+    ),
+    repeating-radial-gradient(
+      ellipse at 50% 120%,
+      transparent 0,
+      transparent 31px,
+      rgba(255,255,255,0.018) 32px,
+      transparent 34px
+    ),
+    linear-gradient(
+      118deg,
+      #171817 0%,
+      #22221f 45%,
+      #39352f 100%
+    ) !important;
+}
+
+
+/* =========================================================
+   FISH POND
+========================================================= */
+
+.se-shift-fish-pond {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   COMPLETE FISH
+========================================================= */
+
+.se-shift-fish {
+  position: absolute;
+
+  left: -130px;
+
+  width: 94px;
+  height: 46px;
+
+  display: block;
+
+  opacity: 0.48;
+
+  filter:
+    drop-shadow(
+      0 3px 3px
+      rgba(0, 0, 0, 0.16)
+    );
+
+  will-change: transform;
+}
+
+
+/* =========================================================
+   FISH BODY
+
+   Tail is on LEFT.
+   Rounded head is on RIGHT.
+========================================================= */
+
+.se-shift-fish .fish-body {
+  position: absolute;
+
+  z-index: 2;
+
+  left: 20px;
+  top: 8px;
+
+  width: 68px;
+  height: 32px;
+
+  display: block;
+
+  border-radius:
+    58% 72% 72% 58% /
+    52% 52% 52% 52%;
+
+  background:
+    radial-gradient(
+      ellipse at 73% 28%,
+      rgba(255,255,255,0.18),
+      transparent 20%
+    ),
+    linear-gradient(
+      105deg,
+      #756650 0%,
+      #a58e6d 48%,
+      #c0a782 100%
+    );
+
+  box-shadow:
+    inset -5px -4px 8px
+      rgba(50, 42, 33, 0.20),
+    inset 5px 3px 8px
+      rgba(255,255,255,0.09);
+
+  transform-origin:
+    20% 50%;
+}
+
+
+/* =========================================================
+   TAIL
+========================================================= */
+
+.se-shift-fish .fish-tail {
+  position: absolute;
+
+  z-index: 1;
+
+  left: 0;
+  top: 8px;
+
+  width: 30px;
+  height: 32px;
+
+  display: block;
+
+  background:
+    linear-gradient(
+      90deg,
+      #756650,
+      #9b8567
+    );
+
+  clip-path:
+    polygon(
+      100% 50%,
+      0 3%,
+      14% 48%,
+      0 97%
+    );
+
+  transform-origin:
+    100% 50%;
+
+  animation:
+    seFishTailMove
+    0.55s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+
+/* =========================================================
+   EYE
+========================================================= */
+
+.se-shift-fish .fish-eye {
+  position: absolute;
+
+  right: 13px;
+  top: 7px;
+
+  width: 5px;
+  height: 5px;
+
+  display: block;
+
+  border-radius: 50%;
+
+  background: #211e19;
+
+  box-shadow:
+    0 0 0 1.5px
+    rgba(235,220,195,0.55);
+}
+
+
+/* tiny eye shine */
+
+.se-shift-fish .fish-eye::after {
+  content: "";
+
+  position: absolute;
+
+  width: 1.5px;
+  height: 1.5px;
+
+  right: 1px;
+  top: 1px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(255,255,255,0.9);
+}
+
+
+/* =========================================================
+   MOUTH
+========================================================= */
+
+.se-shift-fish .fish-mouth {
+  position: absolute;
+
+  right: -1px;
+  top: 17px;
+
+  width: 8px;
+  height: 5px;
+
+  display: block;
+
+  border-bottom:
+    1.5px solid
+    rgba(39,34,28,0.8);
+
+  border-radius:
+    0 0 80% 80%;
+
+  transform:
+    rotate(-7deg);
+}
+
+
+/* =========================================================
+   TOP FIN
+========================================================= */
+
+.se-shift-fish .fish-fin {
+  position: absolute;
+
+  left: 27px;
+  top: -8px;
+
+  width: 21px;
+  height: 11px;
+
+  display: block;
+
+  background:
+    rgba(153,130,98,0.78);
+
+  clip-path:
+    polygon(
+      0 100%,
+      46% 0,
+      100% 100%
+    );
+
+  transform:
+    rotate(-4deg);
+
+  transform-origin:
+    bottom center;
+}
+
+
+/* =========================================================
+   BOTTOM / SIDE FIN
+========================================================= */
+
+.se-shift-fish .fish-body::after {
+  content: "";
+
+  position: absolute;
+
+  left: 33px;
+  bottom: -6px;
+
+  width: 18px;
+  height: 10px;
+
+  background:
+    rgba(129,108,80,0.65);
+
+  clip-path:
+    polygon(
+      0 0,
+      100% 30%,
+      25% 100%
+    );
+
+  transform:
+    rotate(10deg);
+}
+
+
+/* =========================================================
+   SUBTLE GILL
+========================================================= */
+
+.se-shift-fish .fish-body::before {
+  content: "";
+
+  position: absolute;
+
+  right: 24px;
+  top: 7px;
+
+  width: 9px;
+  height: 18px;
+
+  border-right:
+    1px solid
+    rgba(62,51,40,0.32);
+
+  border-radius: 50%;
+}
+
+
+/* =========================================================
+   TAIL MOVEMENT
+========================================================= */
+
+@keyframes seFishTailMove {
+
+  from {
+    transform:
+      rotate(-8deg)
+      skewY(-4deg);
+  }
+
+  to {
+    transform:
+      rotate(8deg)
+      skewY(4deg);
+  }
+}
+
+
+/* =========================================================
+   FISH 1
+========================================================= */
+
+.se-shift-fish--1 {
+  top: 15px;
+
+  transform: scale(1);
+
+  animation:
+    seFishSwim1
+    17s
+    linear
+    infinite;
+}
+
+
+/* =========================================================
+   FISH 2
+========================================================= */
+
+.se-shift-fish--2 {
+  top: 58px;
+
+  opacity: 0.32;
+
+  animation:
+    seFishSwim2
+    22s
+    linear
+    infinite;
+
+  animation-delay: -8s;
+}
+
+
+/* =========================================================
+   FISH 3
+========================================================= */
+
+.se-shift-fish--3 {
+  top: 29px;
+
+  opacity: 0.40;
+
+  animation:
+    seFishSwim3
+    20s
+    linear
+    infinite;
+
+  animation-delay: -13s;
+}
+
+
+/* =========================================================
+   FISH 4
+========================================================= */
+
+.se-shift-fish--4 {
+  top: 5px;
+
+  opacity: 0.25;
+
+  animation:
+    seFishSwim4
+    25s
+    linear
+    infinite;
+
+  animation-delay: -17s;
+}
+
+
+/* =========================================================
+   FISH 5
+========================================================= */
+
+.se-shift-fish--5 {
+  top: 67px;
+
+  opacity: 0.30;
+
+  animation:
+    seFishSwim5
+    19s
+    linear
+    infinite;
+
+  animation-delay: -4s;
+}
+
+
+/* =========================================================
+   DIFFERENT FISH SIZES
+========================================================= */
+
+.se-shift-fish--1 {
+  scale: 1;
+}
+
+.se-shift-fish--2 {
+  scale: 0.72;
+}
+
+.se-shift-fish--3 {
+  scale: 0.88;
+}
+
+.se-shift-fish--4 {
+  scale: 0.62;
+}
+
+.se-shift-fish--5 {
+  scale: 0.78;
+}
+
+
+/* =========================================================
+   SWIMMING PATHS
+========================================================= */
+
+@keyframes seFishSwim1 {
+
+  0% {
+    transform:
+      translate3d(
+        -120px,
+        0,
+        0
+      );
+  }
+
+  25% {
+    transform:
+      translate3d(
+        28vw,
+        5px,
+        0
+      );
+  }
+
+  50% {
+    transform:
+      translate3d(
+        60vw,
+        -3px,
+        0
+      );
+  }
+
+  75% {
+    transform:
+      translate3d(
+        92vw,
+        4px,
+        0
+      );
+  }
+
+  100% {
+    transform:
+      translate3d(
+        calc(100vw + 180px),
+        0,
+        0
+      );
+  }
+}
+
+
+@keyframes seFishSwim2 {
+
+  0% {
+    transform:
+      translate3d(
+        -140px,
+        0,
+        0
+      );
+  }
+
+  33% {
+    transform:
+      translate3d(
+        35vw,
+        -4px,
+        0
+      );
+  }
+
+  66% {
+    transform:
+      translate3d(
+        72vw,
+        3px,
+        0
+      );
+  }
+
+  100% {
+    transform:
+      translate3d(
+        calc(100vw + 160px),
+        -2px,
+        0
+      );
+  }
+}
+
+
+@keyframes seFishSwim3 {
+
+  0% {
+    transform:
+      translate3d(
+        -150px,
+        0,
+        0
+      );
+  }
+
+  30% {
+    transform:
+      translate3d(
+        32vw,
+        4px,
+        0
+      );
+  }
+
+  65% {
+    transform:
+      translate3d(
+        70vw,
+        -5px,
+        0
+      );
+  }
+
+  100% {
+    transform:
+      translate3d(
+        calc(100vw + 170px),
+        1px,
+        0
+      );
+  }
+}
+
+
+@keyframes seFishSwim4 {
+
+  0% {
+    transform:
+      translate3d(
+        -130px,
+        0,
+        0
+      );
+  }
+
+  50% {
+    transform:
+      translate3d(
+        54vw,
+        4px,
+        0
+      );
+  }
+
+  100% {
+    transform:
+      translate3d(
+        calc(100vw + 150px),
+        -2px,
+        0
+      );
+  }
+}
+
+
+@keyframes seFishSwim5 {
+
+  0% {
+    transform:
+      translate3d(
+        -160px,
+        0,
+        0
+      );
+  }
+
+  40% {
+    transform:
+      translate3d(
+        44vw,
+        -3px,
+        0
+      );
+  }
+
+  70% {
+    transform:
+      translate3d(
+        77vw,
+        5px,
+        0
+      );
+  }
+
+  100% {
+    transform:
+      translate3d(
+        calc(100vw + 180px),
+        0,
+        0
+      );
+  }
+}
+
+
+/* =========================================================
+   HEADER CONTENT ALWAYS ABOVE POND
+========================================================= */
+
+.se-shift-page
+.se-shift-header-left,
+
+.se-shift-page
+.se-shift-header-actions,
+
+.se-shift-page
+.se-shift-back {
+  position: relative;
+
+  z-index: 20 !important;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 760px) {
+
+  .se-shift-fish {
+    opacity: 0.25;
+  }
+
+  .se-shift-fish--4,
+  .se-shift-fish--5 {
+    display: none;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+
+  .se-shift-fish,
+  .se-shift-fish .fish-tail {
+    animation: none !important;
+  }
+}

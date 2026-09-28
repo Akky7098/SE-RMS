@@ -19,50 +19,26 @@ import {
    HELPERS
 ========================================================= */
 
-const getUserFromMember = (
-  member
-) =>
-  member?.user ||
-  member ||
-  {};
+const getUserFromMember = (member) =>
+  member?.user || member || {};
 
-const getUserId = (
-  member
-) => {
-  const user =
-    getUserFromMember(
-      member
-    );
+const getUserId = (member) => {
+  const user = getUserFromMember(member);
 
-  return (
-    user?._id ||
-    user?.id ||
-    ""
-  );
+  return user?._id || user?.id || "";
 };
 
-const getUserName = (
-  member
-) => {
-  const user =
-    getUserFromMember(
-      member
-    );
+const getUserName = (member) => {
+  const user = getUserFromMember(member);
 
   return safeText(
-    user?.displayName ||
-      user?.name,
+    user?.displayName || user?.name,
     "HR Employee"
   );
 };
 
-const getUserEmail = (
-  member
-) => {
-  const user =
-    getUserFromMember(
-      member
-    );
+const getUserEmail = (member) => {
+  const user = getUserFromMember(member);
 
   return safeText(
     user?.email,
@@ -70,24 +46,13 @@ const getUserEmail = (
   );
 };
 
-const formatDepartmentRole = (
-  role
-) =>
-  safeText(
-    role,
-    "HR Member"
-  )
-    .replaceAll(
-      "_",
-      " "
-    )
+const formatDepartmentRole = (role) =>
+  safeText(role, "HR Member")
+    .replaceAll("_", " ")
     .toLowerCase()
     .replace(
       /\b\w/g,
-      (
-        value
-      ) =>
-        value.toUpperCase()
+      (value) => value.toUpperCase()
     );
 
 /* =========================================================
@@ -96,130 +61,84 @@ const formatDepartmentRole = (
 
 const AssignHrModal = ({
   open,
-
   requirement,
-
   onClose,
-
   onAssigned,
 }) => {
-  const [
-    employees,
-    setEmployees,
-  ] = useState([]);
+  const [employees, setEmployees] =
+    useState([]);
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [
-    assigning,
-    setAssigning,
-  ] = useState(false);
+  const [assigning, setAssigning] =
+    useState(false);
 
-  const [
-    search,
-    setSearch,
-  ] = useState("");
+  const [search, setSearch] =
+    useState("");
 
-  const [
-    selectedId,
-    setSelectedId,
-  ] = useState("");
+  const [selectedId, setSelectedId] =
+    useState("");
 
-  const [
-    error,
-    setError,
-  ] = useState("");
+  const [error, setError] =
+    useState("");
 
   const currentOwnerId =
-    requirement
-      ?.assignedHr
-      ?._id ||
-    requirement
-      ?.assignedHr ||
+    requirement?.assignedHr?._id ||
+    requirement?.assignedHr ||
     "";
 
   /* =========================================================
-     RESET / LOAD
+     LOAD HR TEAM
   ========================================================= */
 
   useEffect(() => {
-    if (
-      !open
-    ) {
+    if (!open) {
       return;
     }
 
-    let active =
-      true;
+    let active = true;
 
-    setSearch(
-      ""
-    );
-
+    setSearch("");
     setSelectedId(
-      String(
-        currentOwnerId ||
-          ""
-      )
+      String(currentOwnerId || "")
     );
+    setError("");
 
-    setError(
-      ""
-    );
+    const loadEmployees = async () => {
+      try {
+        setLoading(true);
 
-    const load =
-      async () => {
-        try {
-          setLoading(
-            true
+        const result =
+          await getAvailableHrEmployees();
+
+        if (active) {
+          setEmployees(
+            Array.isArray(result)
+              ? result
+              : []
           );
-
-          const result =
-            await getAvailableHrEmployees();
-
-          if (
-            active
-          ) {
-            setEmployees(
-              Array.isArray(
-                result
-              )
-                ? result
-                : []
-            );
-          }
-        } catch (
-          loadError
-        ) {
-          if (
-            active
-          ) {
-            setError(
-              getApiErrorMessage(
-                loadError,
-                "HR employees could not be loaded."
-              )
-            );
-          }
-        } finally {
-          if (
-            active
-          ) {
-            setLoading(
-              false
-            );
-          }
         }
-      };
+      } catch (loadError) {
+        if (active) {
+          setError(
+            getApiErrorMessage(
+              loadError,
+              "HR employees could not be loaded."
+            )
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
 
-    load();
+    loadEmployees();
 
     return () => {
-      active =
-        false;
+      active = false;
     };
   }, [
     open,
@@ -227,28 +146,22 @@ const AssignHrModal = ({
   ]);
 
   /* =========================================================
-     ESC
+     ESC CLOSE
   ========================================================= */
 
   useEffect(() => {
-    if (
-      !open
-    ) {
+    if (!open) {
       return undefined;
     }
 
-    const handleKeyDown =
-      (
-        event
-      ) => {
-        if (
-          event.key ===
-            "Escape" &&
-          !assigning
-        ) {
-          onClose?.();
-        }
-      };
+    const handleKeyDown = (event) => {
+      if (
+        event.key === "Escape" &&
+        !assigning
+      ) {
+        onClose?.();
+      }
+    };
 
     window.addEventListener(
       "keydown",
@@ -272,236 +185,178 @@ const AssignHrModal = ({
 
   const filteredEmployees =
     useMemo(() => {
-      const keyword =
-        String(
-          search || ""
-        )
-          .trim()
-          .toLowerCase();
+      const keyword = String(
+        search || ""
+      )
+        .trim()
+        .toLowerCase();
 
-      if (
-        !keyword
-      ) {
+      if (!keyword) {
         return employees;
       }
 
       return employees.filter(
-        (
-          member
-        ) =>
+        (member) =>
           [
-            getUserName(
-              member
-            ),
-
-            getUserEmail(
-              member
-            ),
-
-            member
-              ?.departmentRole,
+            getUserName(member),
+            getUserEmail(member),
+            member?.departmentRole,
           ]
-            .filter(
-              Boolean
-            )
-            .join(
-              " "
-            )
+            .filter(Boolean)
+            .join(" ")
             .toLowerCase()
-            .includes(
-              keyword
-            )
+            .includes(keyword)
       );
     }, [
       employees,
       search,
     ]);
 
-  const selectedMember =
-    useMemo(
-      () =>
-        employees.find(
-          (
-            member
-          ) =>
-            String(
-              getUserId(
-                member
-              )
-            ) ===
-            String(
-              selectedId
-            )
-        ) || null,
-      [
-        employees,
-        selectedId,
-      ]
-    );
-
   const selectionUnchanged =
     Boolean(
       selectedId &&
-      String(
-        selectedId
-      ) ===
-        String(
-          currentOwnerId
-        )
+      String(selectedId) ===
+        String(currentOwnerId)
     );
 
   /* =========================================================
      ASSIGN
   ========================================================= */
 
-  const handleAssign =
-    async () => {
-      const requirementId =
-        getRecordId(
-          requirement
+  const handleAssign = async () => {
+    const requirementId =
+      getRecordId(requirement);
+
+    if (!requirementId) {
+      setError(
+        "Requirement ID is missing."
+      );
+      return;
+    }
+
+    if (!selectedId) {
+      setError(
+        "Select an HR employee."
+      );
+      return;
+    }
+
+    if (selectionUnchanged) {
+      setError(
+        "This employee is already assigned."
+      );
+      return;
+    }
+
+    try {
+      setAssigning(true);
+      setError("");
+
+      const updated =
+        await assignHrToRequirement(
+          requirementId,
+          selectedId
         );
 
-      if (
-        !requirementId
-      ) {
-        setError(
-          "Requirement ID is missing."
-        );
+      await onAssigned?.(updated);
+    } catch (assignError) {
+      setError(
+        getApiErrorMessage(
+          assignError,
+          "HR owner could not be assigned."
+        )
+      );
+    } finally {
+      setAssigning(false);
+    }
+  };
 
-        return;
-      }
-
-      if (
-        !selectedId
-      ) {
-        setError(
-          "Please select an HR employee."
-        );
-
-        return;
-      }
-
-      if (
-        selectionUnchanged
-      ) {
-        setError(
-          "This employee is already the hiring owner."
-        );
-
-        return;
-      }
-
-      try {
-        setAssigning(
-          true
-        );
-
-        setError(
-          ""
-        );
-
-        const updated =
-          await assignHrToRequirement(
-            requirementId,
-            selectedId
-          );
-
-        await onAssigned?.(
-          updated
-        );
-      } catch (
-        assignError
-      ) {
-        setError(
-          getApiErrorMessage(
-            assignError,
-            "HR owner could not be assigned."
-          )
-        );
-      } finally {
-        setAssigning(
-          false
-        );
-      }
-    };
-
-  if (
-    !open
-  ) {
+  if (!open) {
     return null;
   }
+
+  const positionTitle =
+    safeText(
+      requirement?.positionTitle,
+      "Position"
+    );
+
+  const requestNumber =
+    safeText(
+      requirement?.requestNumber,
+      "MPR"
+    );
+
+  const departmentName =
+    safeText(
+      requirement?.department?.name ||
+        requirement?.departmentName,
+      "Department"
+    );
+
+  const currentOwnerName =
+    safeText(
+      requirement?.assignedHr
+        ?.displayName ||
+        requirement?.assignedHr?.name,
+      "Not assigned"
+    );
 
   return (
     <div
       className="se-hiring-modal-overlay"
       onMouseDown={() => {
-        if (
-          !assigning
-        ) {
+        if (!assigning) {
           onClose?.();
         }
       }}
     >
       <section
         className="se-hiring-assign-modal"
-        onMouseDown={(
-          event
-        ) =>
+        onMouseDown={(event) =>
           event.stopPropagation()
         }
         role="dialog"
         aria-modal="true"
+        aria-labelledby="assign-hiring-owner-title"
       >
-        {/* =================================================
-            HEADER
-        ================================================== */}
+        {/* HEADER */}
 
         <header className="se-hiring-modal-head">
-          <div>
-            <span>
-              HIRING OWNERSHIP
+          <div className="se-hiring-modal-title">
+            <span className="se-hiring-modal-eyebrow">
+              HIRING OWNER
             </span>
 
-            <h2>
+            <h2 id="assign-hiring-owner-title">
               {currentOwnerId
                 ? "Reassign Hiring Owner"
                 : "Assign Hiring Owner"}
             </h2>
 
             <p>
-              {safeText(
-                requirement
-                  ?.requestNumber,
-                "Requirement"
-              )}
+              <strong>
+                {requestNumber}
+              </strong>
 
-              {" · "}
+              <span>•</span>
 
-              {safeText(
-                requirement
-                  ?.positionTitle,
-                "Position"
-              )}
+              {positionTitle}
             </p>
           </div>
 
           <button
             type="button"
             className="se-hiring-modal-close"
-            onClick={
-              onClose
-            }
-            disabled={
-              assigning
-            }
+            onClick={onClose}
+            disabled={assigning}
+            aria-label="Close"
           >
             ×
           </button>
         </header>
 
-        {/* =================================================
-            REQUIREMENT SUMMARY
-        ================================================== */}
+        {/* REQUIREMENT SUMMARY */}
 
         <div className="se-hiring-modal-role-summary">
           <div>
@@ -510,12 +365,7 @@ const AssignHrModal = ({
             </span>
 
             <strong>
-              {safeText(
-                requirement
-                  ?.department
-                  ?.name,
-                "Department"
-              )}
+              {departmentName}
             </strong>
           </div>
 
@@ -538,147 +388,105 @@ const AssignHrModal = ({
               CURRENT OWNER
             </span>
 
-            <strong>
-              {safeText(
-                requirement
-                  ?.assignedHr
-                  ?.displayName,
-                "Not assigned"
-              )}
+            <strong
+              className={
+                currentOwnerId
+                  ? ""
+                  : "is-unassigned"
+              }
+            >
+              {currentOwnerName}
             </strong>
           </div>
         </div>
 
-        <div className="se-hiring-assignment-note">
-          <span>
-            i
-          </span>
-
-          <p>
-            Select the HR employee who
-            will own candidate sourcing,
-            calls, screening, follow-ups
-            and interview coordination
-            for this requirement.
-          </p>
-        </div>
-
-        {/* =================================================
-            SEARCH
-        ================================================== */}
+        {/* SEARCH */}
 
         <div className="se-hiring-employee-search">
-          <span>
+          <span className="se-hiring-search-icon">
             ⌕
           </span>
 
           <input
             type="text"
-            value={
-              search
-            }
-            onChange={(
-              event
-            ) =>
+            value={search}
+            onChange={(event) =>
               setSearch(
-                event
-                  .target
-                  .value
+                event.target.value
               )
             }
-            placeholder="Search HR employee by name, email or role..."
+            placeholder="Search HR by name, email or role"
+            autoFocus
           />
 
           {search ? (
             <button
               type="button"
+              className="se-hiring-search-clear"
               onClick={() =>
-                setSearch(
-                  ""
-                )
+                setSearch("")
               }
+              aria-label="Clear search"
             >
               ×
             </button>
           ) : null}
         </div>
 
-        {/* =================================================
-            ERROR
-        ================================================== */}
+        {/* ERROR */}
 
         {error ? (
           <div className="se-hiring-error">
-            <span>
-              !
-            </span>
+            <span>!</span>
 
-            <div>
-              <strong>
-                Unable to continue
-              </strong>
-
-              <p>
-                {
-                  error
-                }
-              </p>
-            </div>
+            <p>
+              {error}
+            </p>
           </div>
         ) : null}
 
-        {/* =================================================
-            HR TEAM
-        ================================================== */}
+        {/* EMPLOYEE LIST */}
 
         <div className="se-hiring-employee-list">
           {loading ? (
             <div className="se-hiring-loading-state">
               <span className="se-hiring-spinner" />
 
-              <p>
+              <strong>
                 Loading HR team...
-              </p>
+              </strong>
             </div>
           ) : null}
 
           {!loading &&
-          filteredEmployees.length ===
-            0 ? (
+          filteredEmployees.length === 0 ? (
             <div className="se-hiring-empty-team">
-              <span>
-                H
-              </span>
+              <span>H</span>
 
-              <strong>
-                No matching HR employees
-              </strong>
+              <div>
+                <strong>
+                  No HR employees found
+                </strong>
 
-              <p>
-                Active members of the HR
-                department will appear
-                here.
-              </p>
+                <p>
+                  Try another name,
+                  email or role.
+                </p>
+              </div>
             </div>
           ) : null}
 
           {!loading
             ? filteredEmployees.map(
-                (
-                  member
-                ) => {
+                (member) => {
                   const userId =
                     String(
-                      getUserId(
-                        member
-                      )
+                      getUserId(member)
                     );
 
                   const selected =
                     userId ===
-                    String(
-                      selectedId
-                    );
+                    String(selectedId);
 
                   const current =
                     userId ===
@@ -686,57 +494,42 @@ const AssignHrModal = ({
                       currentOwnerId
                     );
 
+                  const name =
+                    getUserName(member);
+
                   return (
                     <button
                       type="button"
-                      key={
-                        userId
-                      }
-                      disabled={
-                        assigning
-                      }
+                      key={userId}
+                      disabled={assigning}
                       className={[
                         "se-hiring-employee-option",
-
                         selected
                           ? "selected"
                           : "",
-
                         current
                           ? "current"
                           : "",
                       ]
-                        .filter(
-                          Boolean
-                        )
-                        .join(
-                          " "
-                        )}
+                        .filter(Boolean)
+                        .join(" ")}
                       onClick={() => {
                         setSelectedId(
                           userId
                         );
 
-                        setError(
-                          ""
-                        );
+                        setError("");
                       }}
                     >
                       <span className="se-hiring-employee-avatar">
-                        {getUserName(
-                          member
-                        )
-                          .charAt(
-                            0
-                          )
+                        {name
+                          .charAt(0)
                           .toUpperCase()}
                       </span>
 
                       <span className="se-hiring-employee-info">
                         <strong>
-                          {getUserName(
-                            member
-                          )}
+                          {name}
                         </strong>
 
                         <small>
@@ -759,7 +552,10 @@ const AssignHrModal = ({
                         </span>
                       ) : null}
 
-                      <span className="se-hiring-radio">
+                      <span
+                        className="se-hiring-radio"
+                        aria-hidden="true"
+                      >
                         {selected
                           ? "✓"
                           : ""}
@@ -771,102 +567,59 @@ const AssignHrModal = ({
             : null}
         </div>
 
-        {/* =================================================
-            SELECTED PREVIEW
-        ================================================== */}
-
-        {selectedMember &&
-        !selectionUnchanged ? (
-          <div className="se-hiring-selected-preview">
-            <span className="se-hiring-selected-avatar">
-              {getUserName(
-                selectedMember
-              )
-                .charAt(
-                  0
-                )
-                .toUpperCase()}
-            </span>
-
-            <div>
-              <span>
-                SELECTED HIRING OWNER
-              </span>
-
-              <strong>
-                {getUserName(
-                  selectedMember
-                )}
-              </strong>
-
-              <small>
-                {formatDepartmentRole(
-                  selectedMember
-                    ?.departmentRole
-                )}
-              </small>
-            </div>
-
-            <span className="check">
-              ✓
-            </span>
-          </div>
-        ) : null}
-
-        {/* =================================================
-            ACTIONS
-        ================================================== */}
+        {/* FOOTER */}
 
         <footer className="se-hiring-modal-actions">
-          <button
-            type="button"
-            className="secondary"
-            onClick={
-              onClose
-            }
-            disabled={
-              assigning
-            }
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            className="primary"
-            disabled={
-              !selectedId ||
-              assigning ||
-              selectionUnchanged
-            }
-            onClick={
-              handleAssign
-            }
-          >
-            {assigning ? (
+          <div className="se-hiring-modal-selection">
+            {selectedId &&
+            !selectionUnchanged ? (
               <>
-                <span className="se-hiring-mini-spinner" />
-
-                Saving Assignment...
-              </>
-            ) : currentOwnerId ? (
-              <>
-                Confirm Reassignment
+                <span className="check">
+                  ✓
+                </span>
 
                 <span>
-                  →
+                  HR owner selected
                 </span>
               </>
             ) : (
-              <>
-                Assign Hiring Owner
-
-                <span>
-                  →
-                </span>
-              </>
+              <span>
+                Select an HR owner
+              </span>
             )}
-          </button>
+          </div>
+
+          <div className="se-hiring-modal-buttons">
+            <button
+              type="button"
+              className="secondary"
+              onClick={onClose}
+              disabled={assigning}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              className="primary"
+              disabled={
+                !selectedId ||
+                assigning ||
+                selectionUnchanged
+              }
+              onClick={handleAssign}
+            >
+              {assigning
+                ? "Saving..."
+                : currentOwnerId
+                  ? "Reassign Owner"
+                  : "Assign Owner"}
+
+              {!assigning ? (
+                <span>→</span>
+              ) : null}
+            </button>
+          </div>
         </footer>
       </section>
     </div>

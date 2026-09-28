@@ -67,7 +67,7 @@ function AttendanceFilters({
     ]);
 
   const formatRangeDate = (value) => {
-    if (!value) return "—";
+    if (!value) return "Select date";
 
     const parts =
       String(value).split("-");
@@ -111,6 +111,54 @@ function AttendanceFilters({
     setShowMoreFilters(false);
   };
 
+const handleRangeType = (code) => {
+  setRangeType(code);
+
+  if (code === "CUSTOM") {
+    setFrom("");
+    setTo("");
+  }
+};
+
+  const handleFromChange = (event) => {
+    const value =
+      event.target.value;
+
+    setFrom(value);
+
+    /*
+      If the currently selected TO date
+      is before the new FROM date, keep
+      the range valid automatically.
+    */
+    if (
+      value &&
+      to &&
+      to < value
+    ) {
+      setTo(value);
+    }
+  };
+
+  const handleToChange = (event) => {
+    const value =
+      event.target.value;
+
+    /*
+      Do not allow an invalid historical
+      range where TO is before FROM.
+    */
+    if (
+      from &&
+      value &&
+      value < from
+    ) {
+      return;
+    }
+
+    setTo(value);
+  };
+
   const hasAdvancedFilters =
     Boolean(source) ||
     Boolean(
@@ -122,12 +170,23 @@ function AttendanceFilters({
       office
     );
 
+  const advancedFilterCount =
+    [
+      source,
+      canUseManagementFilters
+        ? department
+        : "",
+      canUseManagementFilters
+        ? office
+        : "",
+    ].filter(Boolean).length;
+
   return (
-    <section className="se-people-att-filter-card se-att-filter-v3">
+    <section className="se-people-att-filter-card se-att-filter-v4">
 
-      <div className="se-att-filter-v3-head">
+      <div className="se-att-filter-v4-head">
 
-        <div className="se-att-filter-v3-title">
+        <div className="se-att-filter-v4-title">
           <span>
             FILTERS
           </span>
@@ -139,22 +198,18 @@ function AttendanceFilters({
           </h2>
         </div>
 
-        <div className="se-att-filter-v3-head-actions">
+        <div className="se-att-filter-v4-head-actions">
 
           {activeFilterCount > 0 ? (
-            <span className="se-att-filter-v3-active">
+            <span className="se-att-filter-v4-active">
               {activeFilterCount} active
             </span>
           ) : null}
 
           <button
             type="button"
-            className="se-att-filter-v3-reset"
+            className="se-att-filter-v4-reset"
             onClick={handleReset}
-            disabled={
-              activeFilterCount === 0 &&
-              rangeType === "WEEK"
-            }
           >
             Reset
           </button>
@@ -163,11 +218,19 @@ function AttendanceFilters({
 
       </div>
 
-      <div className="se-att-filter-v3-range">
+      <div className="se-att-filter-v4-toolbar">
 
-        <div className="se-att-filter-v3-tabs">
+        <div
+          className="se-att-filter-v4-tabs"
+          role="tablist"
+          aria-label="Attendance date range"
+        >
 
           {[
+            [
+              "TODAY",
+              "Today",
+            ],
             [
               "WEEK",
               "This Week",
@@ -188,13 +251,17 @@ function AttendanceFilters({
               <button
                 key={code}
                 type="button"
+                role="tab"
+                aria-selected={
+                  rangeType === code
+                }
                 className={
                   rangeType === code
                     ? "active"
                     : ""
                 }
                 onClick={() =>
-                  setRangeType(
+                  handleRangeType(
                     code
                   )
                 }
@@ -208,7 +275,7 @@ function AttendanceFilters({
 
         {rangeType !==
         "CUSTOM" ? (
-          <div className="se-att-filter-v3-period">
+          <div className="se-att-filter-v4-period">
 
             <svg
               width="15"
@@ -235,89 +302,144 @@ function AttendanceFilters({
               />
             </svg>
 
-            <span>
+            <strong>
               {formatRangeDate(
                 from
               )}
+            </strong>
+
+            <span className="se-att-filter-v4-period-arrow">
+              →
             </span>
 
-            <i>
-              →
-            </i>
-
-            <span>
+            <strong>
               {formatRangeDate(
                 to
               )}
-            </span>
+            </strong>
 
           </div>
-        ) : null}
+        ) : (
+          <div className="se-att-filter-v4-custom">
+
+            <label className="se-att-filter-v4-date-field">
+
+              <span>
+                FROM
+              </span>
+
+              <div className="se-att-filter-v4-date-input">
+
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="3.5"
+                    y="5.5"
+                    width="17"
+                    height="15"
+                    rx="2.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  />
+
+                  <path
+                    d="M8 3.5v4M16 3.5v4M3.5 10h17"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                <input
+                  type="date"
+                  value={from || ""}
+                  onChange={
+                    handleFromChange
+                  }
+                  aria-label="Attendance start date"
+                />
+
+              </div>
+
+            </label>
+
+            <span className="se-att-filter-v4-custom-arrow">
+              →
+            </span>
+
+            <label
+  className={`se-att-filter-v4-date-field${
+    !from
+      ? " se-att-filter-v4-date-field--disabled"
+      : ""
+  }`}
+>
+
+  <span>
+    TO
+  </span>
+
+  <div className="se-att-filter-v4-date-input">
+
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect
+        x="3.5"
+        y="5.5"
+        width="17"
+        height="15"
+        rx="2.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+
+      <path
+        d="M8 3.5v4M16 3.5v4M3.5 10h17"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+
+    <input
+      type="date"
+      value={from ? to || "" : ""}
+      min={from || undefined}
+      disabled={!from}
+      onChange={
+        handleToChange
+      }
+      aria-label="Attendance end date"
+    />
+
+  </div>
+
+</label>
+
+          </div>
+        )}
 
       </div>
 
-      {rangeType ===
-      "CUSTOM" ? (
-        <div className="se-att-filter-v3-custom">
+      <div className="se-att-filter-v4-grid">
 
-          <label className="se-att-filter-v3-field">
-
-            <span>
-              FROM
-            </span>
-
-            <input
-              type="date"
-              value={from}
-              onChange={(
-                event
-              ) =>
-                setFrom(
-                  event.target
-                    .value
-                )
-              }
-            />
-
-          </label>
-
-          <span className="se-att-filter-v3-custom-arrow">
-            →
-          </span>
-
-          <label className="se-att-filter-v3-field">
-
-            <span>
-              TO
-            </span>
-
-            <input
-              type="date"
-              value={to}
-              onChange={(
-                event
-              ) =>
-                setTo(
-                  event.target
-                    .value
-                )
-              }
-            />
-
-          </label>
-
-        </div>
-      ) : null}
-
-      <div className="se-att-filter-v3-grid">
-
-        <label className="se-att-filter-v3-field se-att-filter-v3-search">
+        <label className="se-att-filter-v4-field se-att-filter-v4-search">
 
           <span>
             SEARCH
           </span>
 
-          <div className="se-att-filter-v3-input-wrap">
+          <div className="se-att-filter-v4-input-wrap">
 
             <svg
               width="15"
@@ -349,21 +471,20 @@ function AttendanceFilters({
                 event
               ) =>
                 setSearch(
-                  event.target
-                    .value
+                  event.target.value
                 )
               }
               placeholder={
                 canUseManagementFilters
-                  ? "Search employee"
-                  : "Search records"
+                  ? "Search employee or code"
+                  : "Search attendance"
               }
             />
 
             {search ? (
               <button
                 type="button"
-                className="se-att-filter-v3-clear"
+                className="se-att-filter-v4-clear"
                 onClick={() =>
                   setSearch("")
                 }
@@ -377,7 +498,7 @@ function AttendanceFilters({
 
         </label>
 
-        <label className="se-att-filter-v3-field">
+        <label className="se-att-filter-v4-field">
 
           <span>
             STATUS
@@ -389,8 +510,7 @@ function AttendanceFilters({
               event
             ) =>
               setStatus(
-                event.target
-                  .value
+                event.target.value
               )
             }
           >
@@ -433,7 +553,7 @@ function AttendanceFilters({
 
         </label>
 
-        <label className="se-att-filter-v3-field">
+        <label className="se-att-filter-v4-field">
 
           <span>
             WORK MODE
@@ -445,8 +565,7 @@ function AttendanceFilters({
               event
             ) =>
               setWorkMode(
-                event.target
-                  .value
+                event.target.value
               )
             }
           >
@@ -473,15 +592,15 @@ function AttendanceFilters({
 
         </label>
 
-        <div className="se-att-filter-v3-more">
+        <div className="se-att-filter-v4-more">
 
           <span>
-            &nbsp;
+            MORE
           </span>
 
           <button
             type="button"
-            className={`se-att-filter-v3-more-btn${
+            className={`se-att-filter-v4-more-btn${
               showMoreFilters
                 ? " active"
                 : ""
@@ -520,25 +639,15 @@ function AttendanceFilters({
               More filters
             </span>
 
-            {hasAdvancedFilters ? (
+            {advancedFilterCount >
+            0 ? (
               <strong>
-                {
-                  [
-                    source,
-                    canUseManagementFilters
-                      ? department
-                      : "",
-                    canUseManagementFilters
-                      ? office
-                      : "",
-                  ].filter(Boolean)
-                    .length
-                }
+                {advancedFilterCount}
               </strong>
             ) : null}
 
             <svg
-              className="se-att-filter-v3-chevron"
+              className="se-att-filter-v4-chevron"
               width="14"
               height="14"
               viewBox="0 0 24 24"
@@ -561,12 +670,12 @@ function AttendanceFilters({
       </div>
 
       {showMoreFilters ? (
-        <div className="se-att-filter-v3-advanced">
+        <div className="se-att-filter-v4-advanced">
 
-          <div className="se-att-filter-v3-advanced-grid">
+          <div className="se-att-filter-v4-advanced-grid">
 
             {canUseManagementFilters ? (
-              <label className="se-att-filter-v3-field">
+              <label className="se-att-filter-v4-field">
 
                 <span>
                   DEPARTMENT
@@ -578,8 +687,7 @@ function AttendanceFilters({
                     event
                   ) =>
                     setDepartment(
-                      event.target
-                        .value
+                      event.target.value
                     )
                   }
                 >
@@ -597,9 +705,7 @@ function AttendanceFilters({
                           item.value
                         }
                       >
-                        {
-                          item.label
-                        }
+                        {item.label}
                       </option>
                     )
                   )}
@@ -609,7 +715,7 @@ function AttendanceFilters({
             ) : null}
 
             {canUseManagementFilters ? (
-              <label className="se-att-filter-v3-field">
+              <label className="se-att-filter-v4-field">
 
                 <span>
                   LOCATION
@@ -621,8 +727,7 @@ function AttendanceFilters({
                     event
                   ) =>
                     setOffice(
-                      event.target
-                        .value
+                      event.target.value
                     )
                   }
                 >
@@ -640,9 +745,7 @@ function AttendanceFilters({
                           item.value
                         }
                       >
-                        {
-                          item.label
-                        }
+                        {item.label}
                       </option>
                     )
                   )}
@@ -651,7 +754,7 @@ function AttendanceFilters({
               </label>
             ) : null}
 
-            <label className="se-att-filter-v3-field">
+            <label className="se-att-filter-v4-field">
 
               <span>
                 SOURCE
@@ -663,8 +766,7 @@ function AttendanceFilters({
                   event
                 ) =>
                   setSource(
-                    event.target
-                      .value
+                    event.target.value
                   )
                 }
               >

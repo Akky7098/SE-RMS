@@ -2574,7 +2574,7 @@ button {
 }
 /* =========================================================
    =========================================================
-   MANPOWER — PREMIUM PRODUCTION UX
+   MANPOWER â€” PREMIUM PRODUCTION UX
    CREATE = CENTERED WORKSPACE
    DETAIL = EXISTING SIDE DRAWER
    =========================================================
@@ -3585,7 +3585,7 @@ input {
 .se-mpr-create-modal
 .se-mpr-field-error::before {
   content:
-    "●";
+    "â—";
 
   margin-right:
     5px;
@@ -5069,7 +5069,7 @@ small {
 }
 /* =========================================================
    =========================================================
-   MANPOWER DETAIL — PREMIUM READABILITY + ACTION UX
+   MANPOWER DETAIL â€” PREMIUM READABILITY + ACTION UX
    ADD AT ABSOLUTE END OF Manpower.css
    =========================================================
    ========================================================= */
@@ -7142,5 +7142,8316 @@ button:disabled {
   .se-mpr-confirm-actions {
     grid-template-columns:
       1fr;
+  }
+}
+/* ============================================================================
+   SE-RMS MANPOWER â€” FINAL ENTERPRISE UI OVERRIDES
+   Readability-first, structured table, centered detail workspace,
+   semantic status colors and high-contrast action hierarchy.
+============================================================================ */
+
+:root {
+  --mpr-font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mpr-text: #172033;
+  --mpr-text-2: #344054;
+  --mpr-muted: #667085;
+  --mpr-soft: #98a2b3;
+  --mpr-line: #e4e7ec;
+  --mpr-line-2: #eaecf0;
+  --mpr-surface: #ffffff;
+  --mpr-bg: #f6f8fb;
+  --mpr-red: #d92d20;
+  --mpr-red-bg: #fef3f2;
+  --mpr-green: #067647;
+  --mpr-green-bg: #ecfdf3;
+  --mpr-amber: #b54708;
+  --mpr-amber-bg: #fffaeb;
+  --mpr-blue: #175cd3;
+  --mpr-blue-bg: #eff8ff;
+  --mpr-shadow: 0 24px 80px rgba(16, 24, 40, 0.18);
+}
+
+.se-mpr-page,
+.se-mpr-overlay,
+.se-mpr-create-modal,
+.se-mpr-detail-modal-overlay,
+.se-mpr-detail-modal,
+.se-mpr-confirm-overlay,
+.se-mpr-confirm-modal {
+  font-family: var(--mpr-font) !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+.se-mpr-page {
+  color: var(--mpr-text);
+}
+
+/* PAGE HEADER */
+.se-mpr-page-head {
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 24px;
+}
+
+.se-mpr-page-head > div:first-child > span {
+  color: #d92d20;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.se-mpr-page-head h2 {
+  margin: 7px 0 6px;
+  color: #101828;
+  font-size: clamp(26px, 2vw, 34px);
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: -0.7px;
+}
+
+.se-mpr-page-head p {
+  max-width: 720px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.se-mpr-refresh,
+.se-mpr-create-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* SUMMARY */
+.se-mpr-summary-grid {
+  gap: 12px;
+}
+
+.se-mpr-summary-grid > button {
+  min-height: 96px;
+  padding: 17px;
+  border-color: var(--mpr-line);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+}
+
+.se-mpr-summary-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.se-mpr-summary-grid strong {
+  color: #101828;
+  font-size: 24px;
+  font-weight: 750;
+}
+
+.se-mpr-summary-grid > button > div > span {
+  margin-top: 6px;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* TOOLBAR */
+.se-mpr-toolbar {
+  margin-top: 16px;
+  padding: 10px;
+  border-color: var(--mpr-line);
+  border-radius: 12px;
+  gap: 10px;
+}
+
+.se-mpr-search {
+  width: min(330px, 100%);
+  height: 42px;
+  padding: 0 12px;
+  border-color: #d0d5dd;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.se-mpr-search input {
+  color: #101828;
+  font-size: 12px;
+}
+
+.se-mpr-search input::placeholder {
+  color: #98a2b3;
+}
+
+.se-mpr-status-tabs button {
+  min-height: 38px;
+  padding: 0 13px;
+  border-radius: 8px;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-mpr-status-tabs button.active {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.se-mpr-approval-inbox-pill {
+  min-height: 40px;
+  padding: 0 13px;
+  border-color: #fedf89;
+  border-radius: 9px;
+  background: #fffaeb;
+  color: #b54708;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+/* TABLE CONTAINER */
+.se-mpr-list-panel {
+  margin-top: 16px;
+  border: 1px solid var(--mpr-line);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.035);
+}
+
+.se-mpr-list-head {
+  min-height: 72px;
+  padding: 16px 20px;
+  border-bottom-color: var(--mpr-line);
+}
+
+.se-mpr-list-head > div > span {
+  color: #d92d20;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.se-mpr-list-head strong {
+  color: #101828;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.se-mpr-list-head p {
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* TABLE â€” FIXED VISUAL RHYTHM */
+.se-mpr-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d0d5dd transparent;
+}
+
+.se-mpr-table {
+  width: 100%;
+  min-width: 1120px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.se-mpr-table th {
+  height: 46px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e4e7ec;
+  background: #f9fafb;
+  color: #475467;
+  vertical-align: middle;
+  text-align: left;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.se-mpr-table td {
+  height: 78px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eaecf0;
+  color: #344054;
+  vertical-align: middle;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.se-mpr-table tbody tr {
+  background: #fff;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.se-mpr-table tbody tr:hover {
+  background: #f9fafb;
+  box-shadow: inset 3px 0 0 #d92d20;
+}
+
+.se-mpr-table th:nth-child(1), .se-mpr-table td:nth-child(1) { width: 28%; }
+.se-mpr-table th:nth-child(2), .se-mpr-table td:nth-child(2) { width: 15%; }
+.se-mpr-table th:nth-child(3), .se-mpr-table td:nth-child(3) { width: 8%; text-align: center; }
+.se-mpr-table th:nth-child(4), .se-mpr-table td:nth-child(4) { width: 13%; }
+.se-mpr-table th:nth-child(5), .se-mpr-table td:nth-child(5) { width: 13%; }
+.se-mpr-table th:nth-child(6), .se-mpr-table td:nth-child(6) { width: 13%; }
+.se-mpr-table th:last-child, .se-mpr-table td:last-child { width: 56px; text-align: center; }
+
+.se-mpr-role-cell {
+  min-width: 0;
+  gap: 12px;
+}
+
+.se-mpr-role-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #101828;
+  font-size: 11px;
+}
+
+.se-mpr-role-cell strong {
+  max-width: 250px;
+  color: #101828;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.se-mpr-role-cell > div > span {
+  margin-top: 5px;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.se-mpr-table-main-text {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.se-mpr-openings {
+  min-width: 34px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f2f4f7;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.se-mpr-person-cell {
+  min-width: 0;
+  gap: 9px;
+}
+
+.se-mpr-person-cell > span {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #eff8ff;
+  color: #175cd3;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.se-mpr-person-cell strong {
+  max-width: 140px;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-mpr-person-cell small {
+  margin-top: 3px;
+  color: #98a2b3;
+  font-size: 9px;
+}
+
+.se-mpr-row-arrow {
+  color: #98a2b3;
+  font-size: 18px;
+  transition: transform 140ms ease, color 140ms ease;
+}
+
+.se-mpr-table tbody tr:hover .se-mpr-row-arrow {
+  color: #d92d20;
+  transform: translateX(2px);
+}
+
+/* STATUS BADGES â€” semantic and immediately recognizable */
+.se-recruitment-status-badge,
+.se-mpr-status-badge,
+[class*="status-badge"] {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f9fafb;
+  color: #475467;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+/* common tone class possibilities used by RecruitmentStatusBadge */
+[class*="status-badge"].success,
+[class*="status-badge"].green,
+[class*="status-badge"].approved,
+[class*="status-badge"][class*="success"] {
+  border-color: #abefc6 !important;
+  background: #ecfdf3 !important;
+  color: #067647 !important;
+}
+
+[class*="status-badge"].warning,
+[class*="status-badge"].amber,
+[class*="status-badge"].pending,
+[class*="status-badge"][class*="warning"] {
+  border-color: #fedf89 !important;
+  background: #fffaeb !important;
+  color: #b54708 !important;
+}
+
+[class*="status-badge"].danger,
+[class*="status-badge"].red,
+[class*="status-badge"].rejected,
+[class*="status-badge"][class*="danger"] {
+  border-color: #fecdca !important;
+  background: #fef3f2 !important;
+  color: #b42318 !important;
+}
+
+[class*="status-badge"].info,
+[class*="status-badge"].blue,
+[class*="status-badge"][class*="info"] {
+  border-color: #b2ddff !important;
+  background: #eff8ff !important;
+  color: #175cd3 !important;
+}
+
+/* CREATE FORM readability */
+.se-mpr-form-section-head strong,
+.se-mpr-create-modal strong {
+  font-weight: 700;
+}
+
+.se-mpr-form-grid label,
+.se-mpr-full-field,
+.se-mpr-approval-zone label,
+.se-mpr-reject-form label {
+  color: #344054;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.se-mpr-form-grid label > span,
+.se-mpr-full-field > span,
+.se-mpr-approval-zone label > span,
+.se-mpr-reject-form label > span {
+  color: #344054;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-mpr-form-grid input,
+.se-mpr-form-grid select,
+.se-mpr-form-grid textarea,
+.se-mpr-full-field textarea,
+.se-mpr-approval-zone textarea,
+.se-mpr-reject-form textarea {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-color: #d0d5dd;
+  border-radius: 9px;
+  background: #fff;
+  color: #101828;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   DETAIL â€” CENTERED FULL WORKSPACE POPUP
+============================================================================ */
+
+.se-mpr-detail-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4200;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 24, 40, 0.62);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.se-mpr-detail-modal {
+  width: min(1380px, calc(100vw - 48px));
+  height: min(900px, calc(100vh - 48px));
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  background: #f7f9fc;
+  box-shadow: var(--mpr-shadow);
+  animation: seMprEnterpriseModalIn 180ms ease-out;
+}
+
+@keyframes seMprEnterpriseModalIn {
+  from { opacity: 0; transform: translateY(10px) scale(.992); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.se-mpr-detail-modal-header {
+  min-height: 112px;
+  padding: 22px 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(217,45,32,.24), transparent 31%),
+    linear-gradient(120deg, #101828 0%, #1d2939 64%, #3a1b20 100%);
+  color: #fff;
+}
+
+.se-mpr-detail-modal-heading {
+  min-width: 0;
+}
+
+.se-mpr-detail-modal-eyebrow {
+  margin-bottom: 8px;
+  color: #fda29b;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.se-mpr-detail-modal-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.se-mpr-detail-modal-title-row h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(26px, 2.1vw, 34px);
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: -0.7px;
+}
+
+.se-mpr-detail-badges {
+  margin-top: 0;
+  display: flex;
+  gap: 7px;
+}
+
+.se-mpr-detail-modal-close {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 140ms ease, transform 140ms ease;
+}
+
+.se-mpr-detail-modal-close:hover {
+  background: rgba(255,255,255,.16);
+  transform: scale(1.03);
+}
+
+.se-mpr-detail-modal-body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+  scrollbar-width: thin;
+  scrollbar-color: #cfd4dc transparent;
+}
+
+.se-mpr-detail-modal-main,
+.se-mpr-detail-modal-side {
+  min-width: 0;
+}
+
+.se-mpr-detail-modal-main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.se-mpr-detail-modal-side {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* SUMMARY */
+.se-mpr-popup-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.se-mpr-popup-summary-card {
+  min-height: 86px;
+  padding: 16px;
+  border: 1px solid #e4e7ec;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16,24,40,.02);
+}
+
+.se-mpr-popup-summary-card span {
+  color: #667085;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.se-mpr-popup-summary-card strong {
+  margin-top: 7px;
+  color: #101828;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* CONTENT CARDS */
+.se-mpr-popup-section,
+.se-mpr-popup-history-card,
+.se-mpr-popup-action-card,
+.se-mpr-popup-status-card {
+  border: 1px solid #e4e7ec;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16,24,40,.025);
+}
+
+.se-mpr-popup-section {
+  padding: 18px;
+}
+
+.se-mpr-popup-section-title {
+  margin-bottom: 14px;
+}
+
+.se-mpr-popup-section-title > span,
+.se-mpr-popup-action-head > span,
+.se-mpr-popup-status-card > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #d92d20;
+  font-size: 9px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.se-mpr-popup-section-title h3,
+.se-mpr-popup-action-head h3 {
+  margin: 0;
+  color: #101828;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: -0.15px;
+}
+
+.se-mpr-popup-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid #eaecf0;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.se-mpr-popup-info-grid > div {
+  min-height: 82px;
+  padding: 14px 15px;
+  border-right: 1px solid #eaecf0;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fcfcfd;
+}
+
+.se-mpr-popup-info-grid > div:nth-child(3n) { border-right: 0; }
+.se-mpr-popup-info-grid > div:nth-last-child(-n+3) { border-bottom: 0; }
+
+.se-mpr-popup-info-grid span {
+  color: #667085;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .55px;
+  text-transform: uppercase;
+}
+
+.se-mpr-popup-info-grid strong {
+  margin-top: 7px;
+  color: #1d2939;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.se-mpr-popup-two-column {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  gap: 14px;
+}
+
+.se-mpr-detail-skills {
+  gap: 7px;
+}
+
+.se-mpr-detail-skills span,
+.se-mpr-skill-preview span {
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid #b2ddff;
+  border-radius: 999px;
+  background: #eff8ff;
+  color: #175cd3;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.se-mpr-detail-empty-text {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.se-mpr-reason-card {
+  padding: 14px 15px;
+  border-color: #eaecf0;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.se-mpr-reason-card p {
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+/* OWNERS */
+.se-mpr-owner-grid {
+  gap: 10px;
+}
+
+.se-mpr-owner-grid > div {
+  min-height: 82px;
+  padding: 14px;
+  border-color: #eaecf0;
+  border-radius: 11px;
+  background: #f9fafb;
+}
+
+.se-mpr-owner-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+.se-mpr-owner-grid small {
+  color: #667085;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .5px;
+}
+
+.se-mpr-owner-grid strong {
+  margin-top: 4px;
+  color: #101828;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.se-mpr-owner-grid p {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+/* ACTION CARD */
+.se-mpr-popup-action-card {
+  padding: 18px;
+  border-color: #fedf89;
+  background: linear-gradient(180deg, #fffdf7 0%, #fff 58%);
+}
+
+.se-mpr-popup-action-head > span {
+  color: #b54708;
+}
+
+.se-mpr-popup-action-request {
+  margin: 14px 0;
+  padding: 13px;
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #fff;
+}
+
+.se-mpr-popup-action-request strong {
+  color: #101828;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.se-mpr-popup-action-request span {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.se-mpr-popup-approve-btn,
+.se-mpr-popup-reject-btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.se-mpr-popup-approve-btn {
+  border: 1px solid #067647;
+  background: #067647;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(6,118,71,.15);
+}
+
+.se-mpr-popup-approve-btn:hover:not(:disabled) {
+  background: #05603a;
+  transform: translateY(-1px);
+}
+
+.se-mpr-popup-reject-btn {
+  margin-top: 9px;
+  border: 1px solid #fda29b;
+  background: #fff;
+  color: #b42318;
+}
+
+.se-mpr-popup-reject-btn:hover:not(:disabled) {
+  background: #fef3f2;
+}
+
+.se-mpr-popup-approve-btn:disabled,
+.se-mpr-popup-reject-btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.se-mpr-popup-status-card {
+  padding: 18px;
+}
+
+.se-mpr-popup-status-card > div {
+  margin-top: 10px;
+}
+
+/* HISTORY */
+.se-mpr-popup-history-card {
+  padding: 18px;
+}
+
+.se-mpr-history-item {
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.se-mpr-history-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+}
+
+.se-mpr-history-content {
+  padding-bottom: 17px;
+}
+
+.se-mpr-history-content > div {
+  align-items: flex-start;
+}
+
+.se-mpr-history-content strong {
+  color: #344054;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-mpr-history-content > div > span {
+  color: #98a2b3;
+  font-size: 9px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.se-mpr-history-content p {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.se-mpr-history-content blockquote {
+  margin-top: 7px;
+  padding: 8px 10px;
+  border-left-color: #d0d5dd;
+  background: #f9fafb;
+  color: #475467;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.se-mpr-rejected-box {
+  margin-top: 0;
+  padding: 14px 16px;
+  border-color: #fecdca;
+  border-radius: 11px;
+  background: #fef3f2;
+}
+
+.se-mpr-rejected-box span {
+  color: #b42318;
+  font-size: 9px;
+}
+
+.se-mpr-rejected-box p {
+  color: #912018;
+  font-size: 11px;
+}
+
+/* ACTION FEEDBACK */
+.se-mpr-action-message {
+  margin: 14px 20px 0;
+  padding: 12px 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+}
+
+.se-mpr-action-message.success {
+  border-color: #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.se-mpr-action-message.error {
+  border-color: #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.se-mpr-action-message-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.75);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.se-mpr-action-message > div { flex: 1; }
+.se-mpr-action-message strong { display: block; font-size: 11px; font-weight: 750; }
+.se-mpr-action-message p { margin: 2px 0 0; font-size: 10px; line-height: 1.45; }
+.se-mpr-action-message > button { border: 0; background: transparent; color: currentColor; font-size: 18px; cursor: pointer; }
+
+/* LOADING */
+.se-mpr-detail-modal-loading {
+  flex: 1;
+  padding: 24px;
+  background: #f7f9fc;
+}
+
+.se-mpr-detail-modal-loading .se-mpr-detail-loading {
+  padding: 0;
+}
+
+/* ============================================================================
+   APPROVE / REJECT CONFIRMATION
+============================================================================ */
+
+.se-mpr-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16,24,40,.68);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.se-mpr-confirm-modal {
+  width: min(520px, calc(100vw - 40px));
+  padding: 24px;
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 30px 90px rgba(16,24,40,.28);
+  animation: seMprEnterpriseModalIn 160ms ease-out;
+}
+
+.se-mpr-confirm-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.se-mpr-confirm-icon.approve {
+  border: 8px solid #ecfdf3;
+  background: #d1fadf;
+  color: #067647;
+}
+
+.se-mpr-confirm-icon.reject {
+  border: 8px solid #fef3f2;
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.se-mpr-confirm-heading > span {
+  color: #667085;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.se-mpr-confirm-heading h3 {
+  margin: 5px 0 5px;
+  color: #101828;
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 750;
+  letter-spacing: -.35px;
+}
+
+.se-mpr-confirm-heading p {
+  margin: 0;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.se-mpr-confirm-heading p strong { color: #344054; }
+
+.se-mpr-confirm-summary {
+  margin: 18px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.se-mpr-confirm-summary > div {
+  padding: 12px 14px;
+  background: #f9fafb;
+}
+
+.se-mpr-confirm-summary > div + div { border-left: 1px solid #eaecf0; }
+.se-mpr-confirm-summary span { display: block; color: #667085; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.se-mpr-confirm-summary strong { display: block; margin-top: 4px; color: #101828; font-size: 12px; font-weight: 700; }
+
+.se-mpr-confirm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.se-mpr-confirm-field > span { display: flex; align-items: center; gap: 6px; }
+.se-mpr-confirm-field > span small { color: #98a2b3; font-size: 9px; font-weight: 500; }
+
+.se-mpr-confirm-field textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 11px 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  outline: none;
+  resize: vertical;
+  background: #fff;
+  color: #101828;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.se-mpr-confirm-field textarea:focus {
+  border-color: #84adff;
+  box-shadow: 0 0 0 3px rgba(47,128,237,.10);
+}
+
+.se-mpr-confirm-field textarea.invalid {
+  border-color: #f04438;
+  box-shadow: 0 0 0 3px rgba(240,68,56,.08);
+}
+
+.se-mpr-confirm-field-error { color: #b42318; font-size: 10px; font-weight: 600; }
+
+.se-mpr-confirm-actions {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.se-mpr-confirm-actions button {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.se-mpr-confirm-actions .cancel {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+}
+
+.se-mpr-confirm-actions .confirm-approve {
+  border: 1px solid #067647;
+  background: #067647;
+  color: #fff;
+}
+
+.se-mpr-confirm-actions .confirm-reject {
+  border: 1px solid #b42318;
+  background: #b42318;
+  color: #fff;
+}
+
+.se-mpr-confirm-actions button:disabled { opacity: .58; cursor: not-allowed; }
+
+.se-mpr-confirm-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: seMprSpin .7s linear infinite;
+}
+
+@keyframes seMprSpin { to { transform: rotate(360deg); } }
+
+/* RESPONSIVE */
+@media (max-width: 1180px) {
+  .se-mpr-detail-modal-body { grid-template-columns: minmax(0, 1fr) 300px; }
+  .se-mpr-popup-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .se-mpr-popup-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .se-mpr-popup-info-grid > div { border-right: 1px solid #eaecf0; border-bottom: 1px solid #eaecf0; }
+  .se-mpr-popup-info-grid > div:nth-child(2n) { border-right: 0; }
+  .se-mpr-popup-info-grid > div:nth-last-child(-n+2) { border-bottom: 0; }
+}
+
+@media (max-width: 900px) {
+  .se-mpr-detail-modal-overlay { padding: 0; }
+  .se-mpr-detail-modal { width: 100vw; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; }
+  .se-mpr-detail-modal-header { min-height: 104px; padding: 18px 20px; }
+  .se-mpr-detail-modal-title-row { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .se-mpr-detail-modal-title-row h2 { font-size: 24px; }
+  .se-mpr-detail-modal-body { padding: 14px; grid-template-columns: 1fr; }
+  .se-mpr-detail-modal-side { position: static; }
+  .se-mpr-popup-two-column { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .se-mpr-page-head h2 { font-size: 25px; }
+  .se-mpr-page-head p { font-size: 12px; }
+  .se-mpr-summary-grid { grid-template-columns: 1fr 1fr; }
+  .se-mpr-summary-grid > button { min-height: 82px; padding: 13px; }
+  .se-mpr-summary-grid strong { font-size: 20px; }
+  .se-mpr-detail-modal-header { padding: 16px; }
+  .se-mpr-detail-modal-eyebrow { font-size: 9px; }
+  .se-mpr-detail-modal-title-row h2 { font-size: 21px; }
+  .se-mpr-detail-modal-close { width: 40px; height: 40px; flex-basis: 40px; }
+  .se-mpr-popup-summary-grid { grid-template-columns: 1fr 1fr; }
+  .se-mpr-popup-summary-card { min-height: 76px; padding: 12px; }
+  .se-mpr-popup-summary-card strong { font-size: 13px; }
+  .se-mpr-popup-info-grid { grid-template-columns: 1fr; }
+  .se-mpr-popup-info-grid > div,
+  .se-mpr-popup-info-grid > div:nth-child(2n),
+  .se-mpr-popup-info-grid > div:nth-child(3n) { border-right: 0; border-bottom: 1px solid #eaecf0; }
+  .se-mpr-popup-info-grid > div:last-child { border-bottom: 0; }
+  .se-mpr-owner-grid { grid-template-columns: 1fr; }
+  .se-mpr-confirm-overlay { padding: 12px; }
+  .se-mpr-confirm-modal { width: 100%; padding: 20px; border-radius: 14px; }
+  .se-mpr-confirm-summary { grid-template-columns: 1fr; }
+  .se-mpr-confirm-summary > div + div { border-left: 0; border-top: 1px solid #eaecf0; }
+  .se-mpr-confirm-actions { grid-template-columns: 1fr; }
+  .se-mpr-confirm-field textarea { font-size: 16px; }
+}
+
+
+/* ==========================================================================
+   SE-RMS MANPOWER — FINAL VISUAL FIX
+   APPEND THIS BLOCK AT THE VERY END OF Manpower.css
+   ========================================================================== */
+
+.se-mpr-page {
+  --mpr-navy: #0f172a;
+  --mpr-navy-2: #172554;
+  --mpr-line: #dbe3ee;
+  --mpr-line-soft: #e9eef5;
+  --mpr-text: #172033;
+  --mpr-muted: #64748b;
+
+  --mpr-green: #087443;
+  --mpr-green-bg: #eaf8f0;
+  --mpr-green-line: #9bd8b7;
+
+  --mpr-amber: #a85a00;
+  --mpr-amber-bg: #fff3d6;
+  --mpr-amber-line: #f2c35c;
+
+  --mpr-red: #b42318;
+  --mpr-red-bg: #feeceb;
+  --mpr-red-line: #f3aaa4;
+
+  --mpr-purple: #6941c6;
+  --mpr-purple-bg: #f1ebff;
+  --mpr-purple-line: #cdbcf6;
+
+  --mpr-blue: #175cd3;
+  --mpr-blue-bg: #eaf4ff;
+  --mpr-blue-line: #a9d2ff;
+
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif !important;
+  color: var(--mpr-text);
+}
+
+/* ========================= PAGE TITLE ========================= */
+
+.se-mpr-page-head {
+  margin-bottom: 20px !important;
+  align-items: center !important;
+}
+
+.se-mpr-page-head > div:first-child > span {
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px !important;
+  color: #e11d2e !important;
+}
+
+.se-mpr-page-head h2 {
+  margin: 8px 0 7px !important;
+  font-size: 32px !important;
+  line-height: 1.08 !important;
+  font-weight: 800 !important;
+  letter-spacing: -1px !important;
+  color: #111827 !important;
+}
+
+.se-mpr-page-head p {
+  max-width: 760px !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  color: #64748b !important;
+}
+
+.se-mpr-refresh,
+.se-mpr-create-btn {
+  min-height: 44px !important;
+  padding: 0 17px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+
+/* ========================= SUMMARY CARDS ========================= */
+
+.se-mpr-summary-grid {
+  gap: 12px !important;
+}
+
+.se-mpr-summary-grid > button {
+  min-height: 98px !important;
+  padding: 17px 18px !important;
+  border: 1px solid #dfe5ed !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.035) !important;
+}
+
+.se-mpr-summary-grid > button:hover {
+  transform: translateY(-2px) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08) !important;
+}
+
+.se-mpr-summary-icon {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 11px !important;
+  font-size: 12px !important;
+}
+
+.se-mpr-summary-grid strong {
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+.se-mpr-summary-grid > button > div > span {
+  margin-top: 6px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+}
+
+/* semantic summary colors */
+.se-mpr-summary-grid > button.amber {
+  border-top: 3px solid #f59e0b !important;
+}
+.se-mpr-summary-grid > button.amber .se-mpr-summary-icon {
+  background: var(--mpr-amber-bg) !important;
+  color: var(--mpr-amber) !important;
+}
+
+.se-mpr-summary-grid > button.blue {
+  border-top: 3px solid #16a34a !important;
+}
+.se-mpr-summary-grid > button.blue .se-mpr-summary-icon {
+  background: var(--mpr-green-bg) !important;
+  color: var(--mpr-green) !important;
+}
+
+.se-mpr-summary-grid > button.purple {
+  border-top: 3px solid #7c3aed !important;
+}
+.se-mpr-summary-grid > button.purple .se-mpr-summary-icon {
+  background: var(--mpr-purple-bg) !important;
+  color: var(--mpr-purple) !important;
+}
+
+.se-mpr-summary-grid > button.red {
+  border-top: 3px solid #dc2626 !important;
+}
+.se-mpr-summary-grid > button.red .se-mpr-summary-icon {
+  background: var(--mpr-red-bg) !important;
+  color: var(--mpr-red) !important;
+}
+
+/* ========================= TOOLBAR ========================= */
+
+.se-mpr-toolbar {
+  margin-top: 16px !important;
+  padding: 10px !important;
+  border: 1px solid #dfe5ed !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.025) !important;
+}
+
+.se-mpr-search {
+  width: 330px !important;
+  height: 42px !important;
+  border: 1px solid #cfd8e3 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+}
+
+.se-mpr-search input {
+  font-size: 12px !important;
+  color: #0f172a !important;
+}
+
+.se-mpr-status-tabs button {
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  color: #64748b !important;
+}
+
+.se-mpr-status-tabs button:hover {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+.se-mpr-status-tabs button.active {
+  background: #fff0f1 !important;
+  color: #d11224 !important;
+  box-shadow: inset 0 0 0 1px #ffd4d8 !important;
+}
+
+.se-mpr-approval-inbox-pill {
+  min-height: 40px !important;
+  padding: 0 14px !important;
+  border: 1px solid #f2c45f !important;
+  border-radius: 9px !important;
+  background: #fff7df !important;
+  color: #9a5300 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+/* ========================= TABLE FRAME ========================= */
+
+.se-mpr-list-panel {
+  margin-top: 16px !important;
+  overflow: hidden !important;
+  border: 1px solid #d9e1eb !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.05) !important;
+}
+
+.se-mpr-list-head {
+  min-height: 68px !important;
+  padding: 15px 18px !important;
+  border-bottom: 1px solid #dce4ed !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%) !important;
+}
+
+.se-mpr-list-head > div > span {
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.2px !important;
+  color: #dc1e2f !important;
+}
+
+.se-mpr-list-head strong {
+  margin-top: 2px !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  color: #172033 !important;
+}
+
+.se-mpr-list-head p {
+  font-size: 11px !important;
+  color: #64748b !important;
+}
+
+/* ========================= ACTUAL TABLE ========================= */
+
+.se-mpr-table-wrap {
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  padding-bottom: 0 !important;
+}
+
+.se-mpr-table {
+  width: 100% !important;
+  min-width: 1180px !important;
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.se-mpr-table thead {
+  background: #111c34 !important;
+}
+
+.se-mpr-table th {
+  height: 52px !important;
+  padding: 0 14px !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-bottom: 0 !important;
+  background: #111c34 !important;
+  color: #f8fafc !important;
+  vertical-align: middle !important;
+  text-align: left !important;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.65px !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.se-mpr-table th:last-child {
+  border-right: 0 !important;
+}
+
+.se-mpr-table td {
+  height: 82px !important;
+  padding: 12px 14px !important;
+  border-right: 1px solid #e5ebf2 !important;
+  border-bottom: 1px solid #dfe6ee !important;
+  background: transparent !important;
+  color: #334155 !important;
+  vertical-align: middle !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.se-mpr-table td:last-child {
+  border-right: 0 !important;
+}
+
+.se-mpr-table tbody tr {
+  position: relative !important;
+  background: #fff !important;
+  cursor: pointer !important;
+}
+
+.se-mpr-table tbody tr:nth-child(even) {
+  background: #f8fafc !important;
+}
+
+.se-mpr-table tbody tr:hover {
+  background: #edf5ff !important;
+  box-shadow: inset 4px 0 0 #2563eb !important;
+}
+
+.se-mpr-table tbody tr:hover td {
+  background: rgba(239, 246, 255, 0.72) !important;
+}
+
+/* correct eight-column sizing */
+.se-mpr-table th:nth-child(1),
+.se-mpr-table td:nth-child(1) {
+  width: 25% !important;
+}
+
+.se-mpr-table th:nth-child(2),
+.se-mpr-table td:nth-child(2) {
+  width: 13% !important;
+}
+
+.se-mpr-table th:nth-child(3),
+.se-mpr-table td:nth-child(3) {
+  width: 8% !important;
+  text-align: center !important;
+}
+
+.se-mpr-table th:nth-child(4),
+.se-mpr-table td:nth-child(4) {
+  width: 11% !important;
+}
+
+.se-mpr-table th:nth-child(5),
+.se-mpr-table td:nth-child(5) {
+  width: 13% !important;
+}
+
+.se-mpr-table th:nth-child(6),
+.se-mpr-table td:nth-child(6) {
+  width: 14% !important;
+}
+
+.se-mpr-table th:nth-child(7),
+.se-mpr-table td:nth-child(7) {
+  width: 14% !important;
+}
+
+.se-mpr-table th:nth-child(8),
+.se-mpr-table td:nth-child(8) {
+  width: 52px !important;
+  text-align: center !important;
+}
+
+/* Request cell */
+.se-mpr-role-cell {
+  min-width: 0 !important;
+  gap: 12px !important;
+}
+
+.se-mpr-role-icon {
+  width: 43px !important;
+  height: 43px !important;
+  flex: 0 0 43px !important;
+  border-radius: 11px !important;
+  background: linear-gradient(145deg, #0f172a, #1e293b) !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12) !important;
+}
+
+.se-mpr-role-cell strong {
+  max-width: 250px !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+.se-mpr-role-cell > div > span {
+  margin-top: 5px !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+  color: #64748b !important;
+}
+
+.se-mpr-table-main-text {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+}
+
+.se-mpr-openings {
+  min-width: 36px !important;
+  height: 34px !important;
+  padding: 0 8px !important;
+  border: 1px solid #dce4ed !important;
+  border-radius: 9px !important;
+  background: #f1f5f9 !important;
+  color: #172033 !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+}
+
+/* owner / approver — fix overlap */
+.se-mpr-person-cell {
+  min-width: 0 !important;
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 36px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.se-mpr-person-cell > span {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  background: #eaf4ff !important;
+  color: #175cd3 !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+}
+
+.se-mpr-person-cell > div {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.se-mpr-person-cell strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #172033 !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
+
+.se-mpr-person-cell small {
+  display: block !important;
+  max-width: 100% !important;
+  margin-top: 3px !important;
+  overflow: hidden !important;
+  color: #718096 !important;
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* arrow is its own column and must never overlap owner */
+.se-mpr-row-arrow {
+  width: 34px !important;
+  height: 34px !important;
+  margin: 0 auto !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 9px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #fff !important;
+  color: #334155 !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  transition: 140ms ease !important;
+}
+
+.se-mpr-table tbody tr:hover .se-mpr-row-arrow {
+  border-color: #93c5fd !important;
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  transform: translateX(2px) !important;
+}
+
+/* ========================= BADGES ========================= */
+
+/* Base badge component used across Recruitment */
+.se-recruitment-status-badge,
+.se-mpr-status-badge,
+.se-status-badge,
+[class*="status-badge"] {
+  min-height: 29px !important;
+  padding: 0 11px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+
+/* badge dot */
+.se-recruitment-status-badge::before,
+.se-mpr-status-badge::before,
+.se-status-badge::before,
+[class*="status-badge"]::before {
+  content: "" !important;
+  width: 6px !important;
+  height: 6px !important;
+  flex: 0 0 6px !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+}
+
+/* APPROVED / SUCCESS = GREEN */
+.se-status-approved,
+.se-status-selected,
+.se-status-shortlisted,
+.se-recruitment-status-badge.approved,
+.se-recruitment-status-badge.success,
+.se-recruitment-status-badge.green,
+.se-mpr-status-badge.approved,
+.se-mpr-status-badge.success,
+.se-mpr-status-badge.green,
+[class*="status-badge"].approved,
+[class*="status-badge"].success,
+[class*="status-badge"].green,
+[class*="status-badge"][class*="approved"],
+[class*="status-badge"][class*="success"],
+[class*="status-badge"][class*="green"] {
+  border-color: var(--mpr-green-line) !important;
+  background: var(--mpr-green-bg) !important;
+  color: var(--mpr-green) !important;
+}
+
+/* PENDING / WARNING = AMBER */
+.se-status-pending,
+.se-status-follow-up,
+.se-recruitment-status-badge.pending,
+.se-recruitment-status-badge.warning,
+.se-recruitment-status-badge.amber,
+.se-recruitment-status-badge.orange,
+.se-mpr-status-badge.pending,
+.se-mpr-status-badge.warning,
+.se-mpr-status-badge.amber,
+[class*="status-badge"].pending,
+[class*="status-badge"].warning,
+[class*="status-badge"].amber,
+[class*="status-badge"].orange,
+[class*="status-badge"][class*="pending"],
+[class*="status-badge"][class*="warning"],
+[class*="status-badge"][class*="amber"] {
+  border-color: var(--mpr-amber-line) !important;
+  background: var(--mpr-amber-bg) !important;
+  color: var(--mpr-amber) !important;
+}
+
+/* REJECTED / ERROR = RED */
+.se-status-rejected,
+.se-recruitment-status-badge.rejected,
+.se-recruitment-status-badge.danger,
+.se-recruitment-status-badge.error,
+.se-recruitment-status-badge.red,
+.se-mpr-status-badge.rejected,
+.se-mpr-status-badge.danger,
+.se-mpr-status-badge.red,
+[class*="status-badge"].rejected,
+[class*="status-badge"].danger,
+[class*="status-badge"].error,
+[class*="status-badge"].red,
+[class*="status-badge"][class*="rejected"],
+[class*="status-badge"][class*="danger"],
+[class*="status-badge"][class*="error"] {
+  border-color: var(--mpr-red-line) !important;
+  background: var(--mpr-red-bg) !important;
+  color: var(--mpr-red) !important;
+}
+
+/* HIRING = PURPLE */
+.se-status-screening,
+.se-status-hiring,
+.se-status-hiring-in-progress,
+.se-recruitment-status-badge.purple,
+.se-mpr-status-badge.purple,
+[class*="status-badge"].purple,
+[class*="status-badge"][class*="purple"] {
+  border-color: var(--mpr-purple-line) !important;
+  background: var(--mpr-purple-bg) !important;
+  color: var(--mpr-purple) !important;
+}
+
+/* INFO / NORMAL = BLUE */
+.se-status-interview,
+.se-recruitment-status-badge.info,
+.se-recruitment-status-badge.blue,
+.se-mpr-status-badge.info,
+.se-mpr-status-badge.blue,
+[class*="status-badge"].info,
+[class*="status-badge"].blue,
+[class*="status-badge"][class*="info"],
+[class*="status-badge"][class*="blue"] {
+  border-color: var(--mpr-blue-line) !important;
+  background: var(--mpr-blue-bg) !important;
+  color: var(--mpr-blue) !important;
+}
+
+/* ========================= PRIORITY ========================= */
+
+.se-mpr-table td:nth-child(4) .se-recruitment-status-badge,
+.se-mpr-table td:nth-child(4) [class*="status-badge"] {
+  font-weight: 850 !important;
+}
+
+/* ========================= PAGINATION FIX ========================= */
+
+/*
+  Covers native manpower pagination names plus MUI pagination
+  so it cannot sit on top of the final table row.
+*/
+.se-mpr-pagination,
+.se-mpr-table-pagination,
+.se-mpr-pagination-wrap,
+.MuiTablePagination-root {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  min-height: 58px !important;
+  margin: 0 !important;
+  padding: 8px 14px !important;
+  box-sizing: border-box !important;
+  border-top: 1px solid #dfe6ee !important;
+  background: #fff !important;
+  color: #475569 !important;
+}
+
+.MuiTablePagination-toolbar {
+  min-height: 42px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+.MuiTablePagination-spacer {
+  flex: 1 1 auto !important;
+}
+
+.MuiTablePagination-selectLabel,
+.MuiTablePagination-displayedRows {
+  margin: 0 !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  color: #64748b !important;
+}
+
+.MuiTablePagination-select {
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+}
+
+.MuiTablePagination-actions {
+  margin-left: 4px !important;
+  display: flex !important;
+  gap: 5px !important;
+}
+
+.MuiTablePagination-actions button {
+  width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #334155 !important;
+}
+
+.MuiTablePagination-actions button:hover:not(:disabled) {
+  border-color: #93c5fd !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+.MuiTablePagination-actions button:disabled {
+  opacity: .38 !important;
+}
+
+/* If pagination is a custom plain HTML footer */
+.se-mpr-list-panel nav,
+.se-mpr-list-panel [class*="pagination"] {
+  box-sizing: border-box !important;
+}
+
+.se-mpr-list-panel [class*="pagination"] button {
+  min-width: 34px !important;
+  height: 34px !important;
+  padding: 0 9px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #334155 !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
+
+/* ensure list panel has room for any pagination rendered after table */
+.se-mpr-list-panel {
+  padding-bottom: 0 !important;
+}
+
+.se-mpr-table-wrap + .se-mpr-pagination,
+.se-mpr-table-wrap + .se-mpr-table-pagination,
+.se-mpr-table-wrap + [class*="pagination"] {
+  margin-top: 0 !important;
+}
+
+/* ========================= RESPONSIVE ========================= */
+
+@media (max-width: 1200px) {
+  .se-mpr-table {
+    min-width: 1120px !important;
+  }
+
+  .se-mpr-table th,
+  .se-mpr-table td {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .se-mpr-page-head h2 {
+    font-size: 27px !important;
+  }
+
+  .se-mpr-toolbar {
+    align-items: stretch !important;
+  }
+
+  .se-mpr-search {
+    width: 100% !important;
+  }
+
+  .se-mpr-list-panel {
+    border-radius: 12px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .se-mpr-page-head h2 {
+    font-size: 25px !important;
+  }
+
+  .se-mpr-page-head p {
+    font-size: 12px !important;
+  }
+
+  .se-mpr-summary-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .se-mpr-summary-grid > button {
+    min-height: 88px !important;
+    padding: 13px !important;
+  }
+
+  .se-mpr-summary-grid strong {
+    font-size: 21px !important;
+  }
+}
+/* ============================================================
+   SE-RMS MANPOWER — FINAL COMPACT PREMIUM TABLE
+   ============================================================ */
+
+
+/* ============================================================
+   TABLE CARD
+   ============================================================ */
+
+.se-mpr-list-panel {
+  margin-top: 14px !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  border: 1px solid #dce4ee !important;
+  border-radius: 14px !important;
+
+  background: #ffffff !important;
+
+  box-shadow:
+    0 8px 28px
+    rgba(15, 23, 42, 0.055) !important;
+}
+
+
+/* ============================================================
+   TABLE WRAPPER
+
+   DESKTOP:
+   NO FORCED HORIZONTAL SCROLL
+   ============================================================ */
+
+.se-mpr-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+
+/* ============================================================
+   TABLE
+
+   IMPORTANT:
+   remove previous 1280px / 1180px / 1120px min-width
+   ============================================================ */
+
+.se-mpr-table {
+  width: 100% !important;
+  min-width: 0 !important;
+
+  margin: 0 !important;
+
+  table-layout: fixed !important;
+
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+
+/* ============================================================
+   COLUMN WIDTHS
+
+   Total = 100%
+
+   Request          24%
+   Department       10%
+   Openings          7%
+   Priority          9%
+   Required By      12%
+   Status           13%
+   Owner/Approver   21%
+   Arrow             4%
+   ============================================================ */
+
+.se-mpr-table th:nth-child(1),
+.se-mpr-table td:nth-child(1) {
+  width: 24% !important;
+}
+
+.se-mpr-table th:nth-child(2),
+.se-mpr-table td:nth-child(2) {
+  width: 10% !important;
+}
+
+.se-mpr-table th:nth-child(3),
+.se-mpr-table td:nth-child(3) {
+  width: 7% !important;
+  text-align: center !important;
+}
+
+.se-mpr-table th:nth-child(4),
+.se-mpr-table td:nth-child(4) {
+  width: 9% !important;
+}
+
+.se-mpr-table th:nth-child(5),
+.se-mpr-table td:nth-child(5) {
+  width: 12% !important;
+}
+
+.se-mpr-table th:nth-child(6),
+.se-mpr-table td:nth-child(6) {
+  width: 13% !important;
+}
+
+.se-mpr-table th:nth-child(7),
+.se-mpr-table td:nth-child(7) {
+  width: 21% !important;
+}
+
+.se-mpr-table th:nth-child(8),
+.se-mpr-table td:nth-child(8) {
+  width: 4% !important;
+  text-align: center !important;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.se-mpr-table thead {
+  background: #101d33 !important;
+}
+
+.se-mpr-table th {
+  height: 44px !important;
+
+  padding: 0 10px !important;
+
+  border-right:
+    1px solid
+    rgba(255, 255, 255, 0.09) !important;
+
+  border-bottom: 0 !important;
+
+  background: #101d33 !important;
+
+  color: #f7f9fc !important;
+
+  vertical-align: middle !important;
+
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+
+  font-weight: 850 !important;
+
+  letter-spacing: 0.65px !important;
+
+  text-transform: uppercase !important;
+
+  white-space: nowrap !important;
+}
+
+.se-mpr-table th:last-child {
+  border-right: 0 !important;
+}
+
+
+/* ============================================================
+   ROW BASE
+   ============================================================ */
+
+.se-mpr-table tbody tr,
+.se-mpr-table tbody tr:nth-child(even) {
+  position: relative !important;
+
+  height: 66px !important;
+
+  background: #ffffff !important;
+
+  cursor: pointer !important;
+
+  box-shadow: none !important;
+
+  transition:
+    background 0.16s ease,
+    box-shadow 0.16s ease !important;
+}
+
+
+.se-mpr-table td {
+  height: 66px !important;
+
+  padding: 8px 10px !important;
+
+  border-right:
+    1px solid
+    rgba(203, 213, 225, 0.55) !important;
+
+  border-bottom:
+    1px solid
+    #dfe6ee !important;
+
+  background: transparent !important;
+
+  vertical-align: middle !important;
+
+  color: #334155 !important;
+
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+}
+
+
+.se-mpr-table td:last-child {
+  border-right: 0 !important;
+}
+
+
+/* ============================================================
+   FULL ROW STATUS COLORS
+   ============================================================ */
+
+
+/* PENDING APPROVAL */
+
+.se-mpr-table tbody
+tr.se-mpr-row-pending-approval {
+  background: #fff9e9 !important;
+
+  box-shadow:
+    inset 4px 0 0
+    #e8a317 !important;
+}
+
+.se-mpr-table tbody
+tr.se-mpr-row-pending-approval:hover {
+  background: #fff3cd !important;
+}
+
+
+/* APPROVED */
+
+.se-mpr-table tbody
+tr.se-mpr-row-approved {
+  background: #eaf8ef !important;
+
+  box-shadow:
+    inset 4px 0 0
+    #22a35a !important;
+}
+
+.se-mpr-table tbody
+tr.se-mpr-row-approved:hover {
+  background: #ddf4e6 !important;
+}
+
+
+/* HIRING */
+
+.se-mpr-table tbody
+tr.se-mpr-row-hiring-in-progress {
+  background: #f3efff !important;
+
+  box-shadow:
+    inset 4px 0 0
+    #7548e8 !important;
+}
+
+.se-mpr-table tbody
+tr.se-mpr-row-hiring-in-progress:hover {
+  background: #eae3ff !important;
+}
+
+
+/* FILLED */
+
+.se-mpr-table tbody
+tr.se-mpr-row-filled {
+  background: #ecf7ff !important;
+
+  box-shadow:
+    inset 4px 0 0
+    #2786d8 !important;
+}
+
+.se-mpr-table tbody
+tr.se-mpr-row-filled:hover {
+  background: #dff1ff !important;
+}
+
+
+/* REJECTED */
+
+.se-mpr-table tbody
+tr.se-mpr-row-rejected {
+  background: #fff0f1 !important;
+
+  box-shadow:
+    inset 4px 0 0
+    #dc3545 !important;
+}
+
+.se-mpr-table tbody
+tr.se-mpr-row-rejected:hover {
+  background: #ffe4e6 !important;
+}
+
+
+/*
+   CRITICAL:
+   old CSS must NOT recolor individual TDs on hover
+*/
+
+.se-mpr-table tbody tr:hover td,
+.se-mpr-table tbody tr:nth-child(even) td {
+  background: transparent !important;
+}
+
+
+/* ============================================================
+   REQUEST CELL
+   ============================================================ */
+
+.se-mpr-role-cell {
+  min-width: 0 !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  gap: 9px !important;
+}
+
+
+.se-mpr-role-icon {
+  width: 36px !important;
+  height: 36px !important;
+
+  flex: 0 0 36px !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 9px !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      #101b2e,
+      #172944
+    ) !important;
+
+  color: #ffffff !important;
+
+  font-size: 10px !important;
+
+  font-weight: 900 !important;
+
+  box-shadow:
+    0 3px 8px
+    rgba(15, 23, 42, 0.13) !important;
+}
+
+
+.se-mpr-role-cell > div {
+  min-width: 0 !important;
+}
+
+
+.se-mpr-role-cell strong {
+  display: block !important;
+
+  max-width: 100% !important;
+
+  overflow: hidden !important;
+
+  color: #142033 !important;
+
+  font-size: 11px !important;
+
+  font-weight: 850 !important;
+
+  text-overflow: ellipsis !important;
+
+  white-space: nowrap !important;
+}
+
+
+.se-mpr-role-cell > div > span {
+  display: block !important;
+
+  margin-top: 3px !important;
+
+  overflow: hidden !important;
+
+  color: #718096 !important;
+
+  font-size: 8px !important;
+
+  font-weight: 700 !important;
+
+  text-overflow: ellipsis !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* ============================================================
+   DEPARTMENT
+
+   Compact because Sales / HR / Quality etc do not need
+   a huge column.
+   ============================================================ */
+
+.se-mpr-table
+td:nth-child(2)
+.se-mpr-table-main-text {
+  display: block !important;
+
+  width: 100% !important;
+
+  overflow: hidden !important;
+
+  color: #334155 !important;
+
+  font-size: 10px !important;
+
+  font-weight: 750 !important;
+
+  text-overflow: ellipsis !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* ============================================================
+   OPENINGS
+   ============================================================ */
+
+.se-mpr-openings {
+  min-width: 30px !important;
+
+  width: fit-content !important;
+
+  height: 28px !important;
+
+  margin: 0 auto !important;
+
+  padding: 0 7px !important;
+
+  display: inline-flex !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  border:
+    1px solid
+    #cfd9e5 !important;
+
+  border-radius: 8px !important;
+
+  background:
+    rgba(255, 255, 255, 0.72) !important;
+
+  color: #172033 !important;
+
+  font-size: 10px !important;
+
+  font-weight: 900 !important;
+}
+
+
+/* ============================================================
+   PRIORITY
+
+   Keep priority neutral.
+   Status is more important.
+   ============================================================ */
+
+.se-mpr-table
+td:nth-child(4)
+.se-recruitment-status-badge,
+
+.se-mpr-table
+td:nth-child(4)
+[class*="status-badge"] {
+  min-height: 25px !important;
+
+  padding: 0 7px !important;
+
+  border:
+    1px solid
+    #cfd8e3 !important;
+
+  border-radius: 999px !important;
+
+  background: #f7f9fc !important;
+
+  color: #475569 !important;
+
+  font-size: 8px !important;
+
+  font-weight: 800 !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* ============================================================
+   STATUS BADGE
+
+   Smaller so "Pending Approval" does not need 160px.
+   ============================================================ */
+
+.se-mpr-table
+td:nth-child(6)
+.se-recruitment-status-badge,
+
+.se-mpr-table
+td:nth-child(6)
+[class*="status-badge"] {
+  min-height: 25px !important;
+
+  max-width: 100% !important;
+
+  padding: 0 8px !important;
+
+  border-radius: 999px !important;
+
+  font-size: 8px !important;
+
+  font-weight: 850 !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* Approved badge */
+
+.se-mpr-row-approved
+td:nth-child(6)
+.se-recruitment-status-badge,
+
+.se-mpr-row-approved
+td:nth-child(6)
+[class*="status-badge"] {
+  border-color: #75d09a !important;
+
+  background: #d8f3e2 !important;
+
+  color: #087443 !important;
+}
+
+
+/* Pending badge */
+
+.se-mpr-row-pending-approval
+td:nth-child(6)
+.se-recruitment-status-badge,
+
+.se-mpr-row-pending-approval
+td:nth-child(6)
+[class*="status-badge"] {
+  border-color: #efbd52 !important;
+
+  background: #ffefc2 !important;
+
+  color: #985600 !important;
+}
+
+
+/* Hiring badge */
+
+.se-mpr-row-hiring-in-progress
+td:nth-child(6)
+.se-recruitment-status-badge,
+
+.se-mpr-row-hiring-in-progress
+td:nth-child(6)
+[class*="status-badge"] {
+  border-color: #c1aff7 !important;
+
+  background: #e9e1ff !important;
+
+  color: #6240bd !important;
+}
+
+
+/* Filled badge */
+
+.se-mpr-row-filled
+td:nth-child(6)
+.se-recruitment-status-badge,
+
+.se-mpr-row-filled
+td:nth-child(6)
+[class*="status-badge"] {
+  border-color: #9acff1 !important;
+
+  background: #dff2ff !important;
+
+  color: #176ba3 !important;
+}
+
+
+/* Rejected badge */
+
+.se-mpr-row-rejected
+td:nth-child(6)
+.se-recruitment-status-badge,
+
+.se-mpr-row-rejected
+td:nth-child(6)
+[class*="status-badge"] {
+  border-color: #eaa0a7 !important;
+
+  background: #ffe0e3 !important;
+
+  color: #b4232e !important;
+}
+
+
+/* ============================================================
+   OWNER / APPROVER
+   ============================================================ */
+
+.se-mpr-person-cell {
+  width: 100% !important;
+
+  min-width: 0 !important;
+
+  display: grid !important;
+
+  grid-template-columns:
+    30px
+    minmax(0, 1fr) !important;
+
+  align-items: center !important;
+
+  gap: 7px !important;
+}
+
+
+.se-mpr-person-cell > span {
+  width: 30px !important;
+  height: 30px !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 50% !important;
+
+  background:
+    rgba(255, 255, 255, 0.72) !important;
+
+  color: #2563eb !important;
+
+  font-size: 8px !important;
+
+  font-weight: 900 !important;
+}
+
+
+.se-mpr-person-cell > div {
+  min-width: 0 !important;
+
+  overflow: hidden !important;
+}
+
+
+.se-mpr-person-cell strong {
+  display: block !important;
+
+  max-width: 100% !important;
+
+  overflow: hidden !important;
+
+  color: #172033 !important;
+
+  font-size: 9px !important;
+
+  font-weight: 800 !important;
+
+  text-overflow: ellipsis !important;
+
+  white-space: nowrap !important;
+}
+
+
+.se-mpr-person-cell small {
+  display: block !important;
+
+  max-width: 100% !important;
+
+  margin-top: 2px !important;
+
+  overflow: hidden !important;
+
+  color: #7c899a !important;
+
+  font-size: 7px !important;
+
+  text-overflow: ellipsis !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* ============================================================
+   ROW ARROW
+   ============================================================ */
+
+.se-mpr-row-arrow {
+  width: 28px !important;
+  height: 28px !important;
+
+  margin: 0 auto !important;
+
+  padding: 0 !important;
+
+  border:
+    1px solid
+    rgba(148, 163, 184, 0.55) !important;
+
+  border-radius: 8px !important;
+
+  display: inline-flex !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  background:
+    rgba(255, 255, 255, 0.72) !important;
+
+  color: #475569 !important;
+
+  font-size: 14px !important;
+}
+
+
+/* ============================================================
+   PAGINATION
+
+   Compact premium footer inspired by your second screenshot.
+   ============================================================ */
+
+.se-mpr-pagination,
+.se-mpr-table-pagination,
+.se-mpr-pagination-wrap,
+.se-mpr-list-panel [class*="pagination"] {
+  position: relative !important;
+
+  inset: auto !important;
+
+  float: none !important;
+
+  width: 100% !important;
+
+  min-height: 62px !important;
+
+  margin: 0 !important;
+
+  padding: 10px 14px !important;
+
+  box-sizing: border-box !important;
+
+  border-top:
+    1px solid
+    #dce4ed !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  justify-content: flex-end !important;
+
+  flex-wrap: nowrap !important;
+
+  gap: 8px !important;
+
+  background: #f8fafc !important;
+
+  color: #475569 !important;
+}
+
+
+/* Pagination text */
+
+.se-mpr-pagination p,
+.se-mpr-pagination span,
+.se-mpr-table-pagination p,
+.se-mpr-table-pagination span,
+.se-mpr-pagination-wrap p,
+.se-mpr-pagination-wrap span {
+  margin: 0 !important;
+
+  color: #475569 !important;
+
+  font-size: 10px !important;
+
+  font-weight: 700 !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* ALL pagination buttons */
+
+.se-mpr-pagination button,
+.se-mpr-table-pagination button,
+.se-mpr-pagination-wrap button,
+.se-mpr-list-panel [class*="pagination"] button {
+  width: auto !important;
+
+  min-width: 36px !important;
+
+  height: 34px !important;
+
+  margin: 0 !important;
+
+  padding: 0 11px !important;
+
+  border: 0 !important;
+
+  border-radius: 9px !important;
+
+  display: inline-flex !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  background: #e5e7eb !important;
+
+  color: #172033 !important;
+
+  font-size: 10px !important;
+
+  font-weight: 850 !important;
+
+  box-shadow: none !important;
+}
+
+
+/* Current page */
+
+.se-mpr-pagination button.active,
+.se-mpr-table-pagination button.active,
+.se-mpr-pagination-wrap button.active,
+.se-mpr-list-panel
+[class*="pagination"]
+button.active,
+
+.se-mpr-pagination button[aria-current="page"],
+.se-mpr-table-pagination button[aria-current="page"],
+.se-mpr-pagination-wrap button[aria-current="page"] {
+  background: #facc15 !important;
+
+  color: #111827 !important;
+}
+
+
+/* Next */
+
+.se-mpr-pagination button:last-child:not(:disabled),
+.se-mpr-table-pagination button:last-child:not(:disabled),
+.se-mpr-pagination-wrap button:last-child:not(:disabled) {
+  padding: 0 15px !important;
+
+  background: #1e3a8a !important;
+
+  color: #ffffff !important;
+}
+
+
+/* disabled previous/next */
+
+.se-mpr-pagination button:disabled,
+.se-mpr-table-pagination button:disabled,
+.se-mpr-pagination-wrap button:disabled {
+  background: #e8edf3 !important;
+
+  color: #a8b3c1 !important;
+
+  opacity: 1 !important;
+
+  cursor: not-allowed !important;
+}
+
+
+/* hover */
+
+.se-mpr-pagination button:hover:not(:disabled),
+.se-mpr-table-pagination button:hover:not(:disabled),
+.se-mpr-pagination-wrap button:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+
+  filter: brightness(0.97);
+}
+
+
+/* ============================================================
+   MUI PAGINATION FALLBACK
+   ============================================================ */
+
+.se-mpr-list-panel
+.MuiTablePagination-root {
+  width: 100% !important;
+
+  min-height: 62px !important;
+
+  margin: 0 !important;
+
+  border-top:
+    1px solid
+    #dce4ed !important;
+
+  background: #f8fafc !important;
+}
+
+
+.se-mpr-list-panel
+.MuiTablePagination-toolbar {
+  min-height: 62px !important;
+
+  padding: 0 14px !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  justify-content: flex-end !important;
+
+  gap: 10px !important;
+}
+
+
+.se-mpr-list-panel
+.MuiTablePagination-spacer {
+  flex: 1 1 auto !important;
+}
+
+
+.se-mpr-list-panel
+.MuiTablePagination-selectLabel,
+.se-mpr-list-panel
+.MuiTablePagination-displayedRows {
+  margin: 0 !important;
+
+  color: #64748b !important;
+
+  font-size: 10px !important;
+
+  font-weight: 700 !important;
+}
+
+
+.se-mpr-list-panel
+.MuiTablePagination-actions {
+  display: flex !important;
+
+  gap: 6px !important;
+}
+
+
+.se-mpr-list-panel
+.MuiTablePagination-actions button {
+  width: 34px !important;
+  height: 34px !important;
+
+  padding: 0 !important;
+
+  border: 0 !important;
+
+  border-radius: 9px !important;
+
+  background: #e5e7eb !important;
+
+  color: #172033 !important;
+}
+
+
+.se-mpr-list-panel
+.MuiTablePagination-actions
+button:last-child:not(:disabled) {
+  background: #1e3a8a !important;
+
+  color: #ffffff !important;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+
+   Only phones/tablets get horizontal scroll.
+   Desktop should NOT.
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+  .se-mpr-table-wrap {
+    overflow-x: auto !important;
+  }
+
+  .se-mpr-table {
+    min-width: 900px !important;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .se-mpr-table {
+    min-width: 820px !important;
+  }
+
+}
+/* =========================================================
+   MANPOWER REQUESTS — COMPACT PREMIUM HEADER
+   REPLACE PREVIOUS HEADER OVERRIDE WITH THIS
+========================================================= */
+
+
+/* =========================================================
+   01. EDGE-TO-EDGE MANPOWER PAGE
+========================================================= */
+
+.se-mpr-page {
+  width: auto !important;
+  max-width: none !important;
+
+  margin:
+    -32px
+    -32px
+    0 !important;
+
+  padding: 0 !important;
+
+  box-sizing: border-box;
+}
+
+
+/* Restore spacing for page content below header */
+
+.se-mpr-page > *:not(.se-mpr-page-head) {
+  margin-left: 32px;
+  margin-right: 32px;
+}
+
+
+/* =========================================================
+   02. COMPACT PREMIUM HEADER
+========================================================= */
+
+.se-mpr-page-head {
+  position: relative;
+  isolation: isolate;
+
+  min-height: 112px !important;
+
+  margin:
+    0 0 20px !important;
+
+  padding:
+    22px 28px !important;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    space-between;
+
+  gap: 24px;
+
+  overflow: hidden;
+
+  border: 0 !important;
+
+  border-radius:
+    0 0 18px 18px !important;
+
+  /*
+    Deep graphite / forest.
+    Professional, not bright, not cheap.
+  */
+
+  background:
+    radial-gradient(
+      circle at 92% -60%,
+      rgba(93, 142, 120, 0.24) 0,
+      rgba(93, 142, 120, 0.08) 29%,
+      transparent 48%
+    ),
+    radial-gradient(
+      circle at 72% 155%,
+      rgba(66, 116, 99, 0.17) 0,
+      transparent 46%
+    ),
+    linear-gradient(
+      118deg,
+      #111917 0%,
+      #17231f 42%,
+      #1c3029 72%,
+      #244238 100%
+    ) !important;
+
+  box-shadow:
+    0 9px 24px
+    rgba(20, 37, 31, 0.09);
+}
+
+
+/* =========================================================
+   03. DECORATIVE CORNER RINGS
+========================================================= */
+
+.se-mpr-page-head::before {
+  content: "";
+
+  position: absolute;
+
+  z-index: -1;
+
+  width: 205px;
+  height: 205px;
+
+  right: -42px;
+  top: -122px;
+
+  border:
+    1px solid
+    rgba(174, 211, 194, 0.12);
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 0 30px
+      rgba(255, 255, 255, 0.014),
+    0 0 0 59px
+      rgba(151, 193, 174, 0.018);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   04. SUBTLE LOWER CURVE
+========================================================= */
+
+.se-mpr-page-head::after {
+  content: "";
+
+  position: absolute;
+
+  z-index: -1;
+
+  width: 380px;
+  height: 100px;
+
+  right: 85px;
+  bottom: -84px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.055);
+
+  border-radius:
+    50% 50% 0 0;
+
+  transform:
+    rotate(-5deg);
+
+  box-shadow:
+    0 -22px 0
+      rgba(255, 255, 255, 0.010),
+    0 -43px 0
+      rgba(135, 181, 160, 0.012);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   05. LEFT CONTENT
+========================================================= */
+
+.se-mpr-page-head > div:first-child {
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 0;
+
+  max-width: 650px;
+}
+
+
+/* =========================================================
+   06. SMALL MANPOWER EYEBROW
+========================================================= */
+
+.se-mpr-page-head > div:first-child > span {
+  position: relative;
+
+  display:
+    inline-flex !important;
+
+  align-items: center;
+
+  min-height: 21px !important;
+
+  padding:
+    0 9px 0 21px !important;
+
+  border:
+    1px solid
+    rgba(143, 194, 170, 0.22) !important;
+
+  border-radius: 999px;
+
+  background:
+    rgba(111, 166, 141, 0.075) !important;
+
+  color:
+    #9fd0b9 !important;
+
+  font-size:
+    7.5px !important;
+
+  line-height: 1 !important;
+
+  font-weight: 900 !important;
+
+  letter-spacing:
+    1.55px !important;
+}
+
+
+/* Small green indicator */
+
+.se-mpr-page-head
+> div:first-child
+> span::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: 8px;
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background:
+    #77b797;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(119, 183, 151, 0.10);
+}
+
+
+/* =========================================================
+   07. TITLE
+========================================================= */
+
+.se-mpr-page-head h2 {
+  margin:
+    8px 0 0 !important;
+
+  color:
+    #ffffff !important;
+
+  font-size:
+    27px !important;
+
+  line-height:
+    1.05 !important;
+
+  font-weight:
+    800 !important;
+
+  letter-spacing:
+    -0.8px !important;
+
+  text-shadow: none !important;
+}
+
+
+/* Description if present */
+
+.se-mpr-page-head p {
+  max-width: 580px;
+
+  margin:
+    4px 0 0 !important;
+
+  color:
+    rgba(226, 238, 233, 0.61) !important;
+
+  font-size:
+    9px !important;
+
+  line-height:
+    1.45 !important;
+}
+
+
+/* REMOVE OLD GOLD LINE */
+
+.se-mpr-page-head
+> div:first-child::after {
+  display:
+    none !important;
+}
+
+
+/* =========================================================
+   08. ACTION AREA
+========================================================= */
+
+.se-mpr-head-actions {
+  position: relative;
+
+  z-index: 4;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px !important;
+}
+
+
+/* =========================================================
+   09. REFRESH BUTTON
+========================================================= */
+
+.se-mpr-refresh {
+  min-height:
+    40px !important;
+
+  padding:
+    0 14px !important;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.14) !important;
+
+  border-radius:
+    10px !important;
+
+  background:
+    rgba(255, 255, 255, 0.065) !important;
+
+  color:
+    rgba(255, 255, 255, 0.78) !important;
+
+  font-size:
+    9px !important;
+
+  font-weight:
+    800 !important;
+
+  box-shadow:
+    inset 0 1px 0
+    rgba(255, 255, 255, 0.04) !important;
+
+  backdrop-filter:
+    blur(8px);
+
+  -webkit-backdrop-filter:
+    blur(8px);
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease !important;
+}
+
+
+.se-mpr-refresh:hover {
+  background:
+    rgba(255, 255, 255, 0.11) !important;
+
+  border-color:
+    rgba(255, 255, 255, 0.24) !important;
+
+  color:
+    #ffffff !important;
+
+  transform:
+    translateY(-1px);
+}
+
+
+/* =========================================================
+   10. NEW MANPOWER REQUEST
+   PRIMARY ACTION — DARK, STRONG, OBVIOUS
+========================================================= */
+
+.se-mpr-create-btn {
+  position: relative;
+
+  min-height:
+    42px !important;
+
+  padding:
+    0 17px !important;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12) !important;
+
+  border-radius:
+    10px !important;
+
+  /*
+    Dark charcoal instead of gold.
+    Slightly different from header so action stands out.
+  */
+
+  background:
+    linear-gradient(
+      135deg,
+      #303936 0%,
+      #252d2b 48%,
+      #171d1b 100%
+    ) !important;
+
+  color:
+    #ffffff !important;
+
+  font-size:
+    9px !important;
+
+  font-weight:
+    900 !important;
+
+  letter-spacing:
+    0.05px;
+
+  box-shadow:
+    0 7px 18px
+      rgba(4, 9, 7, 0.25),
+    inset 0 1px 0
+      rgba(255, 255, 255, 0.10) !important;
+
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease !important;
+}
+
+
+.se-mpr-create-btn:hover {
+  transform:
+    translateY(-1px);
+
+  border-color:
+    rgba(255, 255, 255, 0.20) !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      #3b4743 0%,
+      #2a3431 48%,
+      #1a211f 100%
+    ) !important;
+
+  box-shadow:
+    0 10px 22px
+      rgba(4, 9, 7, 0.30),
+    inset 0 1px 0
+      rgba(255, 255, 255, 0.12) !important;
+}
+
+
+.se-mpr-create-btn:active {
+  transform:
+    translateY(0);
+}
+
+
+/* + icon */
+
+.se-mpr-create-btn > span {
+  color:
+    #a9d7c1 !important;
+
+  font-size:
+    14px !important;
+
+  font-weight:
+    700 !important;
+}
+
+
+/* Kill previous gold shine animation */
+
+.se-mpr-create-btn::after {
+  display:
+    none !important;
+}
+
+
+/* =========================================================
+   11. ADD A SMALL ACTION ACCENT
+   Makes CTA visible without bright/gold background
+========================================================= */
+
+.se-mpr-create-btn::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+
+  width: 2px;
+
+  border-radius:
+    0 3px 3px 0;
+
+  background:
+    #75b694;
+
+  box-shadow:
+    0 0 10px
+    rgba(117, 182, 148, 0.22);
+}
+
+
+/* =========================================================
+   12. CONTENT SPACING
+========================================================= */
+
+.se-mpr-summary-grid {
+  margin-top:
+    0 !important;
+}
+
+
+/* =========================================================
+   13. TABLE / TOOLBAR REMAIN UNCHANGED
+========================================================= */
+
+.se-mpr-toolbar,
+.se-mpr-list-panel {
+  position:
+    relative;
+}
+
+
+/* =========================================================
+   14. TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .se-mpr-page-head {
+    min-height:
+      108px !important;
+
+    padding:
+      20px 24px !important;
+  }
+
+
+  .se-mpr-page-head h2 {
+    font-size:
+      25px !important;
+  }
+
+}
+
+
+/* =========================================================
+   15. MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .se-mpr-page {
+    margin:
+      -20px
+      -18px
+      0 !important;
+  }
+
+
+  .se-mpr-page
+  > *:not(.se-mpr-page-head) {
+
+    margin-left:
+      18px;
+
+    margin-right:
+      18px;
+  }
+
+
+  .se-mpr-page-head {
+    min-height:
+      0 !important;
+
+    padding:
+      20px !important;
+
+    align-items:
+      flex-start !important;
+
+    flex-direction:
+      column;
+
+    gap:
+      17px;
+
+    border-radius:
+      0 0 16px 16px !important;
+  }
+
+
+  .se-mpr-head-actions {
+    width:
+      100%;
+  }
+
+
+  .se-mpr-head-actions button {
+    flex:
+      1;
+  }
+
+
+  .se-mpr-page-head::before {
+    width:
+      170px;
+
+    height:
+      170px;
+
+    right:
+      -70px;
+
+    top:
+      -105px;
+  }
+
+}
+
+
+/* =========================================================
+   16. SMALL MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+  .se-mpr-page-head h2 {
+    font-size:
+      23px !important;
+  }
+
+
+  .se-mpr-head-actions {
+    align-items:
+      stretch;
+
+    flex-direction:
+      row;
+  }
+
+
+  .se-mpr-refresh {
+    flex:
+      0 0 auto !important;
+  }
+
+
+  .se-mpr-create-btn {
+    flex:
+      1 !important;
+  }
+
+}
+/* =========================================================
+   MANPOWER — PRIMARY CTA VISIBILITY FIX
+   ADD AT ABSOLUTE END OF CSS
+   Only changes "New Manpower Request"
+========================================================= */
+
+.se-mpr-create-btn {
+  position: relative !important;
+
+  min-height: 42px !important;
+  padding: 0 19px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.16) !important;
+
+  border-radius: 10px !important;
+
+  /* Strong but professional primary action */
+  background:
+    linear-gradient(
+      135deg,
+      #ef3340 0%,
+      #dc1f2d 52%,
+      #c91422 100%
+    ) !important;
+
+  color: #ffffff !important;
+
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05px !important;
+
+  box-shadow:
+    0 7px 18px rgba(199, 20, 34, 0.24),
+    0 2px 5px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+
+  cursor: pointer !important;
+
+  transform: translateY(0);
+
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease !important;
+}
+
+
+/* PLUS ICON */
+
+.se-mpr-create-btn > span {
+  color: #ffffff !important;
+
+  font-size: 15px !important;
+  font-weight: 500 !important;
+
+  line-height: 1 !important;
+}
+
+
+/* Remove previous green vertical accent */
+
+.se-mpr-create-btn::before {
+  display: none !important;
+}
+
+
+/* Remove previous shine */
+
+.se-mpr-create-btn::after {
+  display: none !important;
+}
+
+
+/* HOVER */
+
+.se-mpr-create-btn:hover {
+  background:
+    linear-gradient(
+      135deg,
+      #f23a47 0%,
+      #e32231 52%,
+      #cf1423 100%
+    ) !important;
+
+  color: #ffffff !important;
+
+  transform:
+    translateY(-1px) !important;
+
+  box-shadow:
+    0 10px 24px rgba(199, 20, 34, 0.30),
+    0 3px 7px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20) !important;
+}
+
+
+/* CLICK */
+
+.se-mpr-create-btn:active {
+  transform:
+    translateY(0) scale(0.985) !important;
+
+  box-shadow:
+    0 4px 11px rgba(199, 20, 34, 0.22) !important;
+}
+
+
+/* KEYBOARD ACCESSIBILITY */
+
+.se-mpr-create-btn:focus-visible {
+  outline:
+    3px solid rgba(239, 51, 64, 0.22) !important;
+
+  outline-offset:
+    3px !important;
+}
+
+
+/* DISABLED */
+
+.se-mpr-create-btn:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .se-mpr-create-btn {
+    min-height: 42px !important;
+    padding: 0 15px !important;
+    font-size: 9.5px !important;
+  }
+}
+/* =========================================================
+   MANPOWER HEADER V3
+   FACTORY + WORKFORCE ENTRY
+   ADD AT ABSOLUTE END OF Manpower.css
+========================================================= */
+
+.se-mpr-page .se-mpr-page-head.se-mpr-factory-header {
+  position: relative;
+  isolation: isolate;
+
+  min-height: 118px;
+
+  margin:
+    0 0 16px;
+
+  padding:
+    24px 27px;
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-radius:
+    0 0 18px 18px;
+
+  background:
+    radial-gradient(
+      circle at 77% 18%,
+      rgba(202, 181, 139, 0.09),
+      transparent 23%
+    ),
+    radial-gradient(
+      circle at 48% 115%,
+      rgba(255, 255, 255, 0.035),
+      transparent 34%
+    ),
+    linear-gradient(
+      112deg,
+      #151917 0%,
+      #1b211d 45%,
+      #262820 100%
+    );
+
+  box-shadow:
+    0 16px 35px
+    rgba(20, 23, 20, 0.08);
+}
+
+
+/* =========================================================
+   TITLE + BUTTONS ABOVE ANIMATION
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory-header-copy {
+  position: relative;
+  z-index: 20;
+
+  min-width: 300px;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-header-copy > span {
+  display: block;
+
+  color: #c8b482;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 2.4px;
+
+  text-transform: uppercase;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-header-copy h2 {
+  margin:
+    8px 0 0;
+
+  color: #ffffff;
+
+  font-size: 28px;
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: -1px;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-header
+.se-mpr-head-actions {
+  position: relative;
+  z-index: 30;
+
+  margin-left: auto;
+}
+
+
+/* =========================================================
+   SCENE
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory-scene {
+  position: absolute;
+
+  z-index: 2;
+
+  inset: 0;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+
+/* subtle floor */
+.se-mpr-page
+.se-mpr-factory-ground {
+  position: absolute;
+
+  left: 32%;
+  right: 0;
+  bottom: 13px;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(217, 200, 161, 0.08) 15%,
+      rgba(217, 200, 161, 0.19) 68%,
+      rgba(217, 200, 161, 0.07)
+    );
+}
+
+
+/* pathway toward factory */
+.se-mpr-page
+.se-mpr-factory-ground::before {
+  content: "";
+
+  position: absolute;
+
+  width: 340px;
+  height: 38px;
+
+  right: 105px;
+  bottom: -37px;
+
+  transform:
+    perspective(180px)
+    rotateX(58deg);
+
+  transform-origin:
+    top center;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(213, 194, 155, 0.035),
+      rgba(213, 194, 155, 0.08),
+      rgba(213, 194, 155, 0.035),
+      transparent
+    );
+}
+
+
+/* =========================================================
+   FACTORY
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory {
+  position: absolute;
+
+  z-index: 4;
+
+  right: 265px;
+  bottom: 13px;
+
+  width: 205px;
+  height: 83px;
+
+  opacity: 0.72;
+
+  filter:
+    drop-shadow(
+      0 8px 9px
+      rgba(0, 0, 0, 0.16)
+    );
+}
+
+
+/* main building */
+.se-mpr-page
+.se-mpr-factory-building {
+  position: absolute;
+
+  left: 22px;
+  right: 0;
+  bottom: 0;
+
+  height: 58px;
+
+  border:
+    1px solid
+    rgba(220, 205, 170, 0.18);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(185, 169, 137, 0.17),
+      rgba(111, 108, 91, 0.11)
+    );
+
+  box-shadow:
+    inset 0 1px 0
+    rgba(255, 255, 255, 0.035);
+}
+
+
+/* industrial saw-tooth roof */
+.se-mpr-page
+.se-mpr-factory-roof {
+  position: absolute;
+
+  z-index: 2;
+
+  left: 22px;
+  bottom: 57px;
+
+  width: 183px;
+  height: 24px;
+
+  display: flex;
+  align-items: flex-end;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-roof span {
+  width: 61px;
+  height: 24px;
+
+  display: block;
+
+  clip-path:
+    polygon(
+      0 100%,
+      0 64%,
+      68% 0,
+      68% 64%,
+      100% 64%,
+      100% 100%
+    );
+
+  background:
+    rgba(195, 179, 146, 0.20);
+}
+
+
+/* chimneys */
+.se-mpr-page
+.se-mpr-factory-chimney {
+  position: absolute;
+
+  z-index: 1;
+
+  bottom: 69px;
+
+  width: 11px;
+
+  border-radius:
+    2px 2px 0 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(119, 115, 98, 0.30),
+      rgba(210, 194, 160, 0.26)
+    );
+}
+
+
+.se-mpr-page
+.se-mpr-factory-chimney::before {
+  content: "";
+
+  position: absolute;
+
+  left: -2px;
+  top: 0;
+
+  width: 15px;
+  height: 3px;
+
+  border-radius: 2px;
+
+  background:
+    rgba(210, 194, 160, 0.24);
+}
+
+
+.se-mpr-page
+.chimney-one {
+  left: 53px;
+  height: 36px;
+}
+
+
+.se-mpr-page
+.chimney-two {
+  left: 88px;
+  height: 27px;
+}
+
+
+/* =========================================================
+   FACTORY NAME
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory-name {
+  position: absolute;
+
+  left: 14px;
+  top: 10px;
+
+  color:
+    rgba(239, 225, 194, 0.76);
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 1.05px;
+
+  white-space: nowrap;
+
+  text-shadow:
+    0 1px 5px
+    rgba(0, 0, 0, 0.3);
+}
+
+
+/* =========================================================
+   WINDOWS
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory-windows {
+  position: absolute;
+
+  left: 14px;
+  top: 27px;
+
+  display: flex;
+  gap: 7px;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-windows span {
+  width: 15px;
+  height: 11px;
+
+  border:
+    1px solid
+    rgba(223, 207, 173, 0.13);
+
+  background:
+    rgba(217, 194, 146, 0.10);
+
+  animation:
+    seMprFactoryWindow
+    4s ease-in-out infinite alternate;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-windows span:nth-child(2) {
+  animation-delay: -1.1s;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-windows span:nth-child(3) {
+  animation-delay: -2.1s;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-windows span:nth-child(4) {
+  animation-delay: -3.1s;
+}
+
+
+@keyframes seMprFactoryWindow {
+  from {
+    background:
+      rgba(217, 194, 146, 0.07);
+  }
+
+  to {
+    background:
+      rgba(225, 200, 145, 0.19);
+
+    box-shadow:
+      0 0 10px
+      rgba(225, 200, 145, 0.06);
+  }
+}
+
+
+/* =========================================================
+   FACTORY ENTRANCE
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory-door {
+  position: absolute;
+
+  right: 18px;
+  bottom: 0;
+
+  width: 28px;
+  height: 35px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(223, 208, 177, 0.22);
+
+  border-bottom: 0;
+
+  background:
+    rgba(8, 11, 9, 0.62);
+
+  box-shadow:
+    inset 0 0 13px
+    rgba(0, 0, 0, 0.32);
+}
+
+
+.se-mpr-page
+.se-mpr-factory-door span {
+  position: absolute;
+
+  left: 50%;
+  top: 0;
+
+  width: 1px;
+  height: 100%;
+
+  background:
+    rgba(220, 205, 172, 0.12);
+}
+
+
+/* =========================================================
+   WORKERS
+========================================================= */
+
+.se-mpr-page
+.se-mpr-worker {
+  position: absolute;
+
+  z-index: 6;
+
+  left: 30%;
+  bottom: 14px;
+
+  width: 20px;
+  height: 42px;
+
+  opacity: 0;
+
+  transform-origin:
+    center bottom;
+
+  animation:
+    seMprWalkToFactory
+    11s linear infinite;
+}
+
+
+/* worker head */
+.se-mpr-page
+.se-mpr-worker-head {
+  position: absolute;
+
+  left: 6px;
+  top: 0;
+
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background:
+    #b9aa8b;
+}
+
+
+/* safety helmet */
+.se-mpr-page
+.se-mpr-worker-head::before {
+  content: "";
+
+  position: absolute;
+
+  left: -1px;
+  top: -2px;
+
+  width: 11px;
+  height: 5px;
+
+  border-radius:
+    8px 8px 2px 2px;
+
+  background:
+    #d2bd91;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-head::after {
+  content: "";
+
+  position: absolute;
+
+  left: 5px;
+  top: 3px;
+
+  width: 7px;
+  height: 2px;
+
+  border-radius: 2px;
+
+  background:
+    #d2bd91;
+}
+
+
+/* torso */
+.se-mpr-page
+.se-mpr-worker-body {
+  position: absolute;
+
+  left: 6px;
+  top: 10px;
+
+  width: 9px;
+  height: 17px;
+
+  border-radius:
+    3px 3px 2px 2px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #a79779,
+      #776e5c
+    );
+}
+
+
+/* arms */
+.se-mpr-page
+.se-mpr-worker-arm {
+  position: absolute;
+
+  top: 12px;
+
+  width: 4px;
+  height: 17px;
+
+  border-radius: 4px;
+
+  background:
+    #8d816a;
+
+  transform-origin:
+    top center;
+
+  animation:
+    seMprWorkerArm
+    0.58s ease-in-out
+    infinite alternate;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-arm.left {
+  left: 3px;
+
+  transform:
+    rotate(20deg);
+}
+
+
+.se-mpr-page
+.se-mpr-worker-arm.right {
+  right: 2px;
+
+  animation-delay:
+    -0.29s;
+
+  transform:
+    rotate(-20deg);
+}
+
+
+/* legs */
+.se-mpr-page
+.se-mpr-worker-leg {
+  position: absolute;
+
+  top: 25px;
+
+  width: 4px;
+  height: 17px;
+
+  border-radius: 3px;
+
+  background:
+    #6e6859;
+
+  transform-origin:
+    top center;
+
+  animation:
+    seMprWorkerLeg
+    0.58s ease-in-out
+    infinite alternate;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-leg.left {
+  left: 6px;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-leg.right {
+  left: 11px;
+
+  animation-delay:
+    -0.29s;
+}
+
+
+@keyframes seMprWorkerArm {
+  from {
+    transform:
+      rotate(-25deg);
+  }
+
+  to {
+    transform:
+      rotate(25deg);
+  }
+}
+
+
+@keyframes seMprWorkerLeg {
+  from {
+    transform:
+      rotate(-21deg);
+  }
+
+  to {
+    transform:
+      rotate(21deg);
+  }
+}
+
+
+/* =========================================================
+   INDIVIDUAL WORKER TIMING
+========================================================= */
+
+.se-mpr-page
+.se-mpr-worker--1 {
+  animation-delay: 0s;
+}
+
+
+.se-mpr-page
+.se-mpr-worker--2 {
+  animation-delay: -2.5s;
+
+  transform:
+    scale(0.88);
+}
+
+
+.se-mpr-page
+.se-mpr-worker--3 {
+  animation-delay: -5s;
+
+  transform:
+    scale(0.96);
+}
+
+
+.se-mpr-page
+.se-mpr-worker--4 {
+  animation-delay: -7.5s;
+
+  transform:
+    scale(0.82);
+}
+
+
+/* =========================================================
+   WALK FROM LEFT -> FACTORY DOOR
+
+   Factory is right-center.
+   Worker fades out when reaching entrance.
+========================================================= */
+
+@keyframes seMprWalkToFactory {
+
+  0% {
+    left: 31%;
+
+    opacity: 0;
+
+    transform:
+      translateY(0)
+      scale(0.82);
+  }
+
+  5% {
+    opacity: 0.64;
+  }
+
+  20% {
+    transform:
+      translateY(-1px)
+      scale(0.87);
+  }
+
+  40% {
+    transform:
+      translateY(0)
+      scale(0.91);
+  }
+
+  60% {
+    transform:
+      translateY(-1px)
+      scale(0.95);
+  }
+
+  82% {
+    left:
+      calc(
+        100% - 303px
+      );
+
+    opacity: 0.62;
+
+    transform:
+      translateY(0)
+      scale(0.76);
+  }
+
+  89% {
+    left:
+      calc(
+        100% - 293px
+      );
+
+    opacity: 0.30;
+
+    transform:
+      translateY(1px)
+      scale(0.62);
+  }
+
+  93% {
+    left:
+      calc(
+        100% - 288px
+      );
+
+    opacity: 0;
+
+    transform:
+      translateY(2px)
+      scale(0.48);
+  }
+
+  100% {
+    left:
+      calc(
+        100% - 288px
+      );
+
+    opacity: 0;
+
+    transform:
+      translateY(2px)
+      scale(0.48);
+  }
+}
+
+
+/* =========================================================
+   CHIMNEY SMOKE
+========================================================= */
+
+.se-mpr-page
+.se-mpr-smoke {
+  position: absolute;
+
+  z-index: 3;
+
+  right: 390px;
+  bottom: 93px;
+
+  width: 13px;
+  height: 13px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(205, 197, 177, 0.08);
+
+  filter:
+    blur(2px);
+
+  opacity: 0;
+
+  animation:
+    seMprSmoke
+    5s ease-out infinite;
+}
+
+
+.se-mpr-page
+.se-mpr-smoke--2 {
+  animation-delay:
+    -1.7s;
+}
+
+
+.se-mpr-page
+.se-mpr-smoke--3 {
+  animation-delay:
+    -3.4s;
+}
+
+
+@keyframes seMprSmoke {
+
+  0% {
+    transform:
+      translate(
+        0,
+        0
+      )
+      scale(0.5);
+
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.22;
+  }
+
+  70% {
+    opacity: 0.06;
+  }
+
+  100% {
+    transform:
+      translate(
+        16px,
+        -35px
+      )
+      scale(2.2);
+
+    opacity: 0;
+  }
+}
+
+
+/* =========================================================
+   VERY SUBTLE MOVING INDUSTRIAL LIGHT
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory-header::after {
+  content: "";
+
+  position: absolute;
+
+  z-index: 1;
+
+  top: -90px;
+  left: 20%;
+
+  width: 210px;
+  height: 280px;
+
+  transform:
+    rotate(22deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(231, 217, 185, 0.025),
+      rgba(231, 217, 185, 0.055),
+      transparent
+    );
+
+  pointer-events: none;
+
+  animation:
+    seMprIndustrialLight
+    9s ease-in-out infinite;
+}
+
+
+@keyframes seMprIndustrialLight {
+
+  0%,
+  100% {
+    transform:
+      translateX(-160px)
+      rotate(22deg);
+  }
+
+  50% {
+    transform:
+      translateX(470px)
+      rotate(22deg);
+  }
+}
+
+
+/* =========================================================
+   BUTTON OVERRIDES FOR DARK HEADER
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory-header
+.se-mpr-refresh {
+  min-height: 42px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.14);
+
+  background:
+    rgba(255, 255, 255, 0.07);
+
+  color:
+    rgba(255, 255, 255, 0.86);
+
+  backdrop-filter:
+    blur(8px);
+
+  -webkit-backdrop-filter:
+    blur(8px);
+}
+
+
+.se-mpr-page
+.se-mpr-factory-header
+.se-mpr-refresh:hover {
+  background:
+    rgba(255, 255, 255, 0.11);
+}
+
+
+/* keep main CTA unmistakable */
+.se-mpr-page
+.se-mpr-factory-header
+.se-mpr-create-btn {
+  min-height: 42px;
+
+  box-shadow:
+    0 9px 22px
+    rgba(227, 6, 19, 0.18);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (
+  max-width: 1100px
+) {
+
+  .se-mpr-page
+  .se-mpr-factory {
+    right: 205px;
+
+    transform:
+      scale(0.85);
+
+    transform-origin:
+      right bottom;
+  }
+
+  .se-mpr-page
+  .se-mpr-factory-header-copy {
+    min-width: 260px;
+  }
+
+}
+
+
+@media (
+  max-width: 820px
+) {
+
+  .se-mpr-page
+  .se-mpr-page-head.se-mpr-factory-header {
+    min-height: 145px;
+
+    padding:
+      20px;
+
+    align-items:
+      flex-start;
+
+    flex-direction: column;
+  }
+
+  .se-mpr-page
+  .se-mpr-factory {
+    right: 20px;
+
+    opacity: 0.35;
+  }
+
+  .se-mpr-page
+  .se-mpr-factory-header
+  .se-mpr-head-actions {
+    width: 100%;
+
+    margin-top: 16px;
+  }
+
+  .se-mpr-page
+  .se-mpr-factory-header
+  .se-mpr-create-btn {
+    flex: 1;
+  }
+
+  .se-mpr-page
+  .se-mpr-worker {
+    display: none;
+  }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+
+  .se-mpr-page
+  .se-mpr-worker,
+
+  .se-mpr-page
+  .se-mpr-worker-arm,
+
+  .se-mpr-page
+  .se-mpr-worker-leg,
+
+  .se-mpr-page
+  .se-mpr-smoke,
+
+  .se-mpr-page
+  .se-mpr-factory-windows span,
+
+  .se-mpr-page
+  .se-mpr-factory-header::after {
+    animation: none !important;
+  }
+
+}
+/* =========================================================
+   MANPOWER FACTORY SCENE V5
+   SIMPLE + HIGH VISIBILITY
+   Worker -> Factory -> Gate opens -> Worker enters
+========================================================= */
+
+
+/* =========================================================
+   1. HEADER
+========================================================= */
+
+.se-mpr-page .se-mpr-page-head.se-mpr-factory-header {
+  position: relative !important;
+  isolation: isolate;
+
+  min-height: 150px !important;
+
+  overflow: hidden !important;
+
+  padding: 26px 28px !important;
+
+  background:
+    radial-gradient(
+      circle at 70% 30%,
+      rgba(208, 190, 146, 0.08),
+      transparent 28%
+    ),
+    linear-gradient(
+      110deg,
+      #101915 0%,
+      #17251e 52%,
+      #253a30 100%
+    ) !important;
+
+  border-radius: 0 0 20px 20px;
+}
+
+
+/* =========================================================
+   2. KEEP TEXT + BUTTONS ABOVE SCENE
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-header-copy {
+  position: relative !important;
+  z-index: 100 !important;
+}
+
+
+.se-mpr-page
+.se-mpr-factory-header
+.se-mpr-head-actions {
+  position: relative !important;
+
+  z-index: 100 !important;
+
+  margin-left: auto;
+}
+
+
+/* =========================================================
+   3. ENTIRE ANIMATION AREA
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-scene {
+  position: absolute !important;
+
+  z-index: 10 !important;
+
+  /*
+   * IMPORTANT:
+   * Start after Manpower Requests title.
+   * End before header buttons.
+   */
+  left: 390px !important;
+  right: 315px !important;
+
+  top: 0 !important;
+  bottom: 0 !important;
+
+  width: auto !important;
+  height: auto !important;
+
+  overflow: visible !important;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   4. GROUND / WALKING ROAD
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-ground {
+  position: absolute !important;
+
+  z-index: 1 !important;
+
+  left: 0 !important;
+  right: 0 !important;
+
+  bottom: 19px !important;
+
+  width: auto !important;
+  height: 2px !important;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(224, 208, 170, 0.20) 8%,
+      rgba(224, 208, 170, 0.34) 50%,
+      rgba(224, 208, 170, 0.34) 90%,
+      transparent 100%
+    ) !important;
+}
+
+
+/* road underneath */
+
+.se-mpr-page .se-mpr-factory-ground::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+
+  top: 2px;
+
+  height: 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(206, 190, 157, 0.045),
+      transparent
+    );
+}
+
+
+/* =========================================================
+   5. FACTORY
+   FIXED ON RIGHT
+========================================================= */
+
+.se-mpr-page .se-mpr-factory {
+  position: absolute !important;
+
+  z-index: 20 !important;
+
+  /*
+   * Factory ALWAYS stays here.
+   */
+  right: 0 !important;
+  left: auto !important;
+
+  bottom: 20px !important;
+
+  width: 245px !important;
+  height: 108px !important;
+
+  opacity: 1 !important;
+
+  transform: none !important;
+
+  filter:
+    drop-shadow(
+      0 9px 10px
+      rgba(0, 0, 0, 0.28)
+    ) !important;
+}
+
+
+/* =========================================================
+   6. FACTORY BODY
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-building {
+  position: absolute !important;
+
+  left: 20px !important;
+  right: 0 !important;
+
+  bottom: 0 !important;
+
+  width: auto !important;
+  height: 70px !important;
+
+  overflow: visible !important;
+
+  border:
+    1px solid
+    rgba(229, 215, 180, 0.46) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      #687266 0%,
+      #4d5c50 45%,
+      #34463b 100%
+    ) !important;
+
+  box-shadow:
+    inset 0 1px 0
+    rgba(255, 255, 255, 0.13) !important;
+}
+
+
+/* factory wall panels */
+
+.se-mpr-page .se-mpr-factory-building::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 27px,
+      rgba(255, 255, 255, 0.055) 28px,
+      rgba(255, 255, 255, 0.055) 29px
+    );
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   7. FACTORY ROOF
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-roof {
+  position: absolute !important;
+
+  z-index: 3 !important;
+
+  left: 20px !important;
+
+  bottom: 69px !important;
+
+  width: 225px !important;
+  height: 34px !important;
+
+  display: flex !important;
+
+  align-items: flex-end !important;
+}
+
+
+.se-mpr-page .se-mpr-factory-roof span {
+  display: block !important;
+
+  width: 75px !important;
+  height: 34px !important;
+
+  flex: 0 0 75px !important;
+
+  clip-path:
+    polygon(
+      0 100%,
+      0 60%,
+      66% 0,
+      66% 60%,
+      100% 60%,
+      100% 100%
+    ) !important;
+
+  background:
+    #7c8777 !important;
+}
+
+
+/* =========================================================
+   8. CHIMNEYS
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-chimney {
+  position: absolute !important;
+
+  z-index: 2 !important;
+
+  bottom: 86px !important;
+
+  width: 12px !important;
+
+  background:
+    #687466 !important;
+
+  border:
+    1px solid
+    rgba(230, 215, 178, 0.22);
+}
+
+
+.se-mpr-page .chimney-one {
+  left: 51px !important;
+
+  height: 37px !important;
+}
+
+
+.se-mpr-page .chimney-two {
+  left: 85px !important;
+
+  height: 28px !important;
+}
+
+
+/* =========================================================
+   9. SANDEEP EDGETECH SIGNBOARD
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-name {
+  position: absolute !important;
+
+  z-index: 15 !important;
+
+  left: 18px !important;
+  top: 9px !important;
+
+  padding:
+    5px 8px !important;
+
+  border:
+    1px solid
+    rgba(246, 224, 169, 0.45) !important;
+
+  border-radius:
+    3px !important;
+
+  background:
+    rgba(13, 24, 18, 0.68) !important;
+
+  color:
+    #f5dda0 !important;
+
+  font-size:
+    8px !important;
+
+  line-height: 1 !important;
+
+  font-weight:
+    950 !important;
+
+  letter-spacing:
+    1.1px !important;
+
+  white-space:
+    nowrap !important;
+
+  opacity: 1 !important;
+}
+
+
+/* =========================================================
+   10. FACTORY WINDOWS
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-windows {
+  position: absolute !important;
+
+  left: 18px !important;
+  top: 38px !important;
+
+  display: flex !important;
+
+  gap: 7px !important;
+}
+
+
+.se-mpr-page .se-mpr-factory-windows span {
+  display: block !important;
+
+  width: 17px !important;
+  height: 12px !important;
+
+  border:
+    1px solid
+    rgba(246, 224, 169, 0.40) !important;
+
+  background:
+    #c2a75d !important;
+
+  box-shadow:
+    0 0 6px
+    rgba(211, 181, 99, 0.18) !important;
+}
+
+
+/* =========================================================
+   11. FACTORY GATE
+========================================================= */
+
+.se-mpr-page .se-mpr-factory-door {
+  position: absolute !important;
+
+  z-index: 50 !important;
+
+  right: 14px !important;
+
+  bottom: 0 !important;
+
+  width: 42px !important;
+  height: 53px !important;
+
+  overflow: hidden !important;
+
+  border:
+    2px solid
+    rgba(234, 218, 180, 0.72) !important;
+
+  border-bottom:
+    0 !important;
+
+  background:
+    #101a14 !important;
+
+  box-shadow:
+    inset 0 0 14px
+    rgba(0, 0, 0, 0.55) !important;
+}
+
+
+/*
+ * This is the visible sliding gate.
+ */
+
+.se-mpr-page .se-mpr-factory-door span {
+  position: absolute !important;
+
+  z-index: 5 !important;
+
+  left: 0 !important;
+  top: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #667066 0,
+      #667066 5px,
+      #48554b 6px,
+      #48554b 9px
+    ) !important;
+
+  transform:
+    translateX(0);
+
+  animation:
+    seMprGateOpenClose
+    10s ease-in-out
+    infinite !important;
+}
+
+
+/* gate label */
+
+.se-mpr-page .se-mpr-factory-door::before {
+  content: "ENTRY";
+
+  position: absolute;
+
+  z-index: 10;
+
+  left: 50%;
+  top: -14px;
+
+  transform:
+    translateX(-50%);
+
+  color:
+    #ead59f;
+
+  font-size: 5px;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+
+/* =========================================================
+   12. GATE ANIMATION
+
+   CLOSED
+      ↓
+   WORKER APPROACHES
+      ↓
+   OPEN
+      ↓
+   WORKER ENTERS
+      ↓
+   CLOSED
+========================================================= */
+
+@keyframes seMprGateOpenClose {
+
+  0%,
+  58% {
+    transform:
+      translateX(0);
+  }
+
+  66%,
+  84% {
+    transform:
+      translateX(92%);
+  }
+
+  92%,
+  100% {
+    transform:
+      translateX(0);
+  }
+
+}
+
+
+/* =========================================================
+   13. WORKER
+========================================================= */
+
+.se-mpr-page .se-mpr-worker {
+  position: absolute !important;
+
+  z-index: 40 !important;
+
+  /*
+   * IMPORTANT:
+   * do NOT animate left anymore.
+   */
+
+  left: 0 !important;
+
+  bottom: 20px !important;
+
+  width: 30px !important;
+  height: 62px !important;
+
+  opacity: 0;
+
+  transform-origin:
+    center bottom !important;
+
+  animation:
+    seMprWalkIntoFactory
+    10s linear
+    infinite !important;
+
+  filter:
+    drop-shadow(
+      0 3px 2px
+      rgba(0, 0, 0, 0.28)
+    ) !important;
+}
+
+
+/* =========================================================
+   14. WORKER HEAD
+========================================================= */
+
+.se-mpr-page .se-mpr-worker-head {
+  position: absolute !important;
+
+  z-index: 8 !important;
+
+  left: 8px !important;
+  top: 0 !important;
+
+  width: 14px !important;
+  height: 14px !important;
+
+  border-radius:
+    50% !important;
+
+  background:
+    #d0a57d !important;
+}
+
+
+/* helmet */
+
+.se-mpr-page
+.se-mpr-worker-head::before {
+  content: "";
+
+  position: absolute;
+
+  left: -2px;
+  top: -3px;
+
+  width: 18px;
+  height: 8px;
+
+  border-radius:
+    10px 10px 2px 2px;
+
+  background:
+    #e4b93e !important;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-head::after {
+  content: "";
+
+  position: absolute;
+
+  left: 6px;
+  top: 3px;
+
+  width: 11px;
+  height: 3px;
+
+  border-radius: 2px;
+
+  background:
+    #e4b93e !important;
+}
+
+
+/* =========================================================
+   15. WORKER BODY
+========================================================= */
+
+.se-mpr-page .se-mpr-worker-body {
+  position: absolute !important;
+
+  z-index: 6 !important;
+
+  left: 7px !important;
+  top: 15px !important;
+
+  width: 16px !important;
+  height: 25px !important;
+
+  border-radius:
+    4px 4px 2px 2px !important;
+
+  background:
+    #c98535 !important;
+}
+
+
+/* reflective jacket */
+
+.se-mpr-page
+.se-mpr-worker-body::before {
+  content: "";
+
+  position: absolute;
+
+  left: 2px;
+  right: 2px;
+
+  top: 11px;
+
+  height: 3px;
+
+  background:
+    #eee0a4;
+}
+
+
+/* =========================================================
+   16. ARMS
+========================================================= */
+
+.se-mpr-page .se-mpr-worker-arm {
+  position: absolute !important;
+
+  z-index: 5 !important;
+
+  top: 17px !important;
+
+  width: 5px !important;
+  height: 23px !important;
+
+  border-radius:
+    5px !important;
+
+  background:
+    #bd8a63 !important;
+
+  transform-origin:
+    top center !important;
+
+  animation:
+    seMprArmWalk
+    0.52s ease-in-out
+    infinite alternate !important;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-arm.left {
+  left: 3px !important;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-arm.right {
+  right: 2px !important;
+
+  animation-delay:
+    -0.26s !important;
+}
+
+
+/* =========================================================
+   17. LEGS
+========================================================= */
+
+.se-mpr-page .se-mpr-worker-leg {
+  position: absolute !important;
+
+  z-index: 4 !important;
+
+  top: 38px !important;
+
+  width: 6px !important;
+  height: 24px !important;
+
+  border-radius:
+    3px !important;
+
+  background:
+    #263844 !important;
+
+  transform-origin:
+    top center !important;
+
+  animation:
+    seMprLegWalk
+    0.52s ease-in-out
+    infinite alternate !important;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-leg.left {
+  left: 8px !important;
+}
+
+
+.se-mpr-page
+.se-mpr-worker-leg.right {
+  left: 16px !important;
+
+  animation-delay:
+    -0.26s !important;
+}
+
+
+/* boots */
+
+.se-mpr-page
+.se-mpr-worker-leg::after {
+  content: "";
+
+  position: absolute;
+
+  bottom: 0;
+
+  width: 9px;
+  height: 4px;
+
+  background:
+    #0d1519;
+
+  border-radius:
+    3px 3px 1px 1px;
+}
+
+
+/* =========================================================
+   18. WALKING BODY MOVEMENT
+========================================================= */
+
+@keyframes seMprArmWalk {
+
+  from {
+    transform:
+      rotate(-29deg);
+  }
+
+  to {
+    transform:
+      rotate(29deg);
+  }
+
+}
+
+
+@keyframes seMprLegWalk {
+
+  from {
+    transform:
+      rotate(-26deg);
+  }
+
+  to {
+    transform:
+      rotate(26deg);
+  }
+
+}
+
+
+/* =========================================================
+   19. MAIN JOURNEY
+
+   translateX is used instead of changing left.
+
+   Worker starts at left of scene.
+   Worker walks to factory gate.
+   Gate opens.
+   Worker disappears INSIDE gate.
+========================================================= */
+
+@keyframes seMprWalkIntoFactory {
+
+  0% {
+    opacity: 0;
+
+    transform:
+      translateX(0)
+      translateY(0);
+  }
+
+
+  4% {
+    opacity: 1;
+  }
+
+
+  15% {
+    opacity: 1;
+
+    transform:
+      translateX(65px)
+      translateY(-1px);
+  }
+
+
+  30% {
+    opacity: 1;
+
+    transform:
+      translateX(145px)
+      translateY(0);
+  }
+
+
+  45% {
+    opacity: 1;
+
+    transform:
+      translateX(225px)
+      translateY(-1px);
+  }
+
+
+  58% {
+    opacity: 1;
+
+    transform:
+      translateX(295px)
+      translateY(0);
+  }
+
+
+  /*
+   * Gate starts opening.
+   */
+
+  67% {
+    opacity: 1;
+
+    transform:
+      translateX(345px)
+      translateY(-1px);
+  }
+
+
+  /*
+   * Worker reaches entrance.
+   */
+
+  76% {
+    opacity: 1;
+
+    transform:
+      translateX(390px)
+      translateY(0)
+      scale(0.95);
+  }
+
+
+  /*
+   * Worker moves through doorway.
+   */
+
+  82% {
+    opacity: 0.75;
+
+    transform:
+      translateX(415px)
+      translateY(1px)
+      scale(0.80);
+  }
+
+
+  87% {
+    opacity: 0;
+
+    transform:
+      translateX(425px)
+      translateY(3px)
+      scale(0.65);
+  }
+
+
+  100% {
+    opacity: 0;
+
+    transform:
+      translateX(425px)
+      translateY(3px)
+      scale(0.65);
+  }
+
+}
+
+
+/* =========================================================
+   20. ONLY ONE PERSON AT A TIME
+
+   You currently have 4 workers in JSX.
+   Instead of all four overlapping, stagger them.
+========================================================= */
+
+.se-mpr-page .se-mpr-worker--1 {
+  animation-delay:
+    0s !important;
+}
+
+
+.se-mpr-page .se-mpr-worker--2 {
+  animation-delay:
+    -2.5s !important;
+}
+
+
+.se-mpr-page .se-mpr-worker--3 {
+  animation-delay:
+    -5s !important;
+}
+
+
+.se-mpr-page .se-mpr-worker--4 {
+  animation-delay:
+    -7.5s !important;
+}
+
+
+/* =========================================================
+   21. SMOKE
+========================================================= */
+
+.se-mpr-page .se-mpr-smoke {
+  position: absolute !important;
+
+  z-index: 15 !important;
+
+  /*
+   * Factory chimney area
+   */
+
+  right: 178px !important;
+
+  bottom: 112px !important;
+
+  width: 13px !important;
+  height: 13px !important;
+
+  border-radius:
+    50% !important;
+
+  background:
+    rgba(215, 215, 198, 0.20) !important;
+
+  filter:
+    blur(2px) !important;
+
+  opacity: 0;
+
+  animation:
+    seMprSmokeRise
+    4.5s ease-out
+    infinite !important;
+}
+
+
+.se-mpr-page
+.se-mpr-smoke--2 {
+  animation-delay:
+    -1.5s !important;
+}
+
+
+.se-mpr-page
+.se-mpr-smoke--3 {
+  animation-delay:
+    -3s !important;
+}
+
+
+@keyframes seMprSmokeRise {
+
+  0% {
+    opacity: 0;
+
+    transform:
+      translate(0, 0)
+      scale(0.5);
+  }
+
+
+  20% {
+    opacity: 0.25;
+  }
+
+
+  70% {
+    opacity: 0.10;
+  }
+
+
+  100% {
+    opacity: 0;
+
+    transform:
+      translate(
+        14px,
+        -34px
+      )
+      scale(2);
+  }
+
+}
+
+
+/* =========================================================
+   22. REMOVE OLD HEADER PSEUDO ANIMATIONS
+========================================================= */
+
+.se-mpr-page
+.se-mpr-factory-header::after {
+  content: none !important;
+
+  display: none !important;
+}
+
+
+/* =========================================================
+   23. RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+
+  .se-mpr-page
+  .se-mpr-factory-scene {
+    left: 330px !important;
+    right: 275px !important;
+
+    transform:
+      scale(0.90);
+
+    transform-origin:
+      right center;
+  }
+
+}
+
+
+@media (max-width: 900px) {
+
+  .se-mpr-page
+  .se-mpr-factory-scene {
+    display:
+      none !important;
+  }
+
+}
+
+
+/* =========================================================
+   24. ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .se-mpr-page .se-mpr-worker,
+  .se-mpr-page .se-mpr-worker-arm,
+  .se-mpr-page .se-mpr-worker-leg,
+  .se-mpr-page .se-mpr-factory-door span,
+  .se-mpr-page .se-mpr-smoke {
+    animation:
+      none !important;
+  }
+
+}
+/* =========================================================
+   MANPOWER HEADER — FACTORY ENTRY V7
+   SYNCHRONISED WORKER + GATE
+========================================================= */
+
+.se-mpr-page .se-mpr-workforce-scene {
+  position: absolute;
+
+  z-index: 2;
+
+  left: 0;
+  right: 300px;
+  bottom: 0;
+
+  height: 100%;
+
+  overflow: hidden;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   GROUND
+========================================================= */
+
+.se-mpr-page .se-mpr-scene-ground {
+  position: absolute;
+
+  z-index: 3;
+
+  left: 0;
+  right: 0;
+  bottom: 17px;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(213, 193, 148, 0.16) 15%,
+      rgba(213, 193, 148, 0.38) 55%,
+      rgba(213, 193, 148, 0.2) 90%,
+      transparent 100%
+    );
+}
+
+
+/* =========================================================
+   FACTORY POSITION
+
+   IMPORTANT:
+   Gate is factory's LEFT edge.
+========================================================= */
+
+.se-mpr-page .se-mpr-plant {
+  position: absolute;
+
+  z-index: 20;
+
+  right: 16px;
+  bottom: 18px;
+
+  width: 245px;
+  height: 103px;
+}
+
+
+/* =========================================================
+   FACTORY BUILDING
+========================================================= */
+
+.se-mpr-page .se-mpr-plant-building {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 70px;
+
+  border:
+    1px solid
+    rgba(206, 196, 163, 0.46);
+
+  background:
+    linear-gradient(
+      180deg,
+      #697568 0%,
+      #566457 100%
+    );
+
+  box-shadow:
+    0 8px 18px
+    rgba(0, 0, 0, 0.16);
+}
+
+
+/* =========================================================
+   FACTORY SAW ROOF
+========================================================= */
+
+.se-mpr-page .se-mpr-plant-roof {
+  position: absolute;
+
+  z-index: 3;
+
+  left: 0;
+  right: 0;
+  top: 18px;
+
+  height: 35px;
+
+  overflow: hidden;
+}
+
+.se-mpr-page .se-mpr-plant-roof span {
+  position: absolute;
+
+  bottom: 0;
+
+  width: 92px;
+  height: 38px;
+
+  background: #748073;
+
+  clip-path:
+    polygon(
+      0 100%,
+      0 55%,
+      100% 0,
+      100% 100%
+    );
+}
+
+.se-mpr-page .se-mpr-plant-roof span:nth-child(1) {
+  left: 0;
+}
+
+.se-mpr-page .se-mpr-plant-roof span:nth-child(2) {
+  left: 75px;
+}
+
+.se-mpr-page .se-mpr-plant-roof span:nth-child(3) {
+  left: 150px;
+}
+
+
+/* =========================================================
+   CHIMNEYS
+========================================================= */
+
+.se-mpr-page .se-mpr-plant-chimney {
+  position: absolute;
+
+  z-index: 1;
+
+  top: 0;
+
+  width: 13px;
+
+  border:
+    1px solid
+    rgba(223, 210, 172, 0.3);
+
+  background:
+    linear-gradient(
+      90deg,
+      #677267,
+      #8b9180,
+      #626d62
+    );
+}
+
+.se-mpr-page .se-mpr-plant-chimney--1 {
+  left: 32px;
+
+  height: 50px;
+}
+
+.se-mpr-page .se-mpr-plant-chimney--2 {
+  left: 69px;
+
+  top: 9px;
+
+  height: 42px;
+}
+
+
+/* =========================================================
+   FACTORY NAME
+========================================================= */
+
+.se-mpr-page .se-mpr-plant-sign {
+  position: absolute;
+
+  z-index: 10;
+
+  left: 66px;
+  top: 10px;
+
+  min-width: 120px;
+  height: 19px;
+
+  padding:
+    0 10px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border:
+    1px solid
+    rgba(227, 202, 139, 0.32);
+
+  background:
+    rgba(24, 34, 27, 0.86);
+
+  color: #ead18d;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.45px;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   WINDOWS
+========================================================= */
+
+.se-mpr-page .se-mpr-plant-windows {
+  position: absolute;
+
+  z-index: 5;
+
+  left: 72px;
+  bottom: 19px;
+
+  display: flex;
+
+  gap: 8px;
+}
+
+.se-mpr-page .se-mpr-plant-windows span {
+  width: 18px;
+  height: 13px;
+
+  border:
+    1px solid
+    rgba(244, 219, 157, 0.25);
+
+  background:
+    linear-gradient(
+      180deg,
+      #d9bc70,
+      #b99a55
+    );
+
+  box-shadow:
+    0 0 10px
+    rgba(222, 191, 111, 0.08);
+}
+
+
+/* =========================================================
+   LEFT SIDE FACTORY ENTRY
+
+   This is the destination.
+========================================================= */
+
+.se-mpr-page .se-mpr-plant-entry {
+  position: absolute;
+
+  z-index: 30;
+
+  left: -1px;
+  bottom: -1px;
+
+  width: 47px;
+  height: 61px;
+
+  overflow: hidden;
+
+  border-top:
+    2px solid
+    rgba(216, 203, 166, 0.7);
+
+  border-right:
+    2px solid
+    rgba(216, 203, 166, 0.7);
+
+  background: #111b16;
+}
+
+
+/* dark inside factory */
+
+.se-mpr-page .se-mpr-entry-dark {
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      ellipse at 80% 50%,
+      rgba(130, 116, 78, 0.12),
+      transparent 55%
+    ),
+    #0a100d;
+}
+
+
+/* =========================================================
+   SLIDING GATE
+========================================================= */
+
+.se-mpr-page .se-mpr-entry-gate {
+  position: absolute;
+
+  z-index: 4;
+
+  inset: 0;
+
+  display: flex;
+
+  justify-content: space-evenly;
+
+  border:
+    1px solid
+    rgba(205, 198, 169, 0.5);
+
+  background:
+    linear-gradient(
+      90deg,
+      #667267,
+      #7b8475
+    );
+
+  transform-origin: right center;
+
+  animation:
+    seMprFactoryGate
+    12s
+    cubic-bezier(.65, 0, .35, 1)
+    infinite;
+}
+
+.se-mpr-page .se-mpr-entry-gate span {
+  width: 2px;
+
+  height: 100%;
+
+  background:
+    rgba(35, 47, 39, 0.55);
+}
+
+
+/* =========================================================
+   EXACT GATE TIMING
+
+   0-60%   CLOSED
+   60-68%  OPENING
+   68-80%  OPEN
+   80-87%  CLOSING
+========================================================= */
+
+@keyframes seMprFactoryGate {
+
+  0%,
+  58% {
+    transform:
+      translateX(0);
+  }
+
+  66%,
+  80% {
+    transform:
+      translateX(44px);
+  }
+
+  88%,
+  100% {
+    transform:
+      translateX(0);
+  }
+}
+
+
+/* =========================================================
+   SIDE-PROFILE WORKER
+========================================================= */
+
+.se-mpr-page .se-mpr-walker {
+  position: absolute;
+
+  z-index: 15;
+
+  left: 0;
+  bottom: 19px;
+
+  width: 31px;
+  height: 62px;
+
+  opacity: 0;
+
+  transform-origin:
+    center bottom;
+
+  animation:
+    seMprWorkerJourney
+    12s
+    linear
+    infinite;
+}
+
+
+/* only one worker occupies path per cycle */
+
+.se-mpr-page .se-mpr-walker--1 {
+  animation-delay: 0s;
+}
+
+.se-mpr-page .se-mpr-walker--2 {
+  animation-delay: 12s;
+}
+
+.se-mpr-page .se-mpr-walker--3 {
+  animation-delay: 24s;
+}
+
+
+/* =========================================================
+   WORKER HEAD
+========================================================= */
+
+.se-mpr-page .se-mpr-walker-head {
+  position: absolute;
+
+  z-index: 6;
+
+  left: 11px;
+  top: 4px;
+
+  width: 15px;
+  height: 16px;
+
+  border-radius:
+    48% 58% 48% 48%;
+
+  background: #c99163;
+}
+
+
+/* small nose makes him visibly side-facing RIGHT */
+
+.se-mpr-page .se-mpr-walker-head::after {
+  content: "";
+
+  position: absolute;
+
+  right: -4px;
+  top: 7px;
+
+  width: 5px;
+  height: 4px;
+
+  border-radius:
+    0 4px 4px 0;
+
+  background: #c99163;
+}
+
+
+/* =========================================================
+   HELMET
+========================================================= */
+
+.se-mpr-page .se-mpr-helmet {
+  position: absolute;
+
+  z-index: 10;
+
+  left: -2px;
+  top: -4px;
+
+  width: 19px;
+  height: 8px;
+
+  border-radius:
+    12px 12px 3px 3px;
+
+  background: #efbd42;
+}
+
+.se-mpr-page .se-mpr-helmet::after {
+  content: "";
+
+  position: absolute;
+
+  right: -4px;
+  bottom: 0;
+
+  width: 8px;
+  height: 3px;
+
+  border-radius: 2px;
+
+  background: #efbd42;
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.se-mpr-page .se-mpr-walker-body {
+  position: absolute;
+
+  z-index: 5;
+
+  left: 8px;
+  top: 20px;
+
+  width: 17px;
+  height: 24px;
+
+  border-radius:
+    4px 5px 3px 3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #dd8a42,
+      #ec9a4c
+    );
+
+  transform:
+    skewX(-5deg);
+}
+
+.se-mpr-page .se-mpr-vest-line {
+  position: absolute;
+
+  left: 2px;
+  right: 2px;
+  top: 10px;
+
+  height: 2px;
+
+  background:
+    rgba(247, 224, 165, 0.9);
+}
+
+
+/* =========================================================
+   ARMS
+========================================================= */
+
+.se-mpr-page .se-mpr-arm {
+  position: absolute;
+
+  z-index: 3;
+
+  top: 23px;
+
+  width: 5px;
+  height: 22px;
+
+  border-radius: 5px;
+
+  background: #bd815a;
+
+  transform-origin:
+    50% 2px;
+
+  animation:
+    seMprArmSwing
+    0.58s
+    ease-in-out
+    infinite alternate;
+}
+
+.se-mpr-page .se-mpr-arm--left {
+  left: 7px;
+}
+
+.se-mpr-page .se-mpr-arm--right {
+  left: 23px;
+
+  animation-direction:
+    alternate-reverse;
+}
+
+
+/* =========================================================
+   LEGS
+========================================================= */
+
+.se-mpr-page .se-mpr-leg {
+  position: absolute;
+
+  z-index: 2;
+
+  left: 12px;
+  top: 41px;
+
+  width: 6px;
+  height: 21px;
+
+  border-radius:
+    3px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #24384a,
+      #172735
+    );
+
+  transform-origin:
+    50% 1px;
+
+  animation:
+    seMprLegSwing
+    0.58s
+    ease-in-out
+    infinite alternate;
+}
+
+.se-mpr-page .se-mpr-leg--right {
+  left: 18px;
+
+  animation-direction:
+    alternate-reverse;
+}
+
+
+/* =========================================================
+   REAL WALKING MOTION
+========================================================= */
+
+@keyframes seMprArmSwing {
+
+  from {
+    transform:
+      rotate(29deg);
+  }
+
+  to {
+    transform:
+      rotate(-29deg);
+  }
+}
+
+@keyframes seMprLegSwing {
+
+  from {
+    transform:
+      rotate(25deg);
+  }
+
+  to {
+    transform:
+      rotate(-25deg);
+  }
+}
+
+
+/* =========================================================
+   CRITICAL PART:
+   ONE JOURNEY.
+
+   Worker moves from exact LEFT EDGE to the LEFT EDGE
+   of factory.
+
+   Factory begins at:
+   scene width - 261px.
+
+   We therefore use calc(100% - 276px)
+   for doorway approach.
+========================================================= */
+
+@keyframes seMprWorkerJourney {
+
+  /* outside left */
+  0% {
+    opacity: 0;
+
+    left: -40px;
+
+    transform:
+      translateY(0);
+  }
+
+
+  /* enters scene */
+  3% {
+    opacity: 1;
+
+    left: -25px;
+
+    transform:
+      translateY(0);
+  }
+
+
+  /* walking */
+  15% {
+    opacity: 1;
+
+    left:
+      calc(
+        20% - 40px
+      );
+
+    transform:
+      translateY(-1px);
+  }
+
+
+  30% {
+    opacity: 1;
+
+    left:
+      calc(
+        42% - 60px
+      );
+
+    transform:
+      translateY(0);
+  }
+
+
+  45% {
+    opacity: 1;
+
+    left:
+      calc(
+        64% - 100px
+      );
+
+    transform:
+      translateY(-1px);
+  }
+
+
+  /* arriving immediately before gate */
+  58% {
+    opacity: 1;
+
+    left:
+      calc(
+        100% - 300px
+      );
+
+    transform:
+      translateY(0);
+  }
+
+
+  /*
+   * WAIT AT GATE
+   * gate is opening here
+   */
+
+  64% {
+    opacity: 1;
+
+    left:
+      calc(
+        100% - 300px
+      );
+
+    transform:
+      translateY(0);
+  }
+
+
+  /*
+   * gate fully open
+   * worker starts crossing doorway
+   */
+
+  69% {
+    opacity: 1;
+
+    left:
+      calc(
+        100% - 286px
+      );
+
+    transform:
+      translateY(-1px);
+  }
+
+
+  /*
+   * halfway inside gate
+   */
+
+  74% {
+    opacity: 1;
+
+    left:
+      calc(
+        100% - 266px
+      );
+
+    transform:
+      translateY(0)
+      scale(0.96);
+  }
+
+
+  /*
+   * inside factory
+   */
+
+  79% {
+    opacity: 0.55;
+
+    left:
+      calc(
+        100% - 246px
+      );
+
+    transform:
+      translateY(0)
+      scale(0.9);
+  }
+
+
+  /*
+   * disappear BEHIND building
+   */
+
+  82% {
+    opacity: 0;
+
+    left:
+      calc(
+        100% - 230px
+      );
+
+    transform:
+      translateY(0)
+      scale(0.86);
+  }
+
+
+  100% {
+    opacity: 0;
+
+    left:
+      calc(
+        100% - 230px
+      );
+  }
+}
+
+
+/* =========================================================
+   IMPORTANT:
+   FACTORY MUST COVER WORKER AFTER ENTRY
+========================================================= */
+
+.se-mpr-page .se-mpr-plant-building {
+  z-index: 20;
+}
+
+.se-mpr-page .se-mpr-plant-entry {
+  z-index: 40;
+}
+
+
+/*
+ * Worker stays behind factory.
+ * This is what makes him actually look like
+ * he entered instead of walking across it.
+ */
+
+.se-mpr-page .se-mpr-walker {
+  z-index: 15;
+}
+
+
+/* =========================================================
+   HEADER CONTENT MUST REMAIN ABOVE SCENE
+========================================================= */
+
+.se-mpr-page .se-mpr-page-head,
+.se-mpr-page .se-mpr-head-actions {
+  position: relative;
+
+  z-index: 100;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .se-mpr-page .se-mpr-walker,
+  .se-mpr-page .se-mpr-entry-gate,
+  .se-mpr-page .se-mpr-arm,
+  .se-mpr-page .se-mpr-leg {
+    animation: none !important;
+  }
+
+  .se-mpr-page .se-mpr-walker {
+    display: none;
+  }
+}
+/* ========================================================================
+   MANPOWER HEADER — FINAL FACTORY WORKFORCE ANIMATION
+   JSX: .se-mpr-workforce-scene / .se-mpr-walker / .se-mpr-plant
+   ======================================================================== */
+
+
+/* =========================================================
+   1. HEADER
+========================================================= */
+
+.se-mpr-page-head.se-mpr-factory-header {
+  position: relative !important;
+  isolation: isolate;
+  min-height: 156px !important;
+  height: 156px !important;
+  margin-bottom: 18px !important;
+  padding: 0 28px !important;
+  overflow: hidden !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  border-radius: 0 0 18px 18px !important;
+
+  background:
+    radial-gradient(
+      circle at 92% 30%,
+      rgba(150, 171, 132, 0.13),
+      transparent 24%
+    ),
+    linear-gradient(
+      110deg,
+      #0c1713 0%,
+      #10221b 55%,
+      #173629 100%
+    ) !important;
+}
+
+
+/* subtle header lines */
+
+.se-mpr-page-head.se-mpr-factory-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      112deg,
+      transparent 0 55%,
+      rgba(255, 255, 255, 0.025) 55.2%,
+      transparent 55.5%
+    ),
+    linear-gradient(
+      78deg,
+      transparent 0 82%,
+      rgba(255, 255, 255, 0.025) 82.2%,
+      transparent 82.5%
+    );
+}
+
+
+/* =========================================================
+   2. HEADER TITLE
+========================================================= */
+
+.se-mpr-factory-header-copy {
+  position: relative !important;
+  z-index: 20 !important;
+
+  width: 330px;
+  flex: 0 0 330px;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+
+.se-mpr-factory-header-copy > span {
+  display: block !important;
+  margin: 0 0 9px !important;
+
+  color: #d4bd7b !important;
+
+  font-size: 8px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: 3px !important;
+}
+
+
+.se-mpr-factory-header-copy h2 {
+  margin: 0 !important;
+
+  color: #ffffff !important;
+
+  font-size: 28px !important;
+  line-height: 1.05 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.9px !important;
+}
+
+
+/* header buttons must stay above animation */
+
+.se-mpr-factory-header .se-mpr-head-actions {
+  position: relative !important;
+  z-index: 30 !important;
+  margin-left: auto !important;
+}
+
+
+/* =========================================================
+   3. COMPLETE ANIMATION AREA
+========================================================= */
+
+.se-mpr-workforce-scene {
+  position: absolute !important;
+
+  z-index: 4 !important;
+
+  left: 330px !important;
+  right: 300px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+
+  display: block !important;
+
+  overflow: hidden !important;
+
+  pointer-events: none !important;
+}
+
+
+/* =========================================================
+   4. GROUND / WALKING PATH
+========================================================= */
+
+.se-mpr-scene-ground {
+  position: absolute;
+
+  z-index: 2;
+
+  left: 0;
+  right: 12px;
+
+  bottom: 20px;
+
+  height: 2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(215, 194, 139, 0.16) 7%,
+      rgba(215, 194, 139, 0.38) 40%,
+      rgba(215, 194, 139, 0.48) 75%,
+      rgba(215, 194, 139, 0.18) 100%
+    );
+
+  box-shadow:
+    0 1px 8px rgba(0, 0, 0, 0.22);
+}
+
+
+/* =========================================================
+   5. FACTORY
+========================================================= */
+
+.se-mpr-plant {
+  position: absolute !important;
+
+  z-index: 6 !important;
+
+  right: 4px !important;
+  bottom: 21px !important;
+
+  width: 238px !important;
+  height: 116px !important;
+
+  display: block !important;
+}
+
+
+/* ---------------------------------------------------------
+   MAIN FACTORY BODY
+--------------------------------------------------------- */
+
+.se-mpr-plant-building {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 84px;
+
+  overflow: visible;
+
+  border:
+    1px solid
+    rgba(198, 203, 171, 0.48);
+
+  background:
+    linear-gradient(
+      180deg,
+      #75816f 0%,
+      #626f60 45%,
+      #536154 100%
+    );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 22px rgba(0, 0, 0, 0.16);
+}
+
+
+/* =========================================================
+   6. SAW TOOTH FACTORY ROOF
+========================================================= */
+
+.se-mpr-plant-roof {
+  position: absolute;
+
+  z-index: 2;
+
+  left: 0;
+  bottom: 84px;
+
+  width: 100%;
+  height: 34px;
+
+  overflow: hidden;
+}
+
+
+.se-mpr-plant-roof span {
+  position: absolute;
+
+  bottom: 0;
+
+  width: 78px;
+  height: 34px;
+
+  background: #7c8875;
+
+  clip-path:
+    polygon(
+      0 100%,
+      0 56%,
+      100% 0,
+      100% 100%
+    );
+}
+
+
+.se-mpr-plant-roof span:nth-child(1) {
+  left: 0;
+}
+
+
+.se-mpr-plant-roof span:nth-child(2) {
+  left: 75px;
+}
+
+
+.se-mpr-plant-roof span:nth-child(3) {
+  left: 150px;
+}
+
+
+/* =========================================================
+   7. CHIMNEYS
+========================================================= */
+
+.se-mpr-plant-chimney {
+  position: absolute;
+
+  z-index: 1;
+
+  bottom: 112px;
+
+  width: 13px;
+
+  border:
+    1px solid
+    rgba(207, 211, 180, 0.3);
+
+  background:
+    linear-gradient(
+      90deg,
+      #657161,
+      #8c9781,
+      #606d5e
+    );
+}
+
+
+.se-mpr-plant-chimney::before {
+  content: "";
+
+  position: absolute;
+
+  left: -2px;
+  top: -4px;
+
+  width: 15px;
+  height: 5px;
+
+  border-radius: 2px;
+
+  background: #8e987f;
+}
+
+
+.se-mpr-plant-chimney--1 {
+  left: 32px;
+  height: 39px;
+}
+
+
+.se-mpr-plant-chimney--2 {
+  left: 72px;
+  height: 29px;
+}
+
+
+/* =========================================================
+   8. FACTORY NAME
+========================================================= */
+
+.se-mpr-plant-sign {
+  position: absolute;
+
+  z-index: 8;
+
+  left: 65px;
+  top: 13px;
+
+  min-width: 125px;
+  height: 22px;
+
+  padding: 0 9px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid
+    rgba(222, 199, 128, 0.32);
+
+  border-radius: 2px;
+
+  background:
+    rgba(22, 34, 28, 0.84);
+
+  color: #e6ce87;
+
+  font-size: 7px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 1.45px;
+  white-space: nowrap;
+
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.16);
+}
+
+
+/* =========================================================
+   9. WINDOWS
+========================================================= */
+
+.se-mpr-plant-windows {
+  position: absolute;
+
+  z-index: 4;
+
+  left: 75px;
+  bottom: 19px;
+
+  display: flex;
+
+  gap: 10px;
+}
+
+
+.se-mpr-plant-windows span {
+  width: 20px;
+  height: 15px;
+
+  border:
+    1px solid
+    rgba(239, 216, 143, 0.42);
+
+  background:
+    linear-gradient(
+      180deg,
+      #d2b965,
+      #a88f4b
+    );
+
+  box-shadow:
+    inset 0 0 7px
+    rgba(255, 239, 176, 0.22);
+}
+
+
+/* =========================================================
+   10. LEFT-FACING FACTORY ENTRANCE
+========================================================= */
+
+.se-mpr-plant-entry {
+  position: absolute !important;
+
+  z-index: 20 !important;
+
+  left: -1px !important;
+  bottom: -1px !important;
+
+  width: 55px !important;
+  height: 65px !important;
+
+  overflow: hidden !important;
+
+  border:
+    2px solid
+    rgba(205, 208, 178, 0.55);
+
+  border-bottom: 0;
+
+  background: #17211c;
+}
+
+
+/* dark inside of factory */
+
+.se-mpr-entry-dark {
+  position: absolute;
+
+  z-index: 1;
+
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at 70% 55%,
+      rgba(207, 183, 111, 0.13),
+      transparent 37%
+    ),
+    linear-gradient(
+      90deg,
+      #0b110e,
+      #18231d
+    );
+}
+
+
+/* =========================================================
+   11. SLIDING FACTORY GATE
+========================================================= */
+
+.se-mpr-entry-gate {
+  position: absolute !important;
+
+  z-index: 8 !important;
+
+  left: 0 !important;
+  top: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  display: flex !important;
+
+  background:
+    linear-gradient(
+      90deg,
+      #6c7868,
+      #87917d,
+      #697566
+    );
+
+  transform-origin: left center;
+
+  animation:
+    seMprGateCycle
+    10s
+    linear
+    infinite !important;
+}
+
+
+.se-mpr-entry-gate span {
+  flex: 1;
+
+  height: 100%;
+
+  border-right:
+    1px solid
+    rgba(36, 48, 40, 0.46);
+
+  box-shadow:
+    inset 1px 0 0
+    rgba(255, 255, 255, 0.08);
+}
+
+
+.se-mpr-entry-gate span:last-child {
+  border-right: 0;
+}
+
+
+/*
+   TIMELINE
+
+   0-55%     CLOSED
+   55-63%    OPEN
+   63-76%    STAYS OPEN
+   76-84%    CLOSE
+   84-100%   CLOSED
+*/
+
+@keyframes seMprGateCycle {
+
+  0%,
+  54% {
+    transform: translateX(0);
+  }
+
+  62%,
+  76% {
+    transform: translateX(-94%);
+  }
+
+  84%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+
+/* =========================================================
+   12. WORKER
+========================================================= */
+
+.se-mpr-walker {
+  position: absolute !important;
+
+  z-index: 15 !important;
+
+  left: 0 !important;
+  bottom: 22px !important;
+
+  width: 32px !important;
+  height: 64px !important;
+
+  display: block !important;
+
+  opacity: 1;
+
+  transform-origin: 50% 100%;
+
+  /*
+     Worker moves from absolute LEFT EDGE
+     to factory LEFT entrance.
+  */
+
+  animation:
+    seMprWorkerJourney
+    10s
+    linear
+    infinite !important;
+}
+
+
+/* =========================================================
+   13. WORKER HEAD — SIDE PROFILE
+========================================================= */
+
+.se-mpr-walker-head {
+  position: absolute;
+
+  z-index: 8;
+
+  left: 8px;
+  top: 3px;
+
+  width: 17px;
+  height: 17px;
+
+  border-radius:
+    50% 48% 45% 48%;
+
+  background: #d69b67;
+
+  box-shadow:
+    inset -3px -1px 0
+    rgba(100, 56, 30, 0.12);
+}
+
+
+/* nose — makes worker visibly face RIGHT */
+
+.se-mpr-walker-head::after {
+  content: "";
+
+  position: absolute;
+
+  right: -4px;
+  top: 7px;
+
+  width: 5px;
+  height: 4px;
+
+  border-radius:
+    0 4px 4px 0;
+
+  background: #d69b67;
+}
+
+
+/* =========================================================
+   14. SAFETY HELMET
+========================================================= */
+
+.se-mpr-helmet {
+  position: absolute;
+
+  z-index: 3;
+
+  left: -2px;
+  top: -4px;
+
+  width: 19px;
+  height: 9px;
+
+  border-radius:
+    10px 10px 3px 3px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f0c647,
+      #d9a92e
+    );
+
+  box-shadow:
+    0 1px 1px
+    rgba(0, 0, 0, 0.14);
+}
+
+
+.se-mpr-helmet::after {
+  content: "";
+
+  position: absolute;
+
+  right: -5px;
+  bottom: 0;
+
+  width: 9px;
+  height: 3px;
+
+  border-radius: 2px;
+
+  background: #e1b434;
+}
+
+
+/* =========================================================
+   15. WORKER BODY / SAFETY VEST
+========================================================= */
+
+.se-mpr-walker-body {
+  position: absolute;
+
+  z-index: 6;
+
+  left: 8px;
+  top: 21px;
+
+  width: 18px;
+  height: 24px;
+
+  border-radius:
+    4px 5px 3px 3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #dd8b3f,
+      #ef9d4a
+    );
+
+  transform: skewX(-4deg);
+
+  box-shadow:
+    inset -3px 0 0
+    rgba(112, 58, 23, 0.14);
+}
+
+
+.se-mpr-vest-line {
+  position: absolute;
+
+  left: 2px;
+  right: 2px;
+  top: 10px;
+
+  height: 3px;
+
+  background:
+    rgba(244, 222, 150, 0.88);
+
+  box-shadow:
+    0 5px 0
+    rgba(244, 222, 150, 0.65);
+}
+
+
+/* =========================================================
+   16. ARMS
+========================================================= */
+
+.se-mpr-arm {
+  position: absolute;
+
+  z-index: 5;
+
+  top: 24px;
+
+  width: 6px;
+  height: 22px;
+
+  border-radius: 4px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #d9905b 0 45%,
+      #c47c49 46% 100%
+    );
+
+  transform-origin:
+    50% 2px;
+}
+
+
+.se-mpr-arm--left {
+  left: 6px;
+
+  animation:
+    seMprArmLeft
+    0.62s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+
+.se-mpr-arm--right {
+  left: 22px;
+
+  animation:
+    seMprArmRight
+    0.62s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+
+@keyframes seMprArmLeft {
+  from {
+    transform:
+      rotate(27deg);
+  }
+
+  to {
+    transform:
+      rotate(-27deg);
+  }
+}
+
+
+@keyframes seMprArmRight {
+  from {
+    transform:
+      rotate(-27deg);
+  }
+
+  to {
+    transform:
+      rotate(27deg);
+  }
+}
+
+
+/* =========================================================
+   17. LEGS
+========================================================= */
+
+.se-mpr-leg {
+  position: absolute;
+
+  z-index: 4;
+
+  top: 43px;
+
+  width: 7px;
+  height: 21px;
+
+  border-radius:
+    2px 2px 4px 4px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #263b3c 0 70%,
+      #152527 71% 100%
+    );
+
+  transform-origin:
+    50% 1px;
+}
+
+
+.se-mpr-leg::after {
+  content: "";
+
+  position: absolute;
+
+  bottom: -2px;
+  right: -3px;
+
+  width: 10px;
+  height: 4px;
+
+  border-radius:
+    4px 5px 2px 2px;
+
+  background: #172326;
+}
+
+
+.se-mpr-leg--left {
+  left: 9px;
+
+  animation:
+    seMprLegLeft
+    0.62s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+
+.se-mpr-leg--right {
+  left: 18px;
+
+  animation:
+    seMprLegRight
+    0.62s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+
+@keyframes seMprLegLeft {
+  from {
+    transform:
+      rotate(23deg);
+  }
+
+  to {
+    transform:
+      rotate(-23deg);
+  }
+}
+
+
+@keyframes seMprLegRight {
+  from {
+    transform:
+      rotate(-23deg);
+  }
+
+  to {
+    transform:
+      rotate(23deg);
+  }
+}
+
+
+/* =========================================================
+   18. MASTER WORKER TIMING
+
+   Factory begins around x = scene width - 238px.
+
+   Worker:
+   0-54%  walks towards gate
+   54-62% waits while gate opens
+   62-76% enters through gate
+   76% disappears INSIDE factory
+   reset happens invisibly
+========================================================= */
+
+@keyframes seMprWorkerJourney {
+
+  /* start exactly at left side */
+  0% {
+    left: 0;
+    opacity: 0;
+    transform:
+      translateX(-35px)
+      translateY(0);
+  }
+
+  3% {
+    opacity: 1;
+  }
+
+
+  /* long visible walk */
+  48% {
+    left: calc(100% - 292px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0);
+  }
+
+
+  /* arrive directly in front of gate */
+  54% {
+    left: calc(100% - 276px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0);
+  }
+
+
+  /* WAIT — gate opening */
+  62% {
+    left: calc(100% - 276px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0);
+  }
+
+
+  /* walk into entrance */
+  69% {
+    left: calc(100% - 253px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0)
+      scale(0.94);
+  }
+
+
+  /* inside dark doorway */
+  75% {
+    left: calc(100% - 231px);
+    opacity: 0.3;
+
+    transform:
+      translateX(0)
+      translateY(0)
+      scale(0.82);
+  }
+
+
+  /* completely inside */
+  77% {
+    left: calc(100% - 218px);
+    opacity: 0;
+
+    transform:
+      translateX(0)
+      translateY(0)
+      scale(0.75);
+  }
+
+
+  /* remain invisible while gate closes */
+  99% {
+    left: calc(100% - 218px);
+    opacity: 0;
+
+    transform:
+      scale(0.75);
+  }
+
+
+  /* reset */
+  100% {
+    left: 0;
+    opacity: 0;
+
+    transform:
+      translateX(-35px);
+  }
+}
+
+
+/* =========================================================
+   19. WALKING BODY BOB
+========================================================= */
+
+.se-mpr-walker::after {
+  content: "";
+
+  position: absolute;
+
+  left: 4px;
+  right: 0;
+  bottom: -3px;
+
+  height: 4px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(0, 0, 0, 0.18);
+
+  filter: blur(2px);
+
+  animation:
+    seMprWorkerShadow
+    0.62s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+
+@keyframes seMprWorkerShadow {
+  from {
+    transform:
+      scaleX(0.72);
+
+    opacity: 0.42;
+  }
+
+  to {
+    transform:
+      scaleX(1);
+
+    opacity: 0.2;
+  }
+}
+
+
+/* =========================================================
+   20. FACTORY SMALL LIGHT
+========================================================= */
+
+.se-mpr-plant-building::after {
+  content: "";
+
+  position: absolute;
+
+  right: 17px;
+  top: 17px;
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #d9c174;
+
+  box-shadow:
+    0 0 8px
+    rgba(217, 193, 116, 0.4);
+
+  animation:
+    seMprPlantLight
+    3s
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes seMprPlantLight {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* =========================================================
+   21. RESPONSIVE
+========================================================= */
+
+@media (max-width: 1250px) {
+
+  .se-mpr-workforce-scene {
+    left: 310px !important;
+    right: 260px !important;
+  }
+
+  .se-mpr-plant {
+    transform:
+      scale(0.88);
+
+    transform-origin:
+      right bottom;
+  }
+}
+
+
+@media (max-width: 1050px) {
+
+  .se-mpr-workforce-scene {
+    opacity: 0.72;
+  }
+
+  .se-mpr-plant {
+    transform:
+      scale(0.76);
+
+    transform-origin:
+      right bottom;
+  }
+}
+
+
+@media (max-width: 850px) {
+
+  .se-mpr-page-head.se-mpr-factory-header {
+    height: auto !important;
+    min-height: 145px !important;
+    padding: 25px 20px !important;
+  }
+
+  .se-mpr-workforce-scene {
+    display: none !important;
+  }
+
+  .se-mpr-factory-header-copy {
+    width: auto;
+    flex: 1 1 auto;
+  }
+}
+
+
+/* =========================================================
+   22. IMPORTANT — KEEP NEW SCENE VISIBLE
+========================================================= */
+
+.se-mpr-factory-header
+.se-mpr-workforce-scene,
+.se-mpr-factory-header
+.se-mpr-plant,
+.se-mpr-factory-header
+.se-mpr-walker {
+  visibility: visible !important;
+}
+/* =========================================================
+   FINAL FIX — CONTINUOUS WALK TO FACTORY
+   Add at absolute END of CSS
+========================================================= */
+
+.se-mpr-page .se-mpr-walker {
+  animation:
+    seMprContinuousWalkToFactory
+    10s
+    linear
+    infinite !important;
+}
+
+
+@keyframes seMprContinuousWalkToFactory {
+
+  /* enter from left */
+  0% {
+    left: 0;
+    opacity: 0;
+
+    transform:
+      translateX(-35px)
+      translateY(0);
+  }
+
+  3% {
+    left: 0;
+    opacity: 1;
+
+    transform:
+      translateX(-20px)
+      translateY(0);
+  }
+
+
+  /* continuously walking */
+  15% {
+    left: calc(25% - 70px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0);
+  }
+
+  30% {
+    left: calc(50% - 130px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0);
+  }
+
+  45% {
+    left: calc(75% - 200px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0);
+  }
+
+
+  /* reaches factory entrance */
+  58% {
+    left: calc(100% - 276px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0);
+  }
+
+
+  /* KEEP WALKING — no stop at gate */
+  64% {
+    left: calc(100% - 258px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0)
+      scale(0.97);
+  }
+
+
+  /* entering doorway */
+  70% {
+    left: calc(100% - 240px);
+    opacity: 1;
+
+    transform:
+      translateX(0)
+      translateY(0)
+      scale(0.92);
+  }
+
+
+  /* inside factory */
+  76% {
+    left: calc(100% - 220px);
+    opacity: 0;
+
+    transform:
+      translateX(0)
+      translateY(0)
+      scale(0.82);
+  }
+
+
+  /* stay hidden */
+  99% {
+    left: calc(100% - 220px);
+    opacity: 0;
+
+    transform:
+      scale(0.82);
+  }
+
+
+  /* reset invisibly */
+  100% {
+    left: 0;
+    opacity: 0;
+
+    transform:
+      translateX(-35px);
   }
 }

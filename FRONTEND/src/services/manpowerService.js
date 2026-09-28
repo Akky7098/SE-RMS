@@ -445,6 +445,51 @@ export const startManpowerHiring =
     );
   };
 
+  /* =========================================================
+   ACTIVE OFFICES
+
+   Used by Manpower Request work-location dropdown.
+
+   GET
+   /offices
+
+   IMPORTANT:
+   Only active offices should be shown in MPR.
+========================================================= */
+
+export const getActiveOffices =
+  async () => {
+    const response =
+      await api.get(
+        "/manpower/offices"
+      );
+
+    const data =
+      responseData(
+        response
+      );
+
+    return normalizeArray(
+      data,
+      [
+        "offices",
+        "records",
+        "items",
+        "data",
+      ]
+    ).filter(
+      (
+        office
+      ) =>
+        office &&
+        String(
+          office.status ||
+            "ACTIVE"
+        ).toUpperCase() ===
+          "ACTIVE"
+    );
+  };
+
 /* =========================================================
    MY HIRING
 
@@ -531,6 +576,8 @@ const manpowerService = {
   startHiring,
 
   getMyHiring,
+
+  getActiveOffices,
 };
 
 export default manpowerService;

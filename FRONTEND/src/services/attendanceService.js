@@ -108,8 +108,32 @@ export const normalizeAttendance =
         record
           ?.employeeName ||
         record
+          ?.machineEmployeeName ||
+        record
+          ?.biometricEmployeeName ||
+        record
           ?.fullName ||
-        "Employee",
+        record
+          ?.biometricCode ||
+        "Biometric Worker",
+
+      machineEmployeeName:
+        record
+          ?.machineEmployeeName ||
+        record
+          ?.biometricEmployeeName ||
+        record
+          ?.employeeName ||
+        "",
+
+      biometricEmployeeName:
+        record
+          ?.biometricEmployeeName ||
+        record
+          ?.machineEmployeeName ||
+        record
+          ?.employeeName ||
+        "",
 
       biometricCode:
         record
@@ -558,6 +582,24 @@ export const normalizeAttendanceListResponse =
         rawItems
       );
 
+    /* =====================================================
+       UNMAPPED BIOMETRIC DAILY ROWS
+    ===================================================== */
+
+    const rawBiometricItems =
+      payload
+        ?.biometric
+        ?.items ||
+      payload
+        ?.biometric
+        ?.unmapped ||
+      [];
+
+    const biometricItems =
+      normalizeAttendanceArray(
+        rawBiometricItems
+      );
+
     const pagination =
       payload
         ?.pagination ||
@@ -587,6 +629,37 @@ export const normalizeAttendanceListResponse =
       records:
         items,
 
+      biometric: {
+        items:
+          biometricItems,
+
+        unmapped:
+          biometricItems,
+
+        rawPunchCount:
+          Number(
+            payload
+              ?.biometric
+              ?.rawPunchCount ||
+            0
+          ),
+
+        workerDayCount:
+          Number(
+            payload
+              ?.biometric
+              ?.workerDayCount ||
+            biometricItems.length
+          ),
+
+        truncated:
+          Boolean(
+            payload
+              ?.biometric
+              ?.truncated
+          ),
+      },
+
       pagination: {
         page:
           Number(
@@ -611,10 +684,10 @@ export const normalizeAttendanceListResponse =
               1,
               Math.ceil(
                 total /
-                Math.max(
-                  limit,
-                  1
-                )
+                  Math.max(
+                    limit,
+                    1
+                  )
               )
             )
           ),
@@ -622,6 +695,7 @@ export const normalizeAttendanceListResponse =
     };
   };
 
+  
 /* =========================================================
    QUERY BUILDER
 ========================================================= */
@@ -840,6 +914,32 @@ const buildAttendanceParams =
         params.sort;
     }
 
+      /* =====================================================
+     BIOMETRIC REGISTER
+  ===================================================== */
+
+  if (
+    params.includeUnmapped !==
+    undefined
+  ) {
+    clean.includeUnmapped =
+      Boolean(
+        params.includeUnmapped
+      );
+  }
+
+  if (
+    params.provider
+  ) {
+    clean.provider =
+      String(
+        params.provider
+      )
+        .trim()
+        .toUpperCase();
+  }
+
+
     return clean;
   };
 
@@ -894,6 +994,29 @@ export const getAttendance =
 
     return normalizeAttendanceListResponse(
       response
+    );
+  };
+
+/* =========================================================
+   ATTENDANCE LIST
+
+   Compatibility export used by AttendanceWeb.
+
+   This intentionally calls the same scoped /attendance API.
+   Backend remains authoritative for SELF / TEAM /
+   DEPARTMENT / ALL visibility.
+
+   includeUnmapped=true is preserved by buildAttendanceParams
+   and allows the Daily Register to receive biometric-only
+   eSSL worker/day rows alongside mapped Attendance records.
+========================================================= */
+
+export const getAttendanceList =
+  async (
+    params = {}
+  ) => {
+    return getAttendance(
+      params
     );
   };
 
@@ -1939,6 +2062,8 @@ const attendanceService = {
   getMyAttendance,
 
   getAttendance,
+
+  getAttendanceList,
 
   getMonthlyAttendanceSummary,
 

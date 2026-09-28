@@ -41,1259 +41,1446 @@ import "./Manpower.css";
 
 const STATUS_TABS = [
   {
-    key:
-      "ALL",
-
-    label:
-      "All",
+    key: "ALL",
+    label: "All",
   },
 
   {
-    key:
-      "PENDING_APPROVAL",
-
-    label:
-      "Pending",
+    key: "PENDING_APPROVAL",
+    label: "Pending",
   },
 
   {
-    key:
-      "APPROVED",
-
-    label:
-      "Approved",
+    key: "APPROVED",
+    label: "Approved",
   },
 
   {
-    key:
-      "HIRING_IN_PROGRESS",
-
-    label:
-      "Hiring",
+    key: "HIRING_IN_PROGRESS",
+    label: "Hiring",
   },
 
   {
-    key:
-      "FILLED",
-
-    label:
-      "Filled",
+    key: "FILLED",
+    label: "Filled",
   },
 
   {
-    key:
-      "REJECTED",
-
-    label:
-      "Rejected",
+    key: "REJECTED",
+    label: "Rejected",
   },
 ];
 
 /* =========================================================
-   STORED USER
-
-   Used only for UI presentation.
-
-   Backend remains final authority for:
-   - visibility
-   - approval
-   - rejection
+   PAGINATION
 ========================================================= */
 
-const getStoredUser =
-  () => {
-    const keys = [
-      "se_rms_user",
-      "user",
-    ];
+const PAGE_SIZE = 50;
 
-    for (
-      const key of keys
-    ) {
-      try {
-        const raw =
-          localStorage.getItem(
-            key
-          );
+/* =========================================================
+   STORED USER
+========================================================= */
 
-        if (
-          !raw
-        ) {
-          continue;
-        }
+const getStoredUser = () => {
+  const keys = [
+    "se_rms_user",
+    "user",
+  ];
 
-        const parsed =
-          JSON.parse(
-            raw
-          );
+  for (
+    const key of keys
+  ) {
+    try {
+      const raw =
+        localStorage.getItem(
+          key
+        );
 
-        if (
-          parsed
-        ) {
-          return parsed;
-        }
-      } catch (
-        error
+      if (
+        !raw
       ) {
-        /*
-         * Ignore malformed cached values.
-         */
+        continue;
       }
-    }
 
-    return {};
-  };
+      const parsed =
+        JSON.parse(
+          raw
+        );
+
+      if (
+        parsed
+      ) {
+        return parsed;
+      }
+    } catch (
+      error
+    ) {
+      /*
+       * Ignore malformed cached values.
+       */
+    }
+  }
+
+  return {};
+};
 
 /* =========================================================
    ID NORMALIZER
 ========================================================= */
 
-const normalizeId =
-  (
-    value
-  ) => {
-    if (
-      value ===
-        null ||
-      value ===
-        undefined
-    ) {
-      return "";
-    }
+const normalizeId = (
+  value
+) => {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "";
+  }
 
-    if (
-      typeof value ===
-      "object"
-    ) {
-      return String(
-        value?._id ||
-        value?.id ||
-        ""
-      );
-    }
-
+  if (
+    typeof value ===
+    "object"
+  ) {
     return String(
-      value
+      value?._id ||
+      value?.id ||
+      ""
     );
-  };
+  }
+
+  return String(
+    value
+  );
+};
 
 /* =========================================================
    LIST RESULT NORMALIZER
-
-   Handles:
-   []
-   { records: [] }
-   { requirements: [] }
-
-   This provides another safe layer even if service shape
-   changes later.
 ========================================================= */
 
-const normalizeRequirementResult =
-  (
+const normalizeRequirementResult = (
+  value
+) => {
+  if (
+    Array.isArray(
+      value
+    )
+  ) {
+    return value;
+  }
+
+  if (
+    Array.isArray(
+      value?.records
+    )
+  ) {
+    return value.records;
+  }
+
+  if (
+    Array.isArray(
+      value?.requirements
+    )
+  ) {
+    return value.requirements;
+  }
+
+  if (
+    Array.isArray(
+      value?.items
+    )
+  ) {
+    return value.items;
+  }
+
+  return [];
+};
+
+/* =========================================================
+   STATUS ROW CLASS
+========================================================= */
+
+const getRowStatusClass = (
+  status
+) => {
+  const value =
+    String(
+      status ||
+      ""
+    )
+      .trim()
+      .toUpperCase();
+
+  switch (
     value
-  ) => {
-    if (
-      Array.isArray(
-        value
-      )
-    ) {
-      return value;
-    }
+  ) {
+    case "PENDING_APPROVAL":
+      return "se-mpr-row-pending";
 
-    if (
-      Array.isArray(
-        value?.records
-      )
-    ) {
-      return value.records;
-    }
+    case "APPROVED":
+      return "se-mpr-row-approved";
 
-    if (
-      Array.isArray(
-        value?.requirements
-      )
-    ) {
-      return value.requirements;
-    }
+    case "REJECTED":
+      return "se-mpr-row-rejected";
 
-    if (
-      Array.isArray(
-        value?.items
-      )
-    ) {
-      return value.items;
-    }
+    case "HIRING_IN_PROGRESS":
+      return "se-mpr-row-hiring";
 
-    return [];
-  };
+    case "FILLED":
+      return "se-mpr-row-filled";
+
+    default:
+      return "se-mpr-row-default";
+  }
+};
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
-const ManpowerPage =
-  () => {
-    const navigate =
-      useNavigate();
+const ManpowerPage = () => {
+  const navigate =
+    useNavigate();
 
-    const location =
-      useLocation();
+  const location =
+    useLocation();
 
-    /* =====================================================
-       CURRENT USER
-    ===================================================== */
+  /* =====================================================
+     CURRENT USER
+  ===================================================== */
 
-    const currentUser =
-      useMemo(
-        () =>
-          getStoredUser(),
-        []
-      );
-
-    const currentUserId =
-      normalizeId(
-        currentUser
-      );
-
-    const currentRole =
-      String(
-        currentUser?.role ||
-          ""
-      )
-        .trim()
-        .toUpperCase();
-
-    const isGlobalSuperAdmin =
-      currentRole ===
-      "SUPER_ADMIN";
-
-    /* =====================================================
-       URL STATE
-    ===================================================== */
-
-    const params =
-      useMemo(
-        () =>
-          new URLSearchParams(
-            location.search
-          ),
-        [
-          location.search,
-        ]
-      );
-
-    const selectedId =
-      params.get(
-        "id"
-      ) ||
-      "";
-
-    const createOpen =
-      params.get(
-        "create"
-      ) ===
-      "true";
-
-    /* =====================================================
-       DATA
-    ===================================================== */
-
-    const [
-      requirements,
-      setRequirements,
-    ] = useState(
+  const currentUser =
+    useMemo(
+      () =>
+        getStoredUser(),
       []
     );
 
-    const [
-      approvalInbox,
-      setApprovalInbox,
-    ] = useState(
-      []
+  const currentUserId =
+    normalizeId(
+      currentUser
     );
 
-    const [
-      loading,
-      setLoading,
-    ] = useState(
-      true
-    );
-
-    const [
-      refreshing,
-      setRefreshing,
-    ] = useState(
-      false
-    );
-
-    const [
-      error,
-      setError,
-    ] = useState(
+  const currentRole =
+    String(
+      currentUser?.systemRole ||
+      currentUser?.role ||
       ""
+    )
+      .trim()
+      .toUpperCase();
+
+  const isGlobalSuperAdmin =
+    currentRole ===
+    "SUPER_ADMIN";
+
+  /* =====================================================
+     URL STATE
+  ===================================================== */
+
+  const params =
+    useMemo(
+      () =>
+        new URLSearchParams(
+          location.search
+        ),
+      [
+        location.search,
+      ]
     );
 
-    /* =====================================================
-       FILTER STATE
-    ===================================================== */
+  const selectedId =
+    params.get(
+      "id"
+    ) ||
+    "";
 
-    const [
-      search,
-      setSearch,
-    ] = useState(
-      ""
-    );
+  const createOpen =
+    params.get(
+      "create"
+    ) ===
+    "true";
 
-    const [
-      debouncedSearch,
-      setDebouncedSearch,
-    ] = useState(
-      ""
-    );
+  /* =====================================================
+     DATA
+  ===================================================== */
 
-    const [
-      status,
-      setStatus,
-    ] = useState(
-      "ALL"
-    );
+  const [
+    requirements,
+    setRequirements,
+  ] = useState(
+    []
+  );
 
-    /* =====================================================
-       SEARCH DEBOUNCE
-    ===================================================== */
+  const [
+    approvalInbox,
+    setApprovalInbox,
+  ] = useState(
+    []
+  );
 
-    useEffect(() => {
-      const timer =
-        window.setTimeout(
-          () => {
-            setDebouncedSearch(
-              search.trim()
-            );
-          },
-          300
-        );
+  const [
+    loading,
+    setLoading,
+  ] = useState(
+    true
+  );
 
-      return () =>
-        window.clearTimeout(
-          timer
-        );
-    }, [
-      search,
-    ]);
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(
+    false
+  );
 
-    /* =====================================================
-       LOAD
-    ===================================================== */
+  const [
+    error,
+    setError,
+  ] = useState(
+    ""
+  );
 
-    const loadRequirements =
-      useCallback(
-        async ({
-          silent = false,
-        } = {}) => {
-          if (
-            silent
-          ) {
-            setRefreshing(
-              true
-            );
-          } else {
-            setLoading(
-              true
-            );
-          }
+  /* =====================================================
+     FILTERS
+  ===================================================== */
 
-          setError(
-            ""
-          );
+  const [
+    search,
+    setSearch,
+  ] = useState(
+    ""
+  );
 
-          const requestParams =
-            {};
+  const [
+    debouncedSearch,
+    setDebouncedSearch,
+  ] = useState(
+    ""
+  );
 
-          if (
-            status !==
-            "ALL"
-          ) {
-            requestParams.status =
-              status;
-          }
+  const [
+    status,
+    setStatus,
+  ] = useState(
+    "ALL"
+  );
 
-          if (
-            debouncedSearch
-          ) {
-            requestParams.search =
-              debouncedSearch;
-          }
+  /* =====================================================
+     PAGINATION
+  ===================================================== */
 
-          const [
-            listResult,
-            approvalResult,
-          ] =
-            await Promise.allSettled([
-              getManpowerRequirements(
-                requestParams
-              ),
+  const [
+    currentPage,
+    setCurrentPage,
+  ] = useState(
+    1
+  );
 
-              getManpowerApprovalInbox(),
-            ]);
+  /* =====================================================
+     SEARCH DEBOUNCE
+  ===================================================== */
 
-          /* ===============================================
-             REQUIREMENT LIST
-          ================================================ */
-
-          if (
-            listResult.status ===
-            "fulfilled"
-          ) {
-            const records =
-              normalizeRequirementResult(
-                listResult.value
-              );
-
-            setRequirements(
-              records
-            );
-          } else {
-            setRequirements(
-              []
-            );
-
-            setError(
-              getApiErrorMessage(
-                listResult.reason,
-                "Manpower requests could not be loaded."
-              )
-            );
-          }
-
-          /* ===============================================
-             APPROVAL INBOX
-
-             403 simply means user has no approval authority.
-          ================================================ */
-
-          if (
-            approvalResult.status ===
-            "fulfilled"
-          ) {
-            setApprovalInbox(
-              Array.isArray(
-                approvalResult.value
-              )
-                ? approvalResult.value
-                : []
-            );
-          } else {
-            setApprovalInbox(
-              []
-            );
-          }
-
-          setLoading(
-            false
-          );
-
-          setRefreshing(
-            false
+  useEffect(() => {
+    const timer =
+      window.setTimeout(
+        () => {
+          setDebouncedSearch(
+            search.trim()
           );
         },
-        [
-          status,
-          debouncedSearch,
-        ]
+        300
       );
 
-    useEffect(() => {
-      loadRequirements();
-    }, [
-      loadRequirements,
-    ]);
+    return () =>
+      window.clearTimeout(
+        timer
+      );
+  }, [
+    search,
+  ]);
 
-    /* =====================================================
-       APPROVAL RECORD MAP
+  /* =====================================================
+     RESET PAGE WHEN FILTER CHANGES
+  ===================================================== */
 
-       Backend inbox is authoritative.
+  useEffect(() => {
+    setCurrentPage(
+      1
+    );
+  }, [
+    status,
+    debouncedSearch,
+  ]);
 
-       We still remove own requests from actionable IDs,
-       because requester must never approve own manpower.
-    ===================================================== */
+  /* =====================================================
+     LOAD REQUIREMENTS
+  ===================================================== */
 
-    const actionableApprovalIds =
-      useMemo(
-        () => {
-          const ids =
-            new Set();
+  const loadRequirements =
+    useCallback(
+      async ({
+        silent = false,
+      } = {}) => {
+        if (
+          silent
+        ) {
+          setRefreshing(
+            true
+          );
+        } else {
+          setLoading(
+            true
+          );
+        }
 
-          approvalInbox.forEach(
-            (
-              requirement
-            ) => {
+        setError(
+          ""
+        );
+
+        const requestParams =
+          {};
+
+        if (
+          status !==
+          "ALL"
+        ) {
+          requestParams.status =
+            status;
+        }
+
+        if (
+          debouncedSearch
+        ) {
+          requestParams.search =
+            debouncedSearch;
+        }
+
+        const [
+          listResult,
+          approvalResult,
+        ] =
+          await Promise.allSettled([
+            getManpowerRequirements(
+              requestParams
+            ),
+
+            getManpowerApprovalInbox(),
+          ]);
+
+        if (
+          listResult.status ===
+          "fulfilled"
+        ) {
+          const records =
+            normalizeRequirementResult(
+              listResult.value
+            );
+
+          setRequirements(
+            records
+          );
+        } else {
+          setRequirements(
+            []
+          );
+
+          setError(
+            getApiErrorMessage(
+              listResult.reason,
+              "Manpower requests could not be loaded."
+            )
+          );
+        }
+
+        if (
+          approvalResult.status ===
+          "fulfilled"
+        ) {
+          setApprovalInbox(
+            Array.isArray(
+              approvalResult.value
+            )
+              ? approvalResult.value
+              : []
+          );
+        } else {
+          setApprovalInbox(
+            []
+          );
+        }
+
+        setLoading(
+          false
+        );
+
+        setRefreshing(
+          false
+        );
+      },
+      [
+        status,
+        debouncedSearch,
+      ]
+    );
+
+  useEffect(() => {
+    loadRequirements();
+  }, [
+    loadRequirements,
+  ]);
+
+  /* =====================================================
+     APPROVAL IDS
+  ===================================================== */
+
+  const actionableApprovalIds =
+    useMemo(
+      () => {
+        const ids =
+          new Set();
+
+        approvalInbox.forEach(
+          (
+            requirement
+          ) => {
+            const id =
+              getRecordId(
+                requirement
+              );
+
+            if (
+              !id
+            ) {
+              return;
+            }
+
+            const requesterId =
+              normalizeId(
+                requirement
+                  ?.requestedBy
+              );
+
+            if (
+              requesterId &&
+              currentUserId &&
+              requesterId ===
+                currentUserId
+            ) {
+              return;
+            }
+
+            ids.add(
+              id
+            );
+          }
+        );
+
+        return ids;
+      },
+      [
+        approvalInbox,
+        currentUserId,
+      ]
+    );
+
+  /* =====================================================
+     MY REQUEST IDS
+  ===================================================== */
+
+  const myRequestIds =
+    useMemo(
+      () => {
+        const ids =
+          new Set();
+
+        requirements.forEach(
+          (
+            requirement
+          ) => {
+            const requesterId =
+              normalizeId(
+                requirement
+                  ?.requestedBy
+              );
+
+            if (
+              requesterId &&
+              currentUserId &&
+              requesterId ===
+                currentUserId
+            ) {
               const id =
                 getRecordId(
                   requirement
                 );
 
               if (
-                !id
-              ) {
-                return;
-              }
-
-              const requesterId =
-                normalizeId(
-                  requirement
-                    ?.requestedBy
-                );
-
-              /*
-               * Own request must never become an approval
-               * action in frontend.
-               *
-               * Backend must enforce this as well.
-               */
-              if (
-                requesterId &&
-                currentUserId &&
-                requesterId ===
-                  currentUserId
-              ) {
-                return;
-              }
-
-              ids.add(
                 id
-              );
-            }
-          );
-
-          return ids;
-        },
-        [
-          approvalInbox,
-          currentUserId,
-        ]
-      );
-
-    /* =====================================================
-       REQUESTS CREATED BY CURRENT USER
-    ===================================================== */
-
-    const myRequestIds =
-      useMemo(
-        () => {
-          const ids =
-            new Set();
-
-          requirements.forEach(
-            (
-              requirement
-            ) => {
-              const requesterId =
-                normalizeId(
-                  requirement
-                    ?.requestedBy
-                );
-
-              if (
-                requesterId &&
-                currentUserId &&
-                requesterId ===
-                  currentUserId
               ) {
-                const id =
-                  getRecordId(
-                    requirement
-                  );
-
-                if (
+                ids.add(
                   id
-                ) {
-                  ids.add(
-                    id
-                  );
-                }
-              }
-            }
-          );
-
-          return ids;
-        },
-        [
-          requirements,
-          currentUserId,
-        ]
-      );
-
-    /* =====================================================
-       SUMMARY
-
-       Counts apply to currently fetched accessible list.
-    ===================================================== */
-
-    const summary =
-      useMemo(
-        () => {
-          const counts = {
-            total:
-              requirements.length,
-
-            pending:
-              0,
-
-            approved:
-              0,
-
-            hiring:
-              0,
-
-            urgent:
-              0,
-
-            mine:
-              0,
-          };
-
-          requirements.forEach(
-            (
-              item
-            ) => {
-              const itemStatus =
-                String(
-                  item?.status ||
-                    ""
-                ).toUpperCase();
-
-              if (
-                itemStatus ===
-                "PENDING_APPROVAL"
-              ) {
-                counts.pending +=
-                  1;
-              }
-
-              if (
-                itemStatus ===
-                "APPROVED"
-              ) {
-                counts.approved +=
-                  1;
-              }
-
-              if (
-                itemStatus ===
-                "HIRING_IN_PROGRESS"
-              ) {
-                counts.hiring +=
-                  1;
-              }
-
-              if (
-                String(
-                  item?.priority ||
-                    ""
-                ).toUpperCase() ===
-                "URGENT"
-              ) {
-                counts.urgent +=
-                  1;
-              }
-
-              const requesterId =
-                normalizeId(
-                  item
-                    ?.requestedBy
                 );
-
-              if (
-                requesterId &&
-                currentUserId &&
-                requesterId ===
-                  currentUserId
-              ) {
-                counts.mine +=
-                  1;
               }
             }
-          );
-
-          return counts;
-        },
-        [
-          requirements,
-          currentUserId,
-        ]
-      );
-
-    /* =====================================================
-       URL HELPERS
-    ===================================================== */
-
-    const openCreate =
-      () => {
-        navigate(
-          buildRecruitmentUrl(
-            "manpower",
-            {
-              create:
-                "true",
-            }
-          )
-        );
-      };
-
-    const closeOverlay =
-      () => {
-        navigate(
-          buildRecruitmentUrl(
-            "manpower"
-          ),
-          {
-            replace:
-              true,
           }
         );
-      };
 
-    const openRequirement =
-      (
-        requirement
-      ) => {
-        const id =
-          getRecordId(
-            requirement
-          );
+        return ids;
+      },
+      [
+        requirements,
+        currentUserId,
+      ]
+    );
 
+  /* =====================================================
+     SUMMARY
+  ===================================================== */
+
+  const summary =
+    useMemo(
+      () => {
+        const counts = {
+          total:
+            requirements.length,
+
+          pending:
+            0,
+
+          approved:
+            0,
+
+          hiring:
+            0,
+
+          urgent:
+            0,
+        };
+
+        requirements.forEach(
+          (
+            item
+          ) => {
+            const itemStatus =
+              String(
+                item?.status ||
+                ""
+              ).toUpperCase();
+
+            if (
+              itemStatus ===
+              "PENDING_APPROVAL"
+            ) {
+              counts.pending +=
+                1;
+            }
+
+            if (
+              itemStatus ===
+              "APPROVED"
+            ) {
+              counts.approved +=
+                1;
+            }
+
+            if (
+              itemStatus ===
+              "HIRING_IN_PROGRESS"
+            ) {
+              counts.hiring +=
+                1;
+            }
+
+            if (
+              String(
+                item?.priority ||
+                ""
+              ).toUpperCase() ===
+              "URGENT"
+            ) {
+              counts.urgent +=
+                1;
+            }
+          }
+        );
+
+        return counts;
+      },
+      [
+        requirements,
+      ]
+    );
+
+  /* =====================================================
+     PAGINATED RECORDS
+  ===================================================== */
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        requirements.length /
+        PAGE_SIZE
+      )
+    );
+
+  useEffect(() => {
+    if (
+      currentPage >
+      totalPages
+    ) {
+      setCurrentPage(
+        totalPages
+      );
+    }
+  }, [
+    currentPage,
+    totalPages,
+  ]);
+
+  const paginatedRequirements =
+    useMemo(
+      () => {
+        const start =
+          (
+            currentPage -
+            1
+          ) *
+          PAGE_SIZE;
+
+        return requirements.slice(
+          start,
+          start +
+            PAGE_SIZE
+        );
+      },
+      [
+        requirements,
+        currentPage,
+      ]
+    );
+
+  const firstVisibleRecord =
+    requirements.length
+      ? (
+          currentPage -
+          1
+        ) *
+          PAGE_SIZE +
+        1
+      : 0;
+
+  const lastVisibleRecord =
+    Math.min(
+      currentPage *
+        PAGE_SIZE,
+      requirements.length
+    );
+
+  /* =====================================================
+     PAGINATION BUTTONS
+  ===================================================== */
+
+  const paginationPages =
+    useMemo(
+      () => {
         if (
-          !id
+          totalPages <=
+          7
         ) {
-          return;
+          return Array.from(
+            {
+              length:
+                totalPages,
+            },
+            (
+              _,
+              index
+            ) =>
+              index +
+              1
+          );
         }
 
+        const pages =
+          new Set([
+            1,
+            totalPages,
+            currentPage,
+            currentPage -
+              1,
+            currentPage +
+              1,
+          ]);
+
+        return Array.from(
+          pages
+        )
+          .filter(
+            (
+              page
+            ) =>
+              page >=
+                1 &&
+              page <=
+                totalPages
+          )
+          .sort(
+            (
+              a,
+              b
+            ) =>
+              a -
+              b
+          );
+      },
+      [
+        totalPages,
+        currentPage,
+      ]
+    );
+
+  /* =====================================================
+     URL HELPERS
+  ===================================================== */
+
+  const openCreate =
+    () => {
+      navigate(
+        buildRecruitmentUrl(
+          "manpower",
+          {
+            create:
+              "true",
+          }
+        )
+      );
+    };
+
+  const closeOverlay =
+    () => {
+      navigate(
+        buildRecruitmentUrl(
+          "manpower"
+        ),
+        {
+          replace:
+            true,
+        }
+      );
+    };
+
+  const openRequirement =
+    (
+      requirement
+    ) => {
+      const id =
+        getRecordId(
+          requirement
+        );
+
+      if (
+        !id
+      ) {
+        return;
+      }
+
+      navigate(
+        buildRecruitmentUrl(
+          "manpower",
+          {
+            id,
+          }
+        )
+      );
+    };
+
+  /* =====================================================
+     CREATE CALLBACK
+  ===================================================== */
+
+  const handleCreated =
+    async (
+      created
+    ) => {
+      setStatus(
+        "ALL"
+      );
+
+      setSearch(
+        ""
+      );
+
+      setCurrentPage(
+        1
+      );
+
+      const id =
+        getRecordId(
+          created
+        );
+
+      if (
+        id
+      ) {
         navigate(
           buildRecruitmentUrl(
             "manpower",
             {
               id,
             }
-          )
+          ),
+          {
+            replace:
+              true,
+          }
         );
-      };
+      } else {
+        closeOverlay();
+      }
 
-    /* =====================================================
-       CREATE CALLBACK
+      await loadRequirements({
+        silent:
+          true,
+      });
+    };
 
-       Reloads data, then opens created request.
-    ===================================================== */
+  /* =====================================================
+     CHANGE CALLBACK
+  ===================================================== */
 
-    const handleCreated =
-      async (
-        created
-      ) => {
-        /*
-         * Reset filter so a newly created PENDING request
-         * cannot disappear because user was looking at
-         * Approved/Hiring/etc.
-         */
-        setStatus(
-          "ALL"
-        );
+  const handleChanged =
+    async () => {
+      await loadRequirements({
+        silent:
+          true,
+      });
+    };
 
-        setSearch(
-          ""
-        );
+  /* =====================================================
+     APPROVAL LABEL
+  ===================================================== */
 
-        const id =
-          getRecordId(
-            created
-          );
+  const approvalInboxLabel =
+    isGlobalSuperAdmin
+      ? "Approval Oversight"
+      : "My Approvals";
 
-        if (
-          id
-        ) {
-          navigate(
-            buildRecruitmentUrl(
-              "manpower",
-              {
-                id,
-              }
-            ),
-            {
-              replace:
-                true,
-            }
-          );
-        } else {
-          closeOverlay();
-        }
+  /* =====================================================
+     RENDER
+  ===================================================== */
 
-        /*
-         * Fetch after navigation.
-         *
-         * The status/search state change will also trigger
-         * another safe refresh through useEffect.
-         */
-        await loadRequirements({
-          silent:
-            true,
-        });
-      };
+  return (
+  <div className="se-mpr-page">
+  {/* =================================================
+      PAGE HEADER
+  ================================================== */}
 
-    /* =====================================================
-       CHANGE CALLBACK
-    ===================================================== */
+  <section className="se-mpr-page-head se-mpr-factory-header">
 
-    const handleChanged =
-      async () => {
-        await loadRequirements({
-          silent:
-            true,
-        });
-      };
+    {/* =================================================
+        FACTORY WORKFORCE ANIMATION
+        ONE WORKER:
+        WALK → WAIT → GATE OPEN → ENTER → GATE CLOSE
+    ================================================== */}
 
-    /* =====================================================
-       APPROVAL LABEL
+    <div
+      className="se-mpr-workforce-scene"
+      aria-hidden="true"
+    >
+      {/* ===============================================
+          WALKING WORKER
+      =============================================== */}
 
-       Global SUPER_ADMIN inbox may represent oversight of
-       pending approvals rather than all being assigned
-       directly to that person.
-    ===================================================== */
+      <div className="se-mpr-walker">
+        {/* side-facing head */}
+        <div className="se-mpr-walker-head">
+          <span className="se-mpr-helmet" />
+        </div>
 
-    const approvalInboxLabel =
-      isGlobalSuperAdmin
-        ? "Pending approval oversight"
-        : "Awaiting my approval";
+        {/* safety vest / body */}
+        <div className="se-mpr-walker-body">
+          <span className="se-mpr-vest-line" />
+        </div>
 
-    /* =====================================================
-       RENDER
-    ===================================================== */
+        {/* walking arms */}
+        <span className="se-mpr-arm se-mpr-arm--left" />
+        <span className="se-mpr-arm se-mpr-arm--right" />
 
-    return (
-      <div className="se-mpr-page">
-        {/* =================================================
-            PAGE HEADER
-        ================================================== */}
+        {/* walking legs */}
+        <span className="se-mpr-leg se-mpr-leg--left" />
+        <span className="se-mpr-leg se-mpr-leg--right" />
+      </div>
 
-        <section className="se-mpr-page-head">
-          <div>
-            <span>
-              HIRING • MANPOWER
-            </span>
 
-            <h2>
-              Manpower Requests
-            </h2>
+      {/* ===============================================
+          FACTORY
+      =============================================== */}
 
-            <p>
-              Raise demand, track approval
-              and drill into every manpower
-              requirement from one view.
-            </p>
+      <div className="se-mpr-plant">
+
+        {/* chimneys */}
+        <div className="se-mpr-plant-chimney se-mpr-plant-chimney--1" />
+        <div className="se-mpr-plant-chimney se-mpr-plant-chimney--2" />
+
+
+        {/* factory saw-tooth roof */}
+        <div className="se-mpr-plant-roof">
+          <span />
+          <span />
+          <span />
+        </div>
+
+
+        {/* main factory building */}
+        <div className="se-mpr-plant-building">
+
+          {/* ===========================================
+              LEFT-SIDE FACTORY ENTRY
+
+              Worker reaches THIS point.
+              Gate opens.
+              Worker enters.
+              Gate closes.
+          =========================================== */}
+
+          <div className="se-mpr-plant-entry">
+
+            {/* dark factory interior */}
+            <div className="se-mpr-entry-dark" />
+
+            {/* animated sliding gate */}
+            <div className="se-mpr-entry-gate">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+
           </div>
 
-          <div className="se-mpr-head-actions">
-            <button
-              type="button"
-              className="se-mpr-refresh"
-              onClick={() =>
-                loadRequirements({
-                  silent:
-                    true,
-                })
-              }
-              disabled={
-                refreshing
-              }
-            >
-              ↻
 
-              <span>
-                {refreshing
-                  ? "Refreshing"
-                  : "Refresh"}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              className="se-mpr-create-btn"
-              onClick={
-                openCreate
-              }
-            >
-              <span>
-                +
-              </span>
-
-              New Manpower Request
-            </button>
+          {/* factory company name */}
+          <div className="se-mpr-plant-sign">
+            SANDEEP EDGETECH
           </div>
-        </section>
 
-        {/* =================================================
-            SUMMARY
-        ================================================== */}
 
-        <section className="se-mpr-summary-grid">
+          {/* factory windows */}
+          <div className="se-mpr-plant-windows">
+            <span />
+            <span />
+            <span />
+          </div>
+
+        </div>
+      </div>
+
+
+      {/* ground/path */}
+      <div className="se-mpr-scene-ground" />
+    </div>
+
+
+    {/* =================================================
+        EXISTING HEADER TITLE
+    ================================================== */}
+
+    <div className="se-mpr-factory-header-copy">
+      <span>
+        MANPOWER
+      </span>
+
+      <h2>
+        Manpower Requests
+      </h2>
+    </div>
+
+  <div className="se-mpr-head-actions">
           <button
             type="button"
-            className={
-              status ===
-              "ALL"
-                ? "active neutral"
-                : "neutral"
-            }
+            className="se-mpr-refresh"
             onClick={() =>
-              setStatus(
-                "ALL"
-              )
+              loadRequirements({
+                silent:
+                  true,
+              })
+            }
+            disabled={
+              refreshing
             }
           >
-            <span className="se-mpr-summary-icon">
-              M
+            ↻
+
+            <span>
+              {refreshing
+                ? "Refreshing"
+                : "Refresh"}
             </span>
-
-            <div>
-              <strong>
-                {
-                  summary.total
-                }
-              </strong>
-
-              <span>
-                Total Requests
-              </span>
-            </div>
           </button>
 
           <button
             type="button"
-            className={
-              status ===
-              "PENDING_APPROVAL"
-                ? "active amber"
-                : "amber"
+            className="se-mpr-create-btn"
+            onClick={
+              openCreate
             }
+          >
+            <span>
+              +
+            </span>
+
+            New Manpower Request
+          </button>
+        </div>
+      </section>
+
+      
+
+      {/* =================================================
+          SUMMARY
+      ================================================== */}
+
+      <section className="se-mpr-summary-grid">
+        <button
+          type="button"
+          className={
+            status ===
+            "ALL"
+              ? "active neutral"
+              : "neutral"
+          }
+          onClick={() =>
+            setStatus(
+              "ALL"
+            )
+          }
+        >
+          <span className="se-mpr-summary-icon">
+            M
+          </span>
+
+          <div>
+            <strong>
+              {
+                summary.total
+              }
+            </strong>
+
+            <span>
+              Total
+            </span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className={
+            status ===
+            "PENDING_APPROVAL"
+              ? "active amber"
+              : "amber"
+          }
+          onClick={() =>
+            setStatus(
+              "PENDING_APPROVAL"
+            )
+          }
+        >
+          <span className="se-mpr-summary-icon">
+            ◷
+          </span>
+
+          <div>
+            <strong>
+              {
+                summary.pending
+              }
+            </strong>
+
+            <span>
+              Pending
+            </span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className={
+            status ===
+            "APPROVED"
+              ? "active green"
+              : "green"
+          }
+          onClick={() =>
+            setStatus(
+              "APPROVED"
+            )
+          }
+        >
+          <span className="se-mpr-summary-icon">
+            ✓
+          </span>
+
+          <div>
+            <strong>
+              {
+                summary.approved
+              }
+            </strong>
+
+            <span>
+              Approved
+            </span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className={
+            status ===
+            "HIRING_IN_PROGRESS"
+              ? "active purple"
+              : "purple"
+          }
+          onClick={() =>
+            setStatus(
+              "HIRING_IN_PROGRESS"
+            )
+          }
+        >
+          <span className="se-mpr-summary-icon">
+            H
+          </span>
+
+          <div>
+            <strong>
+              {
+                summary.hiring
+              }
+            </strong>
+
+            <span>
+              Hiring
+            </span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className="red"
+          onClick={() => {
+            setStatus(
+              "ALL"
+            );
+
+            setSearch(
+              ""
+            );
+          }}
+        >
+          <span className="se-mpr-summary-icon">
+            !
+          </span>
+
+          <div>
+            <strong>
+              {
+                summary.urgent
+              }
+            </strong>
+
+            <span>
+              Urgent
+            </span>
+          </div>
+        </button>
+      </section>
+
+      {/* =================================================
+          TOOLBAR
+      ================================================== */}
+
+      <section className="se-mpr-toolbar">
+        <div className="se-mpr-search">
+          <span>
+            ⌕
+          </span>
+
+          <input
+            type="search"
+            value={
+              search
+            }
+            onChange={(
+              event
+            ) =>
+              setSearch(
+                event
+                  .target
+                  .value
+              )
+            }
+            placeholder="Search request, position..."
+          />
+
+          {search ? (
+            <button
+              type="button"
+              onClick={() =>
+                setSearch(
+                  ""
+                )
+              }
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
+
+        <div className="se-mpr-status-tabs">
+          {STATUS_TABS.map(
+            (
+              tab
+            ) => (
+              <button
+                key={
+                  tab.key
+                }
+                type="button"
+                className={
+                  status ===
+                  tab.key
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setStatus(
+                    tab.key
+                  )
+                }
+              >
+                {
+                  tab.label
+                }
+              </button>
+            )
+          )}
+        </div>
+
+        {approvalInbox.length >
+        0 ? (
+          <button
+            type="button"
+            className="se-mpr-approval-inbox-pill"
             onClick={() =>
               setStatus(
                 "PENDING_APPROVAL"
               )
             }
           >
-            <span className="se-mpr-summary-icon">
-              ◷
-            </span>
-
-            <div>
-              <strong>
-                {
-                  summary.pending
-                }
-              </strong>
-
-              <span>
-                Pending Approval
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={
-              status ===
-              "APPROVED"
-                ? "active blue"
-                : "blue"
-            }
-            onClick={() =>
-              setStatus(
-                "APPROVED"
-              )
-            }
-          >
-            <span className="se-mpr-summary-icon">
-              ✓
-            </span>
-
-            <div>
-              <strong>
-                {
-                  summary.approved
-                }
-              </strong>
-
-              <span>
-                Approved
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={
-              status ===
-              "HIRING_IN_PROGRESS"
-                ? "active purple"
-                : "purple"
-            }
-            onClick={() =>
-              setStatus(
-                "HIRING_IN_PROGRESS"
-              )
-            }
-          >
-            <span className="se-mpr-summary-icon">
-              H
-            </span>
-
-            <div>
-              <strong>
-                {
-                  summary.hiring
-                }
-              </strong>
-
-              <span>
-                Hiring Active
-              </span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className="red"
-            onClick={() => {
-              setStatus(
-                "ALL"
-              );
-
-              setSearch(
-                ""
-              );
-            }}
-          >
-            <span className="se-mpr-summary-icon">
-              !
-            </span>
-
-            <div>
-              <strong>
-                {
-                  summary.urgent
-                }
-              </strong>
-
-              <span>
-                Urgent
-              </span>
-            </div>
-          </button>
-        </section>
-
-        {/* =================================================
-            TOOLBAR
-        ================================================== */}
-
-        <section className="se-mpr-toolbar">
-          <div className="se-mpr-search">
             <span>
-              ⌕
-            </span>
-
-            <input
-              type="search"
-              value={
-                search
-              }
-              onChange={(
-                event
-              ) =>
-                setSearch(
-                  event
-                    .target
-                    .value
-                )
-              }
-              placeholder="Search by request number or position..."
-            />
-
-            {search ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setSearch(
-                    ""
-                  )
-                }
-              >
-                ×
-              </button>
-            ) : null}
-          </div>
-
-          <div className="se-mpr-status-tabs">
-            {STATUS_TABS.map(
-              (
-                tab
-              ) => (
-                <button
-                  key={
-                    tab.key
-                  }
-                  type="button"
-                  className={
-                    status ===
-                    tab.key
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setStatus(
-                      tab.key
-                    )
-                  }
-                >
-                  {
-                    tab.label
-                  }
-                </button>
-              )
-            )}
-          </div>
-
-          {approvalInbox.length >
-          0 ? (
-            <button
-              type="button"
-              className="se-mpr-approval-inbox-pill"
-              onClick={() =>
-                setStatus(
-                  "PENDING_APPROVAL"
-                )
-              }
-            >
-              <span>
-                {
-                  approvalInbox.length
-                }
-              </span>
-
               {
-                approvalInboxLabel
+                approvalInbox.length
               }
-            </button>
-          ) : null}
-        </section>
-
-        {/* =================================================
-            ERROR
-        ================================================== */}
-
-        {error ? (
-          <div className="se-mpr-error">
-            <span>
-              !
             </span>
 
-            <div>
-              <strong>
-                Unable to load manpower requests
-              </strong>
-
-              <p>
-                {
-                  error
-                }
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                loadRequirements()
-              }
-            >
-              Retry
-            </button>
-          </div>
+            {
+              approvalInboxLabel
+            }
+          </button>
         ) : null}
+      </section>
 
-        {/* =================================================
-            TABLE
-        ================================================== */}
+      {/* =================================================
+          ERROR
+      ================================================== */}
 
-        <section className="se-mpr-list-panel">
-          <div className="se-mpr-list-head">
-            <div>
-              <span>
-                REQUIREMENTS
-              </span>
+      {error ? (
+        <div className="se-mpr-error">
+          <span>
+            !
+          </span>
 
-              <strong>
-                {loading
-                  ? "Loading..."
-                  : `${requirements.length} visible request${
-                      requirements.length ===
-                      1
-                        ? ""
-                        : "s"
-                    }`}
-              </strong>
-            </div>
+          <div>
+            <strong>
+              Unable to load requests
+            </strong>
 
             <p>
-              Click any row for full
-              requirement detail.
+              {
+                error
+              }
             </p>
           </div>
 
-          {loading ? (
-            <div className="se-mpr-table-skeleton">
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-          ) : requirements.length >
-            0 ? (
+          <button
+            type="button"
+            onClick={() =>
+              loadRequirements()
+            }
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      {/* =================================================
+          TABLE
+      ================================================== */}
+
+      <section className="se-mpr-list-panel">
+        {loading ? (
+          <div className="se-mpr-table-skeleton">
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+        ) : requirements.length >
+          0 ? (
+          <>
             <div className="se-mpr-table-wrap">
               <table className="se-mpr-table">
                 <thead>
                   <tr>
-                    <th>
+                    <th className="se-mpr-col-request">
                       Request
                     </th>
 
-                    <th>
+                    <th className="se-mpr-col-department">
                       Department
                     </th>
 
-                    <th>
+                    <th className="se-mpr-col-openings">
                       Openings
                     </th>
 
-                    <th>
+                    <th className="se-mpr-col-priority">
                       Priority
                     </th>
 
-                    <th>
+                    <th className="se-mpr-col-date">
                       Required By
                     </th>
 
-                    <th>
+                    <th className="se-mpr-col-status">
                       Status
                     </th>
 
-                    <th>
+                    <th className="se-mpr-col-person">
                       Owner / Approver
                     </th>
 
-                    <th />
+                    <th className="se-mpr-col-action">
+                      View
+                    </th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {requirements.map(
+                  {paginatedRequirements.map(
                     (
                       requirement
                     ) => {
@@ -1345,19 +1532,34 @@ const ManpowerPage =
                           ?.approvedBy ||
                         null;
 
+                      const rowClass =
+                        getRowStatusClass(
+                          requirement
+                            ?.status
+                        );
+
                       return (
-                        <tr
-                          key={
-                            id ||
-                            requirement
-                              ?.requestNumber
-                          }
-                          onClick={() =>
-                            openRequirement(
-                              requirement
-                            )
-                          }
-                        >
+  <tr
+    key={
+      id ||
+      requirement
+        ?.requestNumber
+    }
+    className={`se-mpr-row se-mpr-row-${String(
+      requirement?.status || "unknown"
+    )
+      .trim()
+      .toLowerCase()
+      .replaceAll("_", "-")
+      .replaceAll(" ", "-")}`}
+    onClick={() =>
+      openRequirement(
+        requirement
+      )
+    }
+  >
+                          {/* REQUEST */}
+
                           <td>
                             <div className="se-mpr-role-cell">
                               <span className="se-mpr-role-icon">
@@ -1385,16 +1587,14 @@ const ManpowerPage =
                                   {safeText(
                                     requirement
                                       ?.requestNumber,
-                                    "Request"
+                                    "—"
                                   )}
-
-                                  {isMine
-                                    ? " · Raised by me"
-                                    : ""}
                                 </span>
                               </div>
                             </div>
                           </td>
+
+                          {/* DEPARTMENT */}
 
                           <td>
                             <strong className="se-mpr-table-main-text">
@@ -1407,15 +1607,19 @@ const ManpowerPage =
                             </strong>
                           </td>
 
+                          {/* OPENINGS */}
+
                           <td>
                             <span className="se-mpr-openings">
                               {Number(
                                 requirement
                                   ?.numberOfOpenings ||
-                                  0
+                                0
                               )}
                             </span>
                           </td>
+
+                          {/* PRIORITY */}
 
                           <td>
                             <RecruitmentStatusBadge
@@ -1428,6 +1632,8 @@ const ManpowerPage =
                             />
                           </td>
 
+                          {/* REQUIRED DATE */}
+
                           <td>
                             <strong className="se-mpr-table-main-text">
                               {formatRecruitmentDate(
@@ -1436,6 +1642,8 @@ const ManpowerPage =
                               )}
                             </strong>
                           </td>
+
+                          {/* STATUS */}
 
                           <td>
                             <RecruitmentStatusBadge
@@ -1447,6 +1655,8 @@ const ManpowerPage =
                               }
                             />
                           </td>
+
+                          {/* APPROVER */}
 
                           <td>
                             <div className="se-mpr-person-cell">
@@ -1472,32 +1682,47 @@ const ManpowerPage =
                                 </strong>
 
                                 <small>
-                                  {isMine
-                                    ? requirement
-                                        ?.currentApprover
-                                      ? "Waiting for approval"
-                                      : requirement
-                                          ?.assignedHr
-                                        ? "Hiring owner"
-                                        : "Raised by you"
-                                    : canApprove
-                                      ? "Needs your approval"
+                                  {canApprove
+                                    ? "Approval required"
+                                    : isMine &&
+                                        requirement
+                                          ?.currentApprover
+                                      ? "Pending approval"
                                       : requirement
                                           ?.currentApprover
                                         ? "Approver"
                                         : requirement
                                             ?.assignedHr
                                           ? "Hiring owner"
-                                          : "Workflow"}
+                                          : "—"}
                                 </small>
                               </div>
                             </div>
                           </td>
 
+                          {/* ACTION */}
+
                           <td>
-                            <span className="se-mpr-row-arrow">
+                            <button
+                              type="button"
+                              className="se-mpr-table-view-btn"
+                              aria-label={`View ${safeText(
+                                requirement
+                                  ?.requestNumber,
+                                "request"
+                              )}`}
+                              onClick={(
+                                event
+                              ) => {
+                                event.stopPropagation();
+
+                                openRequirement(
+                                  requirement
+                                );
+                              }}
+                            >
                               →
-                            </span>
+                            </button>
                           </td>
                         </tr>
                       );
@@ -1506,70 +1731,202 @@ const ManpowerPage =
                 </tbody>
               </table>
             </div>
-          ) : (
-            <RecruitmentEmptyState
-              icon="M"
-              title="No manpower requests found"
-              description={
-                search ||
-                status !==
-                  "ALL"
-                  ? "Try changing the current search or status filter."
-                  : "Raise the first manpower requirement to start the recruitment workflow."
-              }
-            />
-          )}
-        </section>
 
-        {/* =================================================
-            CREATE MODAL
-        ================================================== */}
+            {/* =================================================
+                PAGINATION
+            ================================================== */}
 
-        <ManpowerRequestForm
-          open={
-            createOpen
-          }
-          onClose={
-            closeOverlay
-          }
-          onCreated={
-            handleCreated
-          }
-        />
+            <div className="se-mpr-pagination">
+              <div className="se-mpr-pagination-info">
+                <strong>
+                  {
+                    firstVisibleRecord
+                  }
+                  –
+                  {
+                    lastVisibleRecord
+                  }
+                </strong>
 
-        {/* =================================================
-            DETAIL DRAWER
-        ================================================== */}
+                <span>
+                  of{" "}
+                  {
+                    requirements.length
+                  }
+                </span>
 
-        <ManpowerDetailDrawer
-          open={
-            Boolean(
+                <span className="se-mpr-page-size">
+                  50 per page
+                </span>
+              </div>
+
+              <div className="se-mpr-pagination-controls">
+                <button
+                  type="button"
+                  className="se-mpr-page-nav"
+                  disabled={
+                    currentPage ===
+                    1
+                  }
+                  onClick={() =>
+                    setCurrentPage(
+                      (
+                        page
+                      ) =>
+                        Math.max(
+                          1,
+                          page -
+                            1
+                        )
+                    )
+                  }
+                  aria-label="Previous page"
+                >
+                  ‹
+                </button>
+
+                {paginationPages.map(
+                  (
+                    page,
+                    index
+                  ) => {
+                    const previous =
+                      paginationPages[
+                        index -
+                          1
+                      ];
+
+                    const showGap =
+                      previous &&
+                      page -
+                        previous >
+                        1;
+
+                    return (
+                      <React.Fragment
+                        key={
+                          page
+                        }
+                      >
+                        {showGap ? (
+                          <span className="se-mpr-page-gap">
+                            …
+                          </span>
+                        ) : null}
+
+                        <button
+                          type="button"
+                          className={
+                            currentPage ===
+                            page
+                              ? "se-mpr-page-number active"
+                              : "se-mpr-page-number"
+                          }
+                          onClick={() =>
+                            setCurrentPage(
+                              page
+                            )
+                          }
+                        >
+                          {
+                            page
+                          }
+                        </button>
+                      </React.Fragment>
+                    );
+                  }
+                )}
+
+                <button
+                  type="button"
+                  className="se-mpr-page-nav"
+                  disabled={
+                    currentPage ===
+                    totalPages
+                  }
+                  onClick={() =>
+                    setCurrentPage(
+                      (
+                        page
+                      ) =>
+                        Math.min(
+                          totalPages,
+                          page +
+                            1
+                        )
+                    )
+                  }
+                  aria-label="Next page"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <RecruitmentEmptyState
+            icon="M"
+            title="No manpower requests"
+            description={
+              search ||
+              status !==
+                "ALL"
+                ? "No records match the current filter."
+                : "No manpower requests available."
+            }
+          />
+        )}
+      </section>
+
+      {/* =================================================
+          CREATE MODAL
+      ================================================== */}
+
+      <ManpowerRequestForm
+        open={
+          createOpen
+        }
+        onClose={
+          closeOverlay
+        }
+        onCreated={
+          handleCreated
+        }
+      />
+
+      {/* =================================================
+          DETAIL DRAWER
+      ================================================== */}
+
+      <ManpowerDetailDrawer
+        open={
+          Boolean(
+            selectedId
+          )
+        }
+        requirementId={
+          selectedId
+        }
+        canApprove={
+          Boolean(
+            selectedId &&
+            actionableApprovalIds.has(
+              selectedId
+            ) &&
+            !myRequestIds.has(
               selectedId
             )
-          }
-          requirementId={
-            selectedId
-          }
-          canApprove={
-            Boolean(
-              selectedId &&
-              actionableApprovalIds.has(
-                selectedId
-              ) &&
-              !myRequestIds.has(
-                selectedId
-              )
-            )
-          }
-          onClose={
-            closeOverlay
-          }
-          onChanged={
-            handleChanged
-          }
-        />
-      </div>
-    );
-  };
+          )
+        }
+        onClose={
+          closeOverlay
+        }
+        onChanged={
+          handleChanged
+        }
+      />
+    </div>
+  );
+};
 
 export default ManpowerPage;

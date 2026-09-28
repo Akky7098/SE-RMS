@@ -18,220 +18,258 @@ import {
 
 import "./Employees.css";
 
+
 /* =========================================================
    HELPERS
 ========================================================= */
 
-const pretty =
-  (
-    value
-  ) =>
-    String(
-      value ||
-      ""
-    )
-      .replaceAll(
-        "_",
-        " "
-      )
-      .toLowerCase()
-      .replace(
-        /\b\w/g,
-        (
-          character
-        ) =>
-          character.toUpperCase()
-      );
+const pretty = (value) => {
+  if (!value) {
+    return "Not assigned";
+  }
 
-const initials =
-  (
-    name
-  ) => {
-    const parts =
-      String(
-        name ||
-        "E"
-      )
-        .trim()
-        .split(
-          /\s+/
-        )
-        .filter(
-          Boolean
-        );
+  return String(value)
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(
+      /\b\w/g,
+      (character) =>
+        character.toUpperCase()
+    );
+};
 
-    if (
-      !parts.length
-    ) {
-      return "E";
-    }
 
-    if (
-      parts.length ===
-      1
-    ) {
-      return parts[0]
-        .charAt(
-          0
-        )
-        .toUpperCase();
-    }
+const initials = (name) => {
+  const parts = String(
+    name || "Employee"
+  )
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 
-    return (
-      parts[0]
-        .charAt(
-          0
-        ) +
-      parts[
-        parts.length -
-        1
-      ]
-        .charAt(
-          0
-        )
-    ).toUpperCase();
-  };
+  if (!parts.length) {
+    return "E";
+  }
 
-const employeeIdOf =
-  (
-    employee
-  ) =>
-    employee?._id ||
-    employee?.id ||
-    "";
+  if (parts.length === 1) {
+    return parts[0]
+      .charAt(0)
+      .toUpperCase();
+  }
 
-const departmentName =
-  (
-    employee
-  ) =>
-    employee?.department?.name ||
-    employee?.departmentName ||
-    employee?.orgUnit?.name ||
-    employee?.orgUnitCode ||
-    "Organisation";
+  return (
+    parts[0].charAt(0) +
+    parts[parts.length - 1].charAt(0)
+  ).toUpperCase();
+};
 
-const directReportCount =
-  (
-    node
-  ) =>
+
+const employeeIdOf = (
+  employee
+) =>
+  employee?._id ||
+  employee?.id ||
+  "";
+
+
+const departmentName = (
+  employee
+) =>
+  employee?.department?.name ||
+  employee?.departmentName ||
+  employee?.orgUnit?.name ||
+  employee?.orgUnitName ||
+  employee?.orgUnitCode ||
+  "Organisation";
+
+
+const getManagerObject = (
+  employee
+) => {
+  const reportsTo =
+    employee?.reportsTo;
+
+  const reportingManager =
+    employee?.reportingManager;
+
+  if (
+    reportsTo &&
+    typeof reportsTo === "object"
+  ) {
+    return reportsTo;
+  }
+
+  if (
+    reportingManager &&
+    typeof reportingManager ===
+      "object"
+  ) {
+    return reportingManager;
+  }
+
+  return null;
+};
+
+
+const getManagerId = (
+  employee
+) => {
+  const manager =
+    getManagerObject(
+      employee
+    );
+
+  return (
+    manager?._id ||
+    manager?.id ||
+    employee?.reportingManagerId ||
+    (
+      typeof employee?.reportsTo ===
+      "string"
+        ? employee.reportsTo
+        : ""
+    ) ||
+    ""
+  );
+};
+
+
+const getManagerName = (
+  employee
+) => {
+  return (
+    employee?.reportingManagerName ||
+    getManagerObject(employee)
+      ?.fullName ||
+    "Not assigned"
+  );
+};
+
+
+const directReportCount = (
+  node
+) => {
+  return Array.isArray(
+    node?.reports
+  )
+    ? node.reports.length
+    : 0;
+};
+
+
+const totalDescendants = (
+  reports = []
+) => {
+  if (!Array.isArray(reports)) {
+    return 0;
+  }
+
+  return reports.reduce(
+    (total, report) =>
+      total +
+      1 +
+      totalDescendants(
+        report?.reports
+      ),
+    0
+  );
+};
+
+
+const flattenTreeIds = (
+  node,
+  collection = new Set()
+) => {
+  if (!node) {
+    return collection;
+  }
+
+  const id = String(
+    employeeIdOf(node)
+  );
+
+  if (id) {
+    collection.add(id);
+  }
+
+  const reports =
     Array.isArray(
       node?.reports
     )
-      ? node.reports.length
-      : 0;
+      ? node.reports
+      : [];
 
-const totalDescendants =
-  (
-    reports = []
-  ) => {
-    if (
-      !Array.isArray(
-        reports
-      )
-    ) {
-      return 0;
-    }
-
-    return reports.reduce(
-      (
-        total,
-        report
-      ) =>
-        total +
-        1 +
-        totalDescendants(
-          report?.reports
-        ),
-      0
-    );
-  };
-
-const flattenTreeIds =
-  (
-    node,
-    collection =
-      new Set()
-  ) => {
-    if (
-      !node
-    ) {
-      return collection;
-    }
-
-    const id =
-      String(
-        employeeIdOf(
-          node
-        )
-      );
-
-    if (
-      id
-    ) {
-      collection.add(
-        id
+  reports.forEach(
+    (child) => {
+      flattenTreeIds(
+        child,
+        collection
       );
     }
+  );
 
-    const reports =
-      Array.isArray(
-        node?.reports
-      )
-        ? node.reports
-        : [];
+  return collection;
+};
 
-    reports.forEach(
-      (
-        child
-      ) => {
-        flattenTreeIds(
-          child,
-          collection
-        );
-      }
-    );
 
-    return collection;
-  };
+const getListEmployees = (
+  result
+) => {
+  if (Array.isArray(result)) {
+    return result;
+  }
 
-const getListEmployees =
-  (
-    result
-  ) => {
-    if (
-      Array.isArray(
-        result
-      )
-    ) {
-      return result;
-    }
+  if (
+    Array.isArray(
+      result?.records
+    )
+  ) {
+    return result.records;
+  }
 
-    if (
-      Array.isArray(
-        result?.employees
-      )
-    ) {
-      return result.employees;
-    }
+  if (
+    Array.isArray(
+      result?.employees
+    )
+  ) {
+    return result.employees;
+  }
 
-    if (
-      Array.isArray(
-        result?.items
-      )
-    ) {
-      return result.items;
-    }
+  if (
+    Array.isArray(
+      result?.items
+    )
+  ) {
+    return result.items;
+  }
 
-    if (
-      Array.isArray(
-        result?.data
-      )
-    ) {
-      return result.data;
-    }
+  if (
+    Array.isArray(
+      result?.data
+    )
+  ) {
+    return result.data;
+  }
 
-    return [];
-  };
+  if (
+    Array.isArray(
+      result?.data?.records
+    )
+  ) {
+    return result.data.records;
+  }
+
+  if (
+    Array.isArray(
+      result?.data?.employees
+    )
+  ) {
+    return result.data.employees;
+  }
+
+  return [];
+};
+
 
 /* =========================================================
    TREE NODE
@@ -247,10 +285,7 @@ function HierarchyNode({
   const [
     expanded,
     setExpanded,
-  ] =
-    useState(
-      true
-    );
+  ] = useState(true);
 
   const reports =
     Array.isArray(
@@ -272,18 +307,9 @@ function HierarchyNode({
       focusEmployeeId
     );
 
-  const isManager =
-    reports.length >
-    0;
+  const hasReports =
+    reports.length > 0;
 
-  const reportingManagerName =
-    employee
-      ?.reportsTo
-      ?.fullName ||
-    employee
-      ?.reportingManager
-      ?.fullName ||
-    "";
 
   return (
     <div className="employee-hierarchy-node-wrap">
@@ -291,41 +317,52 @@ function HierarchyNode({
       <article
         className={[
           "employee-hierarchy-node",
-
           focused
             ? "is-focus"
             : "",
-
-          level ===
-          0
+          level === 0
             ? "is-root"
             : "",
         ]
-          .filter(
-            Boolean
-          )
-          .join(
-            " "
-          )}
+          .filter(Boolean)
+          .join(" ")}
       >
 
+        {/* ===============================================
+            PERSON
+        =============================================== */}
+
         <div className="employee-hierarchy-avatar">
-          {initials(
-            employee?.fullName
+
+          {employee?.profilePhotoUrl ? (
+            <img
+              src={
+                employee.profilePhotoUrl
+              }
+              alt={
+                employee.fullName ||
+                "Employee"
+              }
+            />
+          ) : (
+            initials(
+              employee?.fullName
+            )
           )}
+
         </div>
+
 
         <div className="employee-hierarchy-node-main">
 
           <div className="employee-hierarchy-node-top">
 
-            <div>
+            <div className="employee-hierarchy-node-identity">
 
               <span>
-                {level ===
-                0
-                  ? "CURRENT EMPLOYEE"
-                  : isManager
+                {focused
+                  ? "FOCUSED EMPLOYEE"
+                  : hasReports
                   ? "MANAGER / LEAD"
                   : "TEAM MEMBER"}
               </span>
@@ -336,6 +373,7 @@ function HierarchyNode({
               </strong>
 
             </div>
+
 
             <span
               className={`employee-hierarchy-status is-${String(
@@ -351,17 +389,20 @@ function HierarchyNode({
 
           </div>
 
+
           <div className="employee-hierarchy-node-role">
             {employee?.designation ||
               "Designation not assigned"}
           </div>
 
+
           <div className="employee-hierarchy-node-meta">
 
-            <span>
-              {employee?.employeeCode ||
-                "No Employee ID"}
-            </span>
+            {employee?.employeeCode ? (
+              <span>
+                {employee.employeeCode}
+              </span>
+            ) : null}
 
             <span>
               {departmentName(
@@ -377,83 +418,89 @@ function HierarchyNode({
               </span>
             ) : null}
 
-          </div>
-
-          {reportingManagerName ? (
-            <div className="employee-hierarchy-reports-to">
-
+            {hasReports ? (
               <span>
-                REPORTS TO
+                {reports.length} direct{" "}
+                {reports.length === 1
+                  ? "report"
+                  : "reports"}
               </span>
+            ) : null}
 
-              <strong>
-                {reportingManagerName}
-              </strong>
-
-            </div>
-          ) : null}
+          </div>
 
         </div>
 
+
+        {/* ===============================================
+            ACTIONS
+        =============================================== */}
+
         <div className="employee-hierarchy-node-actions">
 
-          {reports.length ? (
+          {hasReports ? (
             <button
               type="button"
               className="employee-hierarchy-toggle"
               onClick={() =>
                 setExpanded(
-                  (
-                    value
-                  ) =>
+                  (value) =>
                     !value
                 )
               }
             >
               {expanded
-                ? "Hide"
-                : "Show"}
-              {" "}
-              {reports.length}
+                ? "Collapse"
+                : `Show ${reports.length}`}
             </button>
           ) : null}
 
-          <button
-            type="button"
-            className="employee-hierarchy-change"
-            onClick={() =>
-              onChangeManager(
-                employee
-              )
-            }
-          >
-            Change Manager
-          </button>
 
-          <button
-            type="button"
-            className="employee-hierarchy-open"
-            onClick={() =>
-              onOpenEmployee(
-                employee
-              )
-            }
-          >
-            Open
-          </button>
+          {!focused ? (
+            <button
+              type="button"
+              className="employee-hierarchy-change"
+              onClick={() =>
+                onChangeManager(
+                  employee
+                )
+              }
+            >
+              Change Manager
+            </button>
+          ) : null}
+
+
+          {!focused ? (
+            <button
+              type="button"
+              className="employee-hierarchy-open"
+              onClick={() =>
+                onOpenEmployee(
+                  employee
+                )
+              }
+            >
+              View
+              <span>→</span>
+            </button>
+          ) : null}
 
         </div>
 
       </article>
+
+
+      {/* ===============================================
+          CHILDREN
+      =============================================== */}
 
       {expanded &&
       reports.length ? (
         <div className="employee-hierarchy-children">
 
           {reports.map(
-            (
-              report
-            ) => (
+            (report) => (
               <HierarchyNode
                 key={
                   employeeIdOf(
@@ -464,8 +511,7 @@ function HierarchyNode({
                   report
                 }
                 level={
-                  level +
-                  1
+                  level + 1
                 }
                 focusEmployeeId={
                   focusEmployeeId
@@ -487,192 +533,155 @@ function HierarchyNode({
   );
 }
 
+
 /* =========================================================
    PAGE
 ========================================================= */
 
 function EmployeeHierarchyPage() {
-  const {
-    employeeId,
-  } =
+  const { employeeId } =
     useParams();
 
   const navigate =
     useNavigate();
 
-  /* =====================================================
-     TREE DATA
-  ===================================================== */
+
+  /* =======================================================
+     TREE
+  ======================================================= */
 
   const [
     tree,
     setTree,
-  ] =
-    useState(
-      null
-    );
+  ] = useState(null);
 
   const [
     loading,
     setLoading,
-  ] =
-    useState(
-      true
-    );
+  ] = useState(true);
+
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(false);
 
   const [
     error,
     setError,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
-  /* =====================================================
-     HIERARCHY MANAGEMENT
-  ===================================================== */
+
+  /* =======================================================
+     MANAGER MODAL
+  ======================================================= */
 
   const [
     managerModalOpen,
     setManagerModalOpen,
-  ] =
-    useState(
-      false
-    );
+  ] = useState(false);
 
   const [
     targetEmployee,
     setTargetEmployee,
-  ] =
-    useState(
-      null
-    );
+  ] = useState(null);
 
   const [
     managerOptions,
     setManagerOptions,
-  ] =
-    useState(
-      []
-    );
+  ] = useState([]);
 
   const [
     managerSearch,
     setManagerSearch,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
   const [
     selectedManagerId,
     setSelectedManagerId,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
   const [
     managerLoading,
     setManagerLoading,
-  ] =
-    useState(
-      false
-    );
+  ] = useState(false);
 
   const [
     managerSaving,
     setManagerSaving,
-  ] =
-    useState(
-      false
-    );
+  ] = useState(false);
 
   const [
     managerError,
     setManagerError,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
   const [
     successMessage,
     setSuccessMessage,
-  ] =
-    useState(
-      ""
-    );
+  ] = useState("");
 
-  /* =====================================================
+
+  /* =======================================================
      LOAD TREE
-  ===================================================== */
+  ======================================================= */
 
-  const load =
-    useCallback(
-      async () => {
-        try {
-          setLoading(
-            true
-          );
-
-          setError(
-            ""
-          );
-
-          const result =
-            await getReportingTree(
-              employeeId
-            );
-
-          setTree(
-            result
-          );
-        } catch (
-          requestError
-        ) {
-          setError(
-            requestError
-              ?.response
-              ?.data
-              ?.message ||
-            requestError
-              ?.message ||
-            "Reporting hierarchy could not be loaded."
-          );
-        } finally {
-          setLoading(
-            false
-          );
+  const load = useCallback(
+    async (
+      silent = false
+    ) => {
+      try {
+        if (silent) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
         }
-      },
-      [
-        employeeId,
-      ]
-    );
 
-  useEffect(
-    () => {
-      load();
+        setError("");
+
+        const result =
+          await getReportingTree(
+            employeeId
+          );
+
+        setTree(
+          result?.data ||
+          result ||
+          null
+        );
+      } catch (requestError) {
+        setError(
+          requestError
+            ?.response
+            ?.data
+            ?.message ||
+          requestError?.message ||
+          "Reporting hierarchy could not be loaded."
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
     },
-    [
-      load,
-    ]
+    [employeeId]
   );
 
-  /* =====================================================
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+
+  /* =======================================================
      ROOT
-  ===================================================== */
+  ======================================================= */
 
   const root =
-    useMemo(
-      () => {
-        if (
-          !tree?.employee
-        ) {
-          return null;
-        }
+    useMemo(() => {
+      if (!tree) {
+        return null;
+      }
 
+      if (tree?.employee) {
         return {
           ...tree.employee,
 
@@ -681,13 +690,39 @@ function EmployeeHierarchyPage() {
               tree?.reports
             )
               ? tree.reports
+              : Array.isArray(
+                  tree.employee
+                    ?.reports
+                )
+              ? tree.employee
+                  .reports
               : [],
         };
-      },
-      [
-        tree,
-      ]
-    );
+      }
+
+      if (
+        tree?._id ||
+        tree?.id
+      ) {
+        return {
+          ...tree,
+
+          reports:
+            Array.isArray(
+              tree?.reports
+            )
+              ? tree.reports
+              : [],
+        };
+      }
+
+      return null;
+    }, [tree]);
+
+
+  /* =======================================================
+     SUMMARY
+  ======================================================= */
 
   const summary =
     useMemo(
@@ -713,40 +748,79 @@ function EmployeeHierarchyPage() {
               )
             : "—",
       }),
-      [
-        root,
-      ]
+      [root]
     );
 
-  /* =====================================================
-     CURRENT / REPORTING MANAGER
-  ===================================================== */
 
   const currentManager =
     useMemo(
       () =>
         root
-          ?.reportsTo ||
-        root
-          ?.reportingManager ||
-        null,
-      [
-        root,
-      ]
+          ? getManagerObject(
+              root
+            )
+          : null,
+      [root]
     );
 
-  /* =====================================================
+
+  const currentManagerName =
+    useMemo(
+      () =>
+        root
+          ? getManagerName(
+              root
+            )
+          : "Not assigned",
+      [root]
+    );
+
+
+  /* =======================================================
+     CLOSE MANAGER MODAL
+  ======================================================= */
+
+  const closeManagerModal =
+    () => {
+      if (managerSaving) {
+        return;
+      }
+
+      setManagerModalOpen(
+        false
+      );
+
+      setTargetEmployee(
+        null
+      );
+
+      setManagerOptions(
+        []
+      );
+
+      setManagerSearch(
+        ""
+      );
+
+      setSelectedManagerId(
+        ""
+      );
+
+      setManagerError(
+        ""
+      );
+    };
+
+
+  /* =======================================================
      OPEN MANAGER MODAL
-  ===================================================== */
+  ======================================================= */
 
   const openManagerModal =
     async (
-      employee =
-        root
+      employee = root
     ) => {
-      if (
-        !employee
-      ) {
+      if (!employee) {
         return;
       }
 
@@ -766,47 +840,37 @@ function EmployeeHierarchyPage() {
         ""
       );
 
+      setManagerOptions(
+        []
+      );
+
       setManagerLoading(
         true
       );
 
-      const existingManager =
-        employee
-          ?.reportsTo
-          ?._id ||
-        employee
-          ?.reportsTo ||
-        employee
-          ?.reportingManager
-          ?._id ||
-        employee
-          ?.reportingManager ||
-        "";
-
       setSelectedManagerId(
         String(
-          existingManager ||
-          ""
+          getManagerId(
+            employee
+          ) || ""
         )
       );
+
 
       try {
         const result =
           await getEmployees({
-            page:
-              1,
-
-            limit:
-              500,
-
-            status:
-              "ACTIVE",
+            page: 1,
+            limit: 1000,
+            status: "ACTIVE",
           });
+
 
         const employees =
           getListEmployees(
             result
           );
+
 
         const targetId =
           String(
@@ -815,71 +879,84 @@ function EmployeeHierarchyPage() {
             )
           );
 
-        /*
-         * Prevent self-selection.
-         *
-         * We also exclude all descendants of the target
-         * employee when that target is inside the currently
-         * loaded tree. This avoids obvious circular hierarchy
-         * choices from the frontend.
-         */
 
-        const descendantIds =
+        /*
+         * Target + all descendants cannot become
+         * the target employee's manager.
+         *
+         * This prevents the obvious circular hierarchy
+         * relationships on the client side.
+         */
+        const blockedIds =
           flattenTreeIds(
             employee
           );
 
+
         const filtered =
-          employees.filter(
-            (
-              option
-            ) => {
-              const optionId =
-                String(
-                  employeeIdOf(
-                    option
+          employees
+            .filter(
+              (option) => {
+                const optionId =
+                  String(
+                    employeeIdOf(
+                      option
+                    )
+                  );
+
+                if (!optionId) {
+                  return false;
+                }
+
+                if (
+                  optionId ===
+                  targetId
+                ) {
+                  return false;
+                }
+
+                if (
+                  blockedIds.has(
+                    optionId
                   )
+                ) {
+                  return false;
+                }
+
+                return (
+                  !option?.status ||
+                  String(
+                    option.status
+                  ).toUpperCase() ===
+                    "ACTIVE"
                 );
-
-              if (
-                !optionId
-              ) {
-                return false;
               }
-
-              if (
-                optionId ===
-                targetId
-              ) {
-                return false;
-              }
-
-              if (
-                descendantIds.has(
-                  optionId
+            )
+            .sort(
+              (a, b) =>
+                String(
+                  a?.fullName ||
+                  ""
+                ).localeCompare(
+                  String(
+                    b?.fullName ||
+                    ""
+                  )
                 )
-              ) {
-                return false;
-              }
+            );
 
-              return true;
-            }
-          );
 
         setManagerOptions(
           filtered
         );
-      } catch (
-        requestError
-      ) {
+      } catch (requestError) {
         setManagerError(
           requestError
             ?.response
             ?.data
             ?.message ||
-          requestError
-            ?.message ||
-          "Reporting manager options could not be loaded."
+          requestError?.message ||
+          "Reporting managers could not be loaded."
         );
       } finally {
         setManagerLoading(
@@ -888,77 +965,59 @@ function EmployeeHierarchyPage() {
       }
     };
 
-  /* =====================================================
+
+  /* =======================================================
      FILTER MANAGERS
-  ===================================================== */
+  ======================================================= */
 
   const filteredManagerOptions =
-    useMemo(
-      () => {
-        const search =
-          managerSearch
-            .trim()
+    useMemo(() => {
+      const search =
+        managerSearch
+          .trim()
+          .toLowerCase();
+
+      if (!search) {
+        return managerOptions;
+      }
+
+      return managerOptions.filter(
+        (manager) => {
+          const haystack = [
+            manager?.fullName,
+            manager?.employeeCode,
+            manager?.designation,
+            manager?.companyCode,
+            manager?.orgUnitCode,
+            manager?.departmentName,
+            manager
+              ?.department
+              ?.name,
+          ]
+            .filter(Boolean)
+            .join(" ")
             .toLowerCase();
 
-        if (
-          !search
-        ) {
-          return managerOptions;
+          return haystack.includes(
+            search
+          );
         }
+      );
+    }, [
+      managerOptions,
+      managerSearch,
+    ]);
 
-        return managerOptions.filter(
-          (
-            manager
-          ) => {
-            const haystack =
-              [
-                manager
-                  ?.fullName,
 
-                manager
-                  ?.employeeCode,
-
-                manager
-                  ?.designation,
-
-                manager
-                  ?.orgUnitCode,
-
-                manager
-                  ?.department
-                  ?.name,
-              ]
-                .filter(
-                  Boolean
-                )
-                .join(
-                  " "
-                )
-                .toLowerCase();
-
-            return haystack.includes(
-              search
-            );
-          }
-        );
-      },
-      [
-        managerOptions,
-        managerSearch,
-      ]
-    );
-
-  /* =====================================================
+  /* =======================================================
      SELECTED MANAGER
-  ===================================================== */
+  ======================================================= */
 
   const selectedManager =
     useMemo(
       () =>
         managerOptions.find(
-          (
-            manager
-          ) =>
+          (manager) =>
             String(
               employeeIdOf(
                 manager
@@ -967,44 +1026,40 @@ function EmployeeHierarchyPage() {
             String(
               selectedManagerId
             )
-        ) ||
-        null,
+        ) || null,
       [
         managerOptions,
         selectedManagerId,
       ]
     );
 
-  /* =====================================================
-     SAVE MANAGER / MOVE HIERARCHY
-  ===================================================== */
+
+  /* =======================================================
+     SAVE REPORTING MANAGER
+  ======================================================= */
 
   const saveReportingManager =
     async () => {
-      if (
-        !targetEmployee
-      ) {
+      if (!targetEmployee) {
         return;
       }
 
-      if (
-        !selectedManagerId
-      ) {
+      if (!selectedManagerId) {
         setManagerError(
-          "Please select a reporting manager."
+          "Select a reporting manager before saving."
         );
 
         return;
       }
+
 
       const targetId =
         employeeIdOf(
           targetEmployee
         );
 
-      if (
-        !targetId
-      ) {
+
+      if (!targetId) {
         setManagerError(
           "Employee ID is unavailable."
         );
@@ -1012,19 +1067,43 @@ function EmployeeHierarchyPage() {
         return;
       }
 
-      setManagerSaving(
-        true
-      );
 
-      setManagerError(
-        ""
-      );
+      const oldManagerId =
+        String(
+          getManagerId(
+            targetEmployee
+          ) || ""
+        );
 
-      setSuccessMessage(
-        ""
-      );
+
+      if (
+        oldManagerId ===
+        String(
+          selectedManagerId
+        )
+      ) {
+        setManagerError(
+          "This employee already reports to the selected manager."
+        );
+
+        return;
+      }
+
 
       try {
+        setManagerSaving(
+          true
+        );
+
+        setManagerError(
+          ""
+        );
+
+        setSuccessMessage(
+          ""
+        );
+
+
         await updateEmployee(
           targetId,
           {
@@ -1033,42 +1112,36 @@ function EmployeeHierarchyPage() {
           }
         );
 
-        setManagerModalOpen(
-          false
-        );
 
-        setTargetEmployee(
-          null
-        );
+        const managerName =
+          selectedManager
+            ?.fullName ||
+          "the selected manager";
 
-        setSelectedManagerId(
-          ""
-        );
+
+        const employeeName =
+          targetEmployee
+            ?.fullName ||
+          "Employee";
+
+
+        closeManagerModal();
+
 
         setSuccessMessage(
-          selectedManager
-            ? `${targetEmployee?.fullName || "Employee"} now reports to ${selectedManager.fullName}.`
-            : "Reporting hierarchy updated successfully."
+          `${employeeName} now reports to ${managerName}.`
         );
 
-        /*
-         * Reload the focused hierarchy.
-         *
-         * If a child was moved outside the currently focused
-         * branch, it will disappear from this tree after reload,
-         * which is correct.
-         */
-        await load();
-      } catch (
-        requestError
-      ) {
+
+        await load(true);
+
+      } catch (requestError) {
         setManagerError(
           requestError
             ?.response
             ?.data
             ?.message ||
-          requestError
-            ?.message ||
+          requestError?.message ||
           "Reporting manager could not be updated."
         );
       } finally {
@@ -1078,87 +1151,93 @@ function EmployeeHierarchyPage() {
       }
     };
 
-  /* =====================================================
-     REMOVE MANAGER
-  ===================================================== */
+
+  /* =======================================================
+     REMOVE REPORTING MANAGER
+  ======================================================= */
 
   const removeReportingManager =
     async () => {
-      if (
-        !targetEmployee
-      ) {
+      if (!targetEmployee) {
         return;
       }
+
 
       const targetId =
         employeeIdOf(
           targetEmployee
         );
 
-      if (
-        !targetId
-      ) {
+
+      if (!targetId) {
+        setManagerError(
+          "Employee ID is unavailable."
+        );
+
         return;
       }
+
 
       const confirmed =
         window.confirm(
           `Remove the reporting manager for ${
-            targetEmployee?.fullName ||
+            targetEmployee
+              ?.fullName ||
             "this employee"
           }?`
         );
 
-      if (
-        !confirmed
-      ) {
+
+      if (!confirmed) {
         return;
       }
 
-      setManagerSaving(
-        true
-      );
-
-      setManagerError(
-        ""
-      );
 
       try {
-        await updateEmployee(
-          targetId,
-          {
-            reportsTo:
-              null,
-          }
+        setManagerSaving(
+          true
         );
 
-        setManagerModalOpen(
-          false
-        );
-
-        setTargetEmployee(
-          null
-        );
-
-        setSelectedManagerId(
+        setManagerError(
           ""
         );
 
         setSuccessMessage(
-          "Reporting manager removed successfully."
+          ""
         );
 
-        await load();
-      } catch (
-        requestError
-      ) {
+
+        await updateEmployee(
+          targetId,
+          {
+            reportsTo: null,
+          }
+        );
+
+
+        const employeeName =
+          targetEmployee
+            ?.fullName ||
+          "Employee";
+
+
+        closeManagerModal();
+
+
+        setSuccessMessage(
+          `${employeeName} no longer has a reporting manager assigned.`
+        );
+
+
+        await load(true);
+
+      } catch (requestError) {
         setManagerError(
           requestError
             ?.response
             ?.data
             ?.message ||
-          requestError
-            ?.message ||
+          requestError?.message ||
           "Reporting manager could not be removed."
         );
       } finally {
@@ -1168,27 +1247,39 @@ function EmployeeHierarchyPage() {
       }
     };
 
-  /* =====================================================
-     LOADING
-  ===================================================== */
 
-  if (
-    loading
-  ) {
+  /* =======================================================
+     LOADING
+  ======================================================= */
+
+  if (loading) {
     return (
       <div className="employee-hierarchy-page">
 
         <div className="employee-hierarchy-loading">
-          Loading organisation hierarchy...
+
+          <span className="employee-detail-loader" />
+
+          <div>
+            <strong>
+              Loading hierarchy
+            </strong>
+
+            <small>
+              Building reporting structure...
+            </small>
+          </div>
+
         </div>
 
       </div>
     );
   }
 
-  /* =====================================================
+
+  /* =======================================================
      ERROR
-  ===================================================== */
+  ======================================================= */
 
   if (
     error ||
@@ -1208,16 +1299,30 @@ function EmployeeHierarchyPage() {
               "Hierarchy data was not found."}
           </span>
 
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                `/people/employees/${employeeId}`
-              )
-            }
-          >
-            Return to Employee
-          </button>
+
+          <div className="employee-hierarchy-error-actions">
+
+            <button
+              type="button"
+              onClick={() =>
+                load()
+              }
+            >
+              Try Again
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  `/people/employees/${employeeId}`
+                )
+              }
+            >
+              Employee Profile
+            </button>
+
+          </div>
 
         </div>
 
@@ -1225,94 +1330,205 @@ function EmployeeHierarchyPage() {
     );
   }
 
-  /* =====================================================
+
+  /* =======================================================
      UI
-  ===================================================== */
+  ======================================================= */
 
   return (
     <div className="employee-hierarchy-page">
 
-      <button
-        type="button"
-        className="employee-hierarchy-back"
-        onClick={() =>
-          navigate(
-            `/people/employees/${employeeId}`
-          )
-        }
-      >
-        ← Employee Profile
-      </button>
+
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
+
+      <div className="employee-hierarchy-topbar">
+
+        <button
+          type="button"
+          className="employee-hierarchy-back"
+          onClick={() =>
+            navigate(
+              `/people/employees/${employeeId}`
+            )
+          }
+        >
+          <span>←</span>
+          Employee Profile
+        </button>
+
+
+        <button
+          type="button"
+          className="employee-hierarchy-refresh"
+          disabled={
+            refreshing
+          }
+          onClick={() =>
+            load(true)
+          }
+        >
+          {refreshing
+            ? "Refreshing..."
+            : "↻ Refresh"}
+        </button>
+
+      </div>
+
 
       {/* =================================================
           HERO
-      ================================================== */}
+      ================================================= */}
 
-      <section className="employee-hierarchy-hero">
+      <section className="employee-hierarchy-hero employee-hierarchy-hero-clean">
 
-        <div>
+        <div className="employee-hierarchy-hero-profile">
 
-          <span>
-            PEOPLE / ORGANISATION
-          </span>
+          <div className="employee-hierarchy-hero-avatar">
 
-          <h1>
-            Reporting Hierarchy
-          </h1>
+            {root?.profilePhotoUrl ? (
+              <img
+                src={
+                  root.profilePhotoUrl
+                }
+                alt={
+                  root.fullName ||
+                  "Employee"
+                }
+              />
+            ) : (
+              initials(
+                root.fullName
+              )
+            )}
 
-          <p>
-            View and maintain reporting relationships from
-            leadership through managers, seniors and team members.
-          </p>
+          </div>
 
-        </div>
 
-        <div className="employee-hierarchy-hero-person">
-
-          <span>
-            FOCUSED EMPLOYEE
-          </span>
-
-          <strong>
-            {root.fullName}
-          </strong>
-
-          <small>
-            {root.designation ||
-              "Employee"}
-            {" · "}
-            {root.employeeCode ||
-              "No ID"}
-          </small>
-
-          <div className="employee-hierarchy-current-manager">
+          <div className="employee-hierarchy-hero-copy">
 
             <span>
-              REPORTING TO
+              REPORTING HIERARCHY
             </span>
 
-            <strong>
-              {currentManager
-                ?.fullName ||
-                "Not Assigned"}
-            </strong>
+            <h1>
+              {root.fullName}
+            </h1>
+
+            <p>
+              {root.designation ||
+                "Employee"}
+
+              <span>•</span>
+
+              {summary.department}
+            </p>
+
+
+            <div className="employee-hierarchy-hero-meta">
+
+              {root.employeeCode ? (
+                <strong>
+                  {root.employeeCode}
+                </strong>
+              ) : null}
+
+              <span>
+                {pretty(
+                  root.status ||
+                  "ACTIVE"
+                )}
+              </span>
+
+            </div>
 
           </div>
 
         </div>
 
+
+        {/* ===============================================
+            REPORTING SUMMARY
+        =============================================== */}
+
+        <div className="employee-hierarchy-hero-summary">
+
+          <div className="employee-hierarchy-manager-summary">
+
+            <span>
+              REPORTS TO
+            </span>
+
+            <strong>
+              {currentManagerName}
+            </strong>
+
+            {currentManager
+              ?.designation ? (
+              <small>
+                {
+                  currentManager.designation
+                }
+              </small>
+            ) : null}
+
+          </div>
+
+
+          <div className="employee-hierarchy-counts">
+
+            <div>
+              <strong>
+                {summary.direct}
+              </strong>
+
+              <span>
+                Direct Reports
+              </span>
+            </div>
+
+            <div>
+              <strong>
+                {summary.total}
+              </strong>
+
+              <span>
+                Total Team
+              </span>
+            </div>
+
+          </div>
+
+
+          <button
+            type="button"
+            className="employee-hierarchy-primary-action"
+            onClick={() =>
+              openManagerModal(
+                root
+              )
+            }
+          >
+            {currentManagerName ===
+            "Not assigned"
+              ? "Assign Manager"
+              : "Change Manager"}
+          </button>
+
+        </div>
+
       </section>
+
 
       {/* =================================================
           SUCCESS
-      ================================================== */}
+      ================================================= */}
 
       {successMessage ? (
         <div className="employee-hierarchy-success">
 
-          <span>
-            ✓
-          </span>
+          <span>✓</span>
 
           <strong>
             {successMessage}
@@ -1320,6 +1536,7 @@ function EmployeeHierarchyPage() {
 
           <button
             type="button"
+            aria-label="Dismiss"
             onClick={() =>
               setSuccessMessage(
                 ""
@@ -1332,226 +1549,90 @@ function EmployeeHierarchyPage() {
         </div>
       ) : null}
 
-      {/* =================================================
-          SUMMARY
-      ================================================== */}
-
-      <section className="employee-hierarchy-summary">
-
-        <article>
-
-          <span>
-            DEPARTMENT
-          </span>
-
-          <strong>
-            {summary.department}
-          </strong>
-
-          <small>
-            Organisation unit
-          </small>
-
-        </article>
-
-        <article>
-
-          <span>
-            REPORTING MANAGER
-          </span>
-
-          <strong>
-            {currentManager
-              ?.fullName ||
-              "Not Assigned"}
-          </strong>
-
-          <small>
-            Immediate reporting head
-          </small>
-
-        </article>
-
-        <article>
-
-          <span>
-            DIRECT REPORTS
-          </span>
-
-          <strong>
-            {summary.direct}
-          </strong>
-
-          <small>
-            Immediate team members
-          </small>
-
-        </article>
-
-        <article>
-
-          <span>
-            TOTAL TEAM
-          </span>
-
-          <strong>
-            {summary.total}
-          </strong>
-
-          <small>
-            Full reporting tree
-          </small>
-
-        </article>
-
-      </section>
-
-      {/* =================================================
-          HIERARCHY MANAGEMENT CARD
-      ================================================== */}
-
-      <section className="employee-hierarchy-management">
-
-        <div className="employee-hierarchy-management-icon">
-          H
-        </div>
-
-        <div>
-
-          <span>
-            HIERARCHY MANAGEMENT
-          </span>
-
-          <strong>
-            {currentManager
-              ? "Change Reporting Manager"
-              : "Assign Reporting Manager"}
-          </strong>
-
-          <p>
-            Moving this employee to another reporting manager
-            automatically places the employee and their team
-            under the new hierarchy.
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          onClick={() =>
-            openManagerModal(
-              root
-            )
-          }
-        >
-          {currentManager
-            ? "Change Manager"
-            : "+ Assign Manager"}
-        </button>
-
-      </section>
-
-      {/* =================================================
-          LEGEND
-      ================================================== */}
-
-      <section className="employee-hierarchy-legend">
-
-        <div>
-          <span className="is-head" />
-          <strong>
-            Head / Root
-          </strong>
-        </div>
-
-        <div>
-          <span className="is-manager" />
-          <strong>
-            Manager / Senior
-          </strong>
-        </div>
-
-        <div>
-          <span className="is-member" />
-          <strong>
-            Junior / Team Member
-          </strong>
-        </div>
-
-      </section>
 
       {/* =================================================
           TREE
-      ================================================== */}
+      ================================================= */}
 
       <section className="employee-hierarchy-tree-panel">
 
         <div className="employee-hierarchy-tree-header">
 
           <div>
-
             <span>
-              ORGANISATION TREE
+              TEAM STRUCTURE
             </span>
 
             <h2>
-              Team Structure
+              Reporting Tree
             </h2>
 
             <p>
-              Hierarchy is generated from each employee's
-              Reporting Manager assignment.
+              Expand managers to see the employees reporting under them.
             </p>
-
           </div>
 
-          <div className="employee-hierarchy-tree-actions">
 
-            <button
-              type="button"
-              className="employee-hierarchy-manager-button"
-              onClick={() =>
-                openManagerModal(
-                  root
-                )
-              }
-            >
-              {currentManager
-                ? "Change Manager"
-                : "+ Assign Manager"}
-            </button>
+          <div className="employee-hierarchy-tree-help">
 
-            <button
-              type="button"
-              onClick={
-                load
-              }
-            >
-              ↻ Refresh
-            </button>
+            <span>
+              {summary.total}
+            </span>
+
+            <small>
+              {summary.total === 1
+                ? "employee below"
+                : "employees below"}
+            </small>
 
           </div>
 
         </div>
 
+
+        {summary.total === 0 ? (
+          <div className="employee-hierarchy-empty">
+
+            <div className="employee-hierarchy-empty-icon">
+              H
+            </div>
+
+            <strong>
+              No team members yet
+            </strong>
+
+            <p>
+              No employees currently report under{" "}
+              {root.fullName}.
+            </p>
+
+          </div>
+        ) : null}
+
+
         <div className="employee-hierarchy-tree">
 
           <HierarchyNode
-            employee={
-              root
-            }
+            employee={root}
             focusEmployeeId={
               employeeId
             }
             onOpenEmployee={(
-              employee
-            ) =>
+              selectedEmployee
+            ) => {
+              const id =
+                employeeIdOf(
+                  selectedEmployee
+                );
+
+              if (!id) {
+                return;
+              }
+
               navigate(
-                `/people/employees/${employeeIdOf(
-                  employee
-                )}`
-              )
-            }
+                `/people/employees/${id}`
+              );
+            }}
             onChangeManager={
               openManagerModal
             }
@@ -1561,9 +1642,10 @@ function EmployeeHierarchyPage() {
 
       </section>
 
+
       {/* =================================================
-          CHANGE / ASSIGN MANAGER MODAL
-      ================================================== */}
+          MANAGER MODAL
+      ================================================= */}
 
       {managerModalOpen ? (
         <div
@@ -1576,77 +1658,98 @@ function EmployeeHierarchyPage() {
                 event.currentTarget &&
               !managerSaving
             ) {
-              setManagerModalOpen(
-                false
-              );
+              closeManagerModal();
             }
           }}
         >
 
-          <div className="employee-hierarchy-modal">
+          <div
+            className="employee-hierarchy-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="manager-modal-title"
+          >
 
-            {/* =============================================
+            {/* ===========================================
                 HEADER
-            ============================================= */}
+            =========================================== */}
 
             <div className="employee-hierarchy-modal-header">
 
               <div>
 
                 <span>
-                  ORGANISATION STRUCTURE
+                  REPORTING LINE
                 </span>
 
-                <h2>
-                  {selectedManagerId
+                <h2 id="manager-modal-title">
+                  {getManagerId(
+                    targetEmployee
+                  )
                     ? "Change Reporting Manager"
                     : "Assign Reporting Manager"}
                 </h2>
 
                 <p>
-                  Assign the immediate manager for{" "}
+                  Choose who{" "}
                   <strong>
                     {targetEmployee
                       ?.fullName ||
                       "this employee"}
-                  </strong>
-                  .
+                  </strong>{" "}
+                  directly reports to.
                 </p>
 
               </div>
+
 
               <button
                 type="button"
                 disabled={
                   managerSaving
                 }
-                onClick={() =>
-                  setManagerModalOpen(
-                    false
-                  )
+                onClick={
+                  closeManagerModal
                 }
+                aria-label="Close"
               >
                 ×
               </button>
 
             </div>
 
-            {/* =============================================
+
+            {/* ===========================================
                 BODY
-            ============================================= */}
+            =========================================== */}
 
             <div className="employee-hierarchy-modal-body">
 
-              {/* CURRENT EMPLOYEE */}
+
+              {/* EMPLOYEE */}
 
               <div className="employee-hierarchy-current-person">
 
                 <div className="employee-hierarchy-avatar">
-                  {initials(
-                    targetEmployee
-                      ?.fullName
+
+                  {targetEmployee
+                    ?.profilePhotoUrl ? (
+                    <img
+                      src={
+                        targetEmployee
+                          .profilePhotoUrl
+                      }
+                      alt=""
+                    />
+                  ) : (
+                    initials(
+                      targetEmployee
+                        ?.fullName
+                    )
                   )}
+
                 </div>
+
 
                 <div>
 
@@ -1664,11 +1767,14 @@ function EmployeeHierarchyPage() {
                     {targetEmployee
                       ?.designation ||
                       "Employee"}
-                    {" · "}
+
                     {targetEmployee
-                      ?.employeeCode ||
-                      "No ID"}
+                      ?.employeeCode
+                      ? ` · ${targetEmployee.employeeCode}`
+                      : ""}
+
                     {" · "}
+
                     {departmentName(
                       targetEmployee
                     )}
@@ -1678,32 +1784,32 @@ function EmployeeHierarchyPage() {
 
               </div>
 
-              {/* CURRENT MANAGER */}
+
+              {/* CURRENT LINE */}
 
               <div className="employee-hierarchy-manager-current">
 
                 <div>
-
                   <span>
-                    CURRENT REPORTING MANAGER
+                    CURRENT MANAGER
                   </span>
 
                   <strong>
-                    {targetEmployee
-                      ?.reportsTo
-                      ?.fullName ||
-                    targetEmployee
-                      ?.reportingManager
-                      ?.fullName ||
-                    "Not Assigned"}
+                    {getManagerName(
+                      targetEmployee
+                    )}
                   </strong>
-
                 </div>
 
-                <div>
 
+                <span className="employee-hierarchy-manager-arrow">
+                  →
+                </span>
+
+
+                <div>
                   <span>
-                    NEW REPORTING MANAGER
+                    NEW MANAGER
                   </span>
 
                   <strong>
@@ -1711,21 +1817,21 @@ function EmployeeHierarchyPage() {
                       ?.fullName ||
                       "Select below"}
                   </strong>
-
                 </div>
 
               </div>
+
 
               {/* SEARCH */}
 
               <label className="employee-hierarchy-manager-field">
 
                 <span>
-                  Search Manager
+                  Find Manager
                 </span>
 
                 <input
-                  type="text"
+                  type="search"
                   value={
                     managerSearch
                   }
@@ -1733,12 +1839,13 @@ function EmployeeHierarchyPage() {
                     managerLoading ||
                     managerSaving
                   }
-                  placeholder="Search name, employee ID, designation or department..."
+                  placeholder="Search by name, ID, designation or department"
                   onChange={(
                     event
                   ) =>
                     setManagerSearch(
-                      event.target
+                      event
+                        .target
                         .value
                     )
                   }
@@ -1746,12 +1853,14 @@ function EmployeeHierarchyPage() {
 
               </label>
 
-              {/* MANAGER */}
+
+              {/* SELECT */}
 
               <label className="employee-hierarchy-manager-field">
 
                 <span>
-                  Reporting Manager *
+                  Reporting Manager
+                  <b>*</b>
                 </span>
 
                 <select
@@ -1764,22 +1873,28 @@ function EmployeeHierarchyPage() {
                   }
                   onChange={(
                     event
-                  ) =>
+                  ) => {
                     setSelectedManagerId(
-                      event.target
+                      event
+                        .target
                         .value
-                    )
-                  }
+                    );
+
+                    setManagerError(
+                      ""
+                    );
+                  }}
                 >
 
                   <option value="">
-                    Select Reporting Manager
+                    {managerLoading
+                      ? "Loading employees..."
+                      : "Select reporting manager"}
                   </option>
 
+
                   {filteredManagerOptions.map(
-                    (
-                      manager
-                    ) => (
+                    (manager) => (
                       <option
                         key={
                           employeeIdOf(
@@ -1792,32 +1907,32 @@ function EmployeeHierarchyPage() {
                           )
                         }
                       >
-                        {manager
-                          ?.fullName}
-                        {" — "}
-                        {manager
-                          ?.designation ||
-                          "Employee"}
-                        {" — "}
-                        {manager
-                          ?.employeeCode ||
-                          ""}
-                        {" — "}
-                        {departmentName(
-                          manager
-                        )}
+                        {manager.fullName}
+
+                        {manager.designation
+                          ? ` — ${manager.designation}`
+                          : ""}
+
+                        {manager.employeeCode
+                          ? ` (${manager.employeeCode})`
+                          : ""}
                       </option>
                     )
                   )}
 
                 </select>
 
-                <small>
-                  Selecting another manager moves this employee
-                  into the new reporting hierarchy.
-                </small>
+
+                {!managerLoading &&
+                filteredManagerOptions.length ===
+                  0 ? (
+                  <small>
+                    No matching active employee found.
+                  </small>
+                ) : null}
 
               </label>
+
 
               {/* SELECTED PREVIEW */}
 
@@ -1825,11 +1940,25 @@ function EmployeeHierarchyPage() {
                 <div className="employee-hierarchy-manager-preview">
 
                   <div className="employee-hierarchy-avatar">
-                    {initials(
-                      selectedManager
-                        ?.fullName
+
+                    {selectedManager
+                      ?.profilePhotoUrl ? (
+                      <img
+                        src={
+                          selectedManager
+                            .profilePhotoUrl
+                        }
+                        alt=""
+                      />
+                    ) : (
+                      initials(
+                        selectedManager
+                          ?.fullName
+                      )
                     )}
+
                   </div>
+
 
                   <div>
 
@@ -1839,10 +1968,10 @@ function EmployeeHierarchyPage() {
 
                     <strong>
                       {selectedManager
-                        ?.fullName}
-                      {" "}
-                      →
-                      {" "}
+                        .fullName}
+                      <span>
+                        →
+                      </span>
                       {targetEmployee
                         ?.fullName}
                     </strong>
@@ -1850,8 +1979,10 @@ function EmployeeHierarchyPage() {
                     <small>
                       {selectedManager
                         ?.designation ||
-                        "Manager"}
+                        "Employee"}
+
                       {" · "}
+
                       {departmentName(
                         selectedManager
                       )}
@@ -1862,52 +1993,47 @@ function EmployeeHierarchyPage() {
                 </div>
               ) : null}
 
-              {/* LOADING */}
-
-              {managerLoading ? (
-                <div className="employee-hierarchy-manager-loading">
-                  Loading employees...
-                </div>
-              ) : null}
 
               {/* ERROR */}
 
               {managerError ? (
                 <div className="employee-hierarchy-manager-error">
+                  <span>!</span>
                   {managerError}
                 </div>
               ) : null}
 
-              {/* NOTE */}
+
+              {/* SIMPLE EXPLANATION */}
 
               <div className="employee-hierarchy-manager-note">
 
-                <strong>
-                  How hierarchy works
-                </strong>
+                <span>
+                  i
+                </span>
 
                 <p>
-                  You only assign the immediate reporting manager.
-                  The Head → Manager → Senior → Junior structure is
-                  generated automatically from reporting relationships.
+                  Only the immediate manager is selected here.
+                  The complete hierarchy is created automatically
+                  from employee reporting relationships.
                 </p>
 
               </div>
 
             </div>
 
-            {/* =============================================
+
+            {/* ===========================================
                 FOOTER
-            ============================================= */}
+            =========================================== */}
 
             <div className="employee-hierarchy-modal-footer">
 
               <div>
 
-                {(targetEmployee
-                  ?.reportsTo ||
+                {getManagerId(
                   targetEmployee
-                    ?.reportingManager) ? (
+                ) ? (
                   <button
                     type="button"
                     className="employee-hierarchy-remove-manager"
@@ -1924,6 +2050,7 @@ function EmployeeHierarchyPage() {
 
               </div>
 
+
               <div>
 
                 <button
@@ -1932,14 +2059,13 @@ function EmployeeHierarchyPage() {
                   disabled={
                     managerSaving
                   }
-                  onClick={() =>
-                    setManagerModalOpen(
-                      false
-                    )
+                  onClick={
+                    closeManagerModal
                   }
                 >
                   Cancel
                 </button>
+
 
                 <button
                   type="button"
@@ -1954,8 +2080,8 @@ function EmployeeHierarchyPage() {
                   }
                 >
                   {managerSaving
-                    ? "Saving Hierarchy..."
-                    : "Save Hierarchy"}
+                    ? "Saving..."
+                    : "Save Reporting Line"}
                 </button>
 
               </div>
@@ -1970,5 +2096,6 @@ function EmployeeHierarchyPage() {
     </div>
   );
 }
+
 
 export default EmployeeHierarchyPage;

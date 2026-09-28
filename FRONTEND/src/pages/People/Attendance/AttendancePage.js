@@ -35,6 +35,7 @@ import RegularizationModal from "./components/RegularizationModal";
 
 import {
   attendanceSource,
+  formatTime,
   monthRange,
   normalizedMode,
   rangeLabel,
@@ -56,6 +57,218 @@ const recordsOf = (
     result?.records ||
     []
   );
+};
+
+const biometricRecordsOf = (result) => {
+  const biometric =
+    result?.biometric;
+
+  if (
+    Array.isArray(
+      biometric?.unmapped
+    )
+  ) {
+    return biometric.unmapped;
+  }
+
+  if (
+    Array.isArray(
+      biometric?.items
+    )
+  ) {
+    return biometric.items;
+  }
+
+  if (
+    Array.isArray(
+      result?.unmapped?.items
+    )
+  ) {
+    return result.unmapped.items;
+  }
+
+  if (
+    Array.isArray(
+      result?.biometricItems
+    )
+  ) {
+    return result.biometricItems;
+  }
+
+  return [];
+};
+
+const normalizeBiometricRegisterRecord = (
+  record
+) => {
+  const biometricCode =
+    record?.biometricCode ||
+    record?.machineUserId ||
+    record?.employeeCode ||
+    "";
+
+  const employeeName =
+    record?.employeeName ||
+    record?.machineEmployeeName ||
+    record?.biometricEmployeeName ||
+    biometricCode ||
+    "Biometric Worker";
+
+  const firstInAt =
+    record?.firstInAt ||
+    record?.firstPunchAt ||
+    record?.firstPunch ||
+    record?.firstIn?.time ||
+    null;
+
+  const lastOutAt =
+    record?.lastOutAt ||
+    record?.lastPunchAt ||
+    record?.lastPunch ||
+    record?.lastOut?.time ||
+    null;
+
+  const rawPunchCount =
+    Number(
+      record?.rawPunchCount ||
+      record?.punchCount ||
+      record?.scanCount ||
+      0
+    ) || 0;
+
+  return {
+    ...record,
+
+    _id:
+      record?._id ||
+      `biometric-${record?.attendanceDeviceId || record?.deviceCode || "device"}-${biometricCode}-${record?.businessDate || record?.date || "day"}`,
+
+    employeeId:
+      record?.employeeId ||
+      null,
+
+    employeeCode:
+      record?.employeeCode ||
+      biometricCode,
+
+    biometricCode,
+
+    employeeName,
+
+    machineEmployeeName:
+      record?.machineEmployeeName ||
+      record?.biometricEmployeeName ||
+      employeeName,
+
+    businessDate:
+      record?.businessDate ||
+      record?.date ||
+      "",
+
+    firstInAt,
+
+    lastOutAt,
+
+    presenceStatus:
+      record?.presenceStatus ||
+      (
+        firstInAt
+          ? "PRESENT"
+          : "NOT_MARKED"
+      ),
+
+    workMode:
+      record?.workMode ||
+      "OFFICE",
+
+    provider:
+      record?.provider ||
+      "ESSL",
+
+    source:
+      record?.source ||
+      "BIOMETRIC",
+
+    officeName:
+      record?.officeName ||
+      record?.shortLocation ||
+      record?.locationName ||
+      record?.workLocation ||
+      (
+        String(
+          record?.provider ||
+          ""
+        ).toUpperCase() ===
+        "ESSL"
+          ? "Sonipat Office"
+          : ""
+      ),
+
+    workLocation:
+      record?.workLocation ||
+      record?.shortLocation ||
+      record?.locationName ||
+      record?.officeName ||
+      (
+        String(
+          record?.provider ||
+          ""
+        ).toUpperCase() ===
+        "ESSL"
+          ? "Sonipat"
+          : ""
+      ),
+
+    rawPunchCount,
+
+    isBiometricOnly:
+      !record?.employeeId,
+
+    missingCheckOut:
+      Boolean(
+        record?.missingCheckOut ||
+        (
+          firstInAt &&
+          !lastOutAt
+        )
+      ),
+  };
+};
+
+const mergeUniqueAttendanceRecords = (
+  mapped = [],
+  biometric = []
+) => {
+  const output =
+    new Map();
+
+  [
+    ...mapped,
+    ...biometric,
+  ].forEach(
+    (
+      record
+    ) => {
+      const key =
+        record?._id ||
+        `${record?.employeeId || record?.biometricCode || record?.employeeCode || "worker"}-${record?.businessDate || record?.date || "day"}-${record?.attendanceDeviceId || record?.deviceCode || ""}`;
+
+      if (
+        !output.has(
+          key
+        )
+      ) {
+        output.set(
+          key,
+          record
+        );
+      }
+    }
+  );
+
+  return [
+    ...output.values(),
+  ];
 };
 
 /* =========================================================
@@ -648,6 +861,1163 @@ const getBrowserLocation =
     );
 
 /* =========================================================
+   PERSONAL ATTENDANCE CALENDAR
+========================================================= */
+
+const CALENDAR_STATUS_META = {
+  PRESENT: {
+    label: "Present",
+    className: "present",
+  },
+
+  ABSENT: {
+    label: "Absent",
+    className: "absent",
+  },
+
+  ON_LEAVE: {
+    label: "Leave",
+    className: "leave",
+  },
+
+  HALF_DAY: {
+    label: "Half day",
+    className: "half-day",
+  },
+
+  WEEK_OFF: {
+    label: "Sunday / Week off",
+    className: "week-off",
+  },
+
+  HOLIDAY: {
+    label: "Holiday",
+    className: "holiday",
+  },
+
+  NO_CHECKOUT: {
+    label: "No checkout",
+    className: "no-checkout",
+  },
+
+  NOT_MARKED: {
+    label: "No record",
+    className: "not-marked",
+  },
+};
+
+const calendarDateKey = (
+  value
+) => {
+  if (
+    !value
+  ) {
+    return "";
+  }
+
+  return String(
+    value
+  ).slice(
+    0,
+    10
+  );
+};
+
+const calendarStatusOf = (
+  record
+) => {
+  if (
+    !record
+  ) {
+    return "NOT_MARKED";
+  }
+
+  if (
+    record?.missingCheckOut ||
+    (
+      (
+        record?.firstInAt ||
+        record?.firstIn?.time
+      ) &&
+      !(
+        record?.lastOutAt ||
+        record?.lastOut?.time
+      )
+    )
+  ) {
+    return "NO_CHECKOUT";
+  }
+
+  return (
+    record?.presenceStatus ||
+    "NOT_MARKED"
+  );
+};
+
+function PersonalAttendanceCalendar({
+  records = [],
+  from,
+  to,
+}) {
+
+    /* =========================================================
+     SELECTED CALENDAR DAY
+  ========================================================= */
+
+  const [
+    selectedCalendarDay,
+    setSelectedCalendarDay,
+  ] = useState(null);
+  
+  const today = useMemo(
+    () => todayKey(),
+    []
+  );
+
+  /* =========================================================
+     CALENDAR MONTH
+
+     IMPORTANT:
+     History filters can still be Today / Week / Month / Custom,
+     but the calendar ALWAYS renders the complete month.
+
+     We use "from" only to decide which month should be visible.
+  ========================================================= */
+
+  const calendarMonth = useMemo(() => {
+    const sourceDate =
+      from || today;
+
+    const parsed =
+      new Date(
+        `${sourceDate}T00:00:00+05:30`
+      );
+
+    if (
+      Number.isNaN(
+        parsed.getTime()
+      )
+    ) {
+      return null;
+    }
+
+    return {
+      year: Number(
+        new Intl.DateTimeFormat(
+          "en-IN",
+          {
+            timeZone:
+              "Asia/Kolkata",
+
+            year:
+              "numeric",
+          }
+        ).format(parsed)
+      ),
+
+      month: Number(
+        new Intl.DateTimeFormat(
+          "en-IN",
+          {
+            timeZone:
+              "Asia/Kolkata",
+
+            month:
+              "numeric",
+          }
+        ).format(parsed)
+      ),
+    };
+  }, [
+    from,
+    today,
+  ]);
+
+
+  /* =========================================================
+     MONTH TITLE
+  ========================================================= */
+
+  const monthTitle = useMemo(() => {
+    if (!calendarMonth) {
+      return "Attendance calendar";
+    }
+
+    const date =
+      new Date(
+        Date.UTC(
+          calendarMonth.year,
+          calendarMonth.month - 1,
+          1
+        )
+      );
+
+    return new Intl.DateTimeFormat(
+      "en-IN",
+      {
+        timeZone:
+          "Asia/Kolkata",
+
+        month:
+          "long",
+
+        year:
+          "numeric",
+      }
+    ).format(date);
+  }, [
+    calendarMonth,
+  ]);
+
+
+  /* =========================================================
+     RECORD LOOKUP
+  ========================================================= */
+
+  const recordsByDate = useMemo(() => {
+    const map =
+      new Map();
+
+    records.forEach(
+      (record) => {
+        const key =
+          calendarDateKey(
+            record?.businessDate ||
+            record?.date
+          );
+
+        if (key) {
+          map.set(
+            key,
+            record
+          );
+        }
+      }
+    );
+
+    return map;
+  }, [
+    records,
+  ]);
+
+
+  /* =========================================================
+     COMPLETE MONTH GRID
+
+     Monday-first calendar.
+     Blank cells are inserted before/after the actual month.
+  ========================================================= */
+
+  const calendarCells = useMemo(() => {
+    if (!calendarMonth) {
+      return [];
+    }
+
+    const {
+      year,
+      month,
+    } = calendarMonth;
+
+    const firstDay =
+      new Date(
+        Date.UTC(
+          year,
+          month - 1,
+          1
+        )
+      );
+
+    const daysInMonth =
+      new Date(
+        Date.UTC(
+          year,
+          month,
+          0
+        )
+      ).getUTCDate();
+
+    /*
+     JS:
+     Sunday = 0
+     Monday = 1
+
+     Calendar:
+     Monday = column 0
+     ...
+     Sunday = column 6
+    */
+
+    const leadingBlanks =
+      (
+        firstDay.getUTCDay() +
+        6
+      ) % 7;
+
+    const cells = [];
+
+    for (
+      let i = 0;
+      i < leadingBlanks;
+      i += 1
+    ) {
+      cells.push({
+        type: "blank",
+        key: `before-${i}`,
+      });
+    }
+
+    for (
+      let dayNumber = 1;
+      dayNumber <= daysInMonth;
+      dayNumber += 1
+    ) {
+      const monthString =
+        String(
+          month
+        ).padStart(
+          2,
+          "0"
+        );
+
+      const dayString =
+        String(
+          dayNumber
+        ).padStart(
+          2,
+          "0"
+        );
+
+      const key =
+        `${year}-${monthString}-${dayString}`;
+
+      const date =
+        new Date(
+          Date.UTC(
+            year,
+            month - 1,
+            dayNumber
+          )
+        );
+
+      const weekday =
+        new Intl.DateTimeFormat(
+          "en-US",
+          {
+            timeZone:
+              "UTC",
+
+            weekday:
+              "short",
+          }
+        ).format(date);
+
+      const record =
+        recordsByDate.get(
+          key
+        ) || null;
+
+      let status =
+        calendarStatusOf(
+          record
+        );
+
+      /*
+       * Sunday without attendance record
+       * = Week Off.
+       */
+      if (
+        !record &&
+        weekday === "Sun"
+      ) {
+        status =
+          "WEEK_OFF";
+      }
+
+      const meta =
+        CALENDAR_STATUS_META[
+          status
+        ] ||
+        CALENDAR_STATUS_META
+          .NOT_MARKED;
+
+      cells.push({
+        type: "day",
+
+        key,
+
+        date,
+
+        day:
+          dayNumber,
+
+        weekday,
+
+        record,
+
+        status,
+
+        meta,
+
+        isToday:
+          key === today,
+
+        isSelectedRange:
+          Boolean(
+            from &&
+            to &&
+            key >= from &&
+            key <= to
+          ),
+      });
+    }
+
+    /*
+     * Complete final week so the calendar
+     * always has a clean rectangular grid.
+     */
+
+    const remainder =
+      cells.length % 7;
+
+    if (remainder) {
+      const trailing =
+        7 - remainder;
+
+      for (
+        let i = 0;
+        i < trailing;
+        i += 1
+      ) {
+        cells.push({
+          type: "blank",
+          key: `after-${i}`,
+        });
+      }
+    }
+
+    return cells;
+  }, [
+    calendarMonth,
+    recordsByDate,
+    today,
+    from,
+    to,
+  ]);
+
+
+  /* =========================================================
+     MONTH SUMMARY
+  ========================================================= */
+
+  const monthSummary = useMemo(() => {
+    const result = {
+      present: 0,
+      absent: 0,
+      leave: 0,
+    };
+
+    calendarCells.forEach(
+      (cell) => {
+        if (
+          cell.type !==
+          "day"
+        ) {
+          return;
+        }
+
+        if (
+          cell.status ===
+          "PRESENT"
+        ) {
+          result.present += 1;
+        }
+
+        if (
+          cell.status ===
+          "ABSENT"
+        ) {
+          result.absent += 1;
+        }
+
+        if (
+          cell.status ===
+          "ON_LEAVE"
+        ) {
+          result.leave += 1;
+        }
+      }
+    );
+
+    return result;
+  }, [
+    calendarCells,
+  ]);
+
+
+  return (
+    <section className="se-att-calendar-card se-att-calendar-card--full">
+
+      {/* HEADER */}
+
+      <div className="se-att-calendar-head">
+
+        <div className="se-att-calendar-title">
+
+          <span className="se-att-calendar-eyebrow">
+            CALENDAR
+          </span>
+
+          <h3>
+            {monthTitle}
+          </h3>
+
+          <p>
+            Your attendance at a glance
+          </p>
+
+        </div>
+
+
+        <div className="se-att-calendar-summary">
+
+          <div className="se-att-calendar-summary-item se-att-calendar-summary-item--present">
+            <strong>
+              {monthSummary.present}
+            </strong>
+
+            <span>
+              Present
+            </span>
+          </div>
+
+
+          <div className="se-att-calendar-summary-item se-att-calendar-summary-item--absent">
+            <strong>
+              {monthSummary.absent}
+            </strong>
+
+            <span>
+              Absent
+            </span>
+          </div>
+
+
+          <div className="se-att-calendar-summary-item se-att-calendar-summary-item--leave">
+            <strong>
+              {monthSummary.leave}
+            </strong>
+
+            <span>
+              Leave
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* WEEKDAY HEADER */}
+
+      <div className="se-att-calendar-weekdays">
+
+        {[
+          "MON",
+          "TUE",
+          "WED",
+          "THU",
+          "FRI",
+          "SAT",
+          "SUN",
+        ].map(
+          (day) => (
+            <span
+              key={day}
+            >
+              {day}
+            </span>
+          )
+        )}
+
+      </div>
+
+
+      {/* FULL MONTH */}
+
+      <div className="se-att-calendar-grid">
+
+        {calendarCells.map(
+          (cell) => {
+
+            if (
+              cell.type ===
+              "blank"
+            ) {
+              return (
+                <div
+                  key={
+                    cell.key
+                  }
+                  className="se-att-calendar-day se-att-calendar-day--blank"
+                  aria-hidden="true"
+                />
+              );
+            }
+
+            const {
+              meta,
+              record,
+            } = cell;
+
+            const firstIn =
+              record?.firstInAt ||
+              record?.firstIn?.time ||
+              null;
+
+            const lastOut =
+              record?.lastOutAt ||
+              record?.lastOut?.time ||
+              null;
+
+            return (
+  <button
+    type="button"
+    key={cell.key}
+    className={[
+      "se-att-calendar-day",
+      "se-att-calendar-day--clickable",
+
+      `se-att-calendar-day--${meta.className}`,
+
+      cell.isToday
+        ? "se-att-calendar-day--today"
+        : "",
+
+      cell.isSelectedRange
+        ? "se-att-calendar-day--selected"
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ")}
+    title={`${cell.key} · ${meta.label}`}
+    onClick={() =>
+      setSelectedCalendarDay(cell)
+    }
+  >
+
+    <div className="se-att-calendar-day-top">
+
+      <strong>
+        {cell.day}
+      </strong>
+
+      {cell.isToday ? (
+        <span className="se-att-calendar-today">
+          TODAY
+        </span>
+      ) : null}
+
+    </div>
+
+
+    {/* ROUND ATTENDANCE STATUS */}
+
+    <div
+      className={[
+        "se-att-calendar-round-status",
+        `se-att-calendar-round-status--${meta.className}`,
+      ].join(" ")}
+      aria-label={meta.label}
+    >
+      <span className="se-att-calendar-round-dot" />
+
+      {record ? (
+        <span className="se-att-calendar-round-mark">
+          {cell.status === "PRESENT"
+            ? "✓"
+            : cell.status === "ABSENT"
+              ? "×"
+              : cell.status === "ON_LEAVE"
+                ? "L"
+                : cell.status === "HALF_DAY"
+                  ? "½"
+                  : cell.status === "NO_CHECKOUT"
+                    ? "!"
+                    : cell.status === "HOLIDAY"
+                      ? "H"
+                      : cell.status === "WEEK_OFF"
+                        ? "W"
+                        : "•"}
+        </span>
+      ) : (
+        <span className="se-att-calendar-round-mark">
+          {cell.status === "WEEK_OFF"
+            ? "W"
+            : "•"}
+        </span>
+      )}
+    </div>
+
+  </button>
+);
+          }
+        )}
+
+      </div>
+
+
+      {/* LEGEND */}
+
+      <div className="se-att-calendar-legend">
+
+        <span>
+          <i className="se-att-calendar-legend-dot se-att-calendar-legend-dot--present" />
+          Present
+        </span>
+
+        <span>
+          <i className="se-att-calendar-legend-dot se-att-calendar-legend-dot--absent" />
+          Absent
+        </span>
+
+        <span>
+          <i className="se-att-calendar-legend-dot se-att-calendar-legend-dot--leave" />
+          Leave
+        </span>
+
+        <span>
+          <i className="se-att-calendar-legend-dot se-att-calendar-legend-dot--half-day" />
+          Half day
+        </span>
+
+        <span>
+          <i className="se-att-calendar-legend-dot se-att-calendar-legend-dot--week-off" />
+          Sunday / Week off
+        </span>
+
+        <span>
+          <i className="se-att-calendar-legend-dot se-att-calendar-legend-dot--holiday" />
+          Holiday
+        </span>
+
+        <span>
+          <i className="se-att-calendar-legend-dot se-att-calendar-legend-dot--no-checkout" />
+          No checkout
+        </span>
+
+      </div>
+
+            {/* =====================================================
+          CALENDAR DAY DETAILS POPUP
+      ===================================================== */}
+
+      {selectedCalendarDay ? (() => {
+
+        const dayRecord =
+          selectedCalendarDay.record;
+
+        const dayMeta =
+          selectedCalendarDay.meta;
+
+        const firstIn =
+          dayRecord?.firstInAt ||
+          dayRecord?.firstIn?.time ||
+          null;
+
+        const lastOut =
+          dayRecord?.lastOutAt ||
+          dayRecord?.lastOut?.time ||
+          null;
+
+        const mode =
+          dayRecord
+            ? normalizedMode(dayRecord)
+            : "";
+
+        const displayMode =
+          mode === "WFH"
+            ? "Work From Home"
+            : mode === "FIELD_VISIT" ||
+                mode === "ON_DUTY"
+              ? "Field Visit"
+              : mode === "OFFICE"
+                ? "Office"
+                : "—";
+
+        const sourceLabel =
+          dayRecord
+            ? attendanceSource(dayRecord) ||
+              dayRecord?.source ||
+              dayRecord?.provider ||
+              "—"
+            : "—";
+
+        const location =
+          dayRecord?.officeName ||
+          dayRecord?.workLocation ||
+          dayRecord?.locationName ||
+          "—";
+
+        const shift =
+          dayRecord?.shiftName ||
+          dayRecord?.shiftCode ||
+          "—";
+
+        const employeeName =
+          dayRecord?.employeeName ||
+          dayRecord?.employee?.fullName ||
+          "";
+
+        const formattedDate =
+          selectedCalendarDay.date
+            ? new Intl.DateTimeFormat(
+                "en-IN",
+                {
+                  timeZone: "UTC",
+                  weekday: "long",
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                }
+              ).format(
+                selectedCalendarDay.date
+              )
+            : selectedCalendarDay.key;
+
+        return (
+          <div
+            className="se-att-calendar-modal-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (
+                event.target ===
+                event.currentTarget
+              ) {
+                setSelectedCalendarDay(
+                  null
+                );
+              }
+            }}
+          >
+
+            <div
+              className="se-att-calendar-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Attendance details for ${formattedDate}`}
+            >
+
+              {/* HEADER */}
+
+              <div className="se-att-calendar-modal-head">
+
+                <div className="se-att-calendar-modal-date">
+
+                  <div
+                    className={[
+                      "se-att-calendar-modal-date-circle",
+                      `se-att-calendar-modal-date-circle--${dayMeta.className}`,
+                    ].join(" ")}
+                  >
+                    <strong>
+                      {selectedCalendarDay.day}
+                    </strong>
+
+                    <span>
+                      {selectedCalendarDay.weekday}
+                    </span>
+                  </div>
+
+
+                  <div className="se-att-calendar-modal-heading">
+
+                    <span>
+                      ATTENDANCE DETAILS
+                    </span>
+
+                    <h3>
+                      {formattedDate}
+                    </h3>
+
+                    <p>
+                      Complete attendance information for this day
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="se-att-calendar-modal-close"
+                  onClick={() =>
+                    setSelectedCalendarDay(
+                      null
+                    )
+                  }
+                  aria-label="Close attendance details"
+                >
+                  ×
+                </button>
+
+              </div>
+
+
+              {/* STATUS HERO */}
+
+              <div
+                className={[
+                  "se-att-calendar-modal-status",
+                  `se-att-calendar-modal-status--${dayMeta.className}`,
+                ].join(" ")}
+              >
+
+                <div className="se-att-calendar-modal-status-icon">
+                  {selectedCalendarDay.status ===
+                  "PRESENT"
+                    ? "✓"
+                    : selectedCalendarDay.status ===
+                        "ABSENT"
+                      ? "×"
+                      : selectedCalendarDay.status ===
+                          "ON_LEAVE"
+                        ? "L"
+                        : selectedCalendarDay.status ===
+                            "HALF_DAY"
+                          ? "½"
+                          : selectedCalendarDay.status ===
+                              "NO_CHECKOUT"
+                            ? "!"
+                            : selectedCalendarDay.status ===
+                                "WEEK_OFF"
+                              ? "W"
+                              : selectedCalendarDay.status ===
+                                  "HOLIDAY"
+                                ? "H"
+                                : "•"}
+                </div>
+
+
+                <div>
+
+                  <span>
+                    STATUS
+                  </span>
+
+                  <strong>
+                    {dayMeta.label}
+                  </strong>
+
+                  <small>
+                    {dayRecord
+                      ? "Attendance record available"
+                      : selectedCalendarDay.status ===
+                          "WEEK_OFF"
+                        ? "Scheduled weekly off"
+                        : "No attendance record for this date"}
+                  </small>
+
+                </div>
+
+              </div>
+
+
+              {dayRecord ? (
+                <>
+
+                  {/* TIME CARDS */}
+
+                  <div className="se-att-calendar-modal-time-grid">
+
+                    <div className="se-att-calendar-modal-time-card">
+
+                      <span className="se-att-calendar-modal-time-label">
+                        CHECK IN
+                      </span>
+
+                      <strong>
+                        {firstIn
+                          ? formatTime(
+                              firstIn
+                            )
+                          : "—"}
+                      </strong>
+
+                      <small>
+                        Start time
+                      </small>
+
+                    </div>
+
+
+                    <div className="se-att-calendar-modal-time-arrow">
+                      →
+                    </div>
+
+
+                    <div className="se-att-calendar-modal-time-card">
+
+                      <span className="se-att-calendar-modal-time-label">
+                        CHECK OUT
+                      </span>
+
+                      <strong>
+                        {lastOut
+                          ? formatTime(
+                              lastOut
+                            )
+                          : "—"}
+                      </strong>
+
+                      <small>
+                        {lastOut
+                          ? "End time"
+                          : "Checkout pending"}
+                      </small>
+
+                    </div>
+
+                  </div>
+
+
+                  {/* INFORMATION */}
+
+                  <div className="se-att-calendar-modal-info-grid">
+
+                    <div className="se-att-calendar-modal-info">
+
+                      <span>
+                        WORK MODE
+                      </span>
+
+                      <strong>
+                        {displayMode}
+                      </strong>
+
+                    </div>
+
+
+                    <div className="se-att-calendar-modal-info">
+
+                      <span>
+                        SHIFT
+                      </span>
+
+                      <strong>
+                        {shift}
+                      </strong>
+
+                    </div>
+
+
+                    <div className="se-att-calendar-modal-info">
+
+                      <span>
+                        LOCATION
+                      </span>
+
+                      <strong>
+                        {location}
+                      </strong>
+
+                    </div>
+
+
+                    <div className="se-att-calendar-modal-info">
+
+                      <span>
+                        SOURCE
+                      </span>
+
+                      <strong>
+                        {sourceLabel}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+
+                  {employeeName ? (
+                    <div className="se-att-calendar-modal-employee">
+
+                      <span>
+                        EMPLOYEE
+                      </span>
+
+                      <strong>
+                        {employeeName}
+                      </strong>
+
+                      {dayRecord?.employeeCode ? (
+                        <small>
+                          {dayRecord.employeeCode}
+                        </small>
+                      ) : null}
+
+                    </div>
+                  ) : null}
+
+                </>
+              ) : (
+
+                <div className="se-att-calendar-modal-empty">
+
+                  <div className="se-att-calendar-modal-empty-icon">
+                    {selectedCalendarDay.status ===
+                    "WEEK_OFF"
+                      ? "W"
+                      : "—"}
+                  </div>
+
+                  <strong>
+                    {selectedCalendarDay.status ===
+                    "WEEK_OFF"
+                      ? "Weekly off"
+                      : "No attendance recorded"}
+                  </strong>
+
+                  <p>
+                    {selectedCalendarDay.status ===
+                    "WEEK_OFF"
+                      ? "This date is marked as a scheduled weekly off."
+                      : "There is no attendance record available for this date."}
+                  </p>
+
+                </div>
+
+              )}
+
+
+              {/* FOOTER */}
+
+              <div className="se-att-calendar-modal-footer">
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedCalendarDay(
+                      null
+                    )
+                  }
+                >
+                  Close
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        );
+      })() : null}
+
+    </section>
+  );
+}
+
+/* =========================================================
    PAGE
 ========================================================= */
 
@@ -692,23 +2062,26 @@ function AttendancePage() {
     );
 
   const initialRange =
-    useMemo(
-      () =>
-        weekRange(
-          today
-        ),
-      [
+  useMemo(
+    () => ({
+      from:
         today,
-      ]
-    );
+
+      to:
+        today,
+    }),
+    [
+      today,
+    ]
+  );
 
   const [
     rangeType,
     setRangeType,
   ] =
     useState(
-      "WEEK"
-    );
+  "TODAY"
+);
 
   const [
     from,
@@ -894,17 +2267,33 @@ const [
       ""
     );
 
-  const [
-    source,
-    setSource,
-  ] =
-    useState(
-      ""
-    );
+ const [
+  source,
+  setSource,
+] =
+  useState(
+    ""
+  );
 
-  /* =====================================================
-     DRAWERS / MODALS
-  ===================================================== */
+/* =====================================================
+   WORKFORCE REGISTER CARD FILTER
+
+   PRESENT is intentionally the default.
+
+   Important:
+   - Late employees are still PRESENT.
+   - LATE is only a drill-down subset of PRESENT.
+   - WFH / FIELD / ON DUTY are attendance modes.
+===================================================== */
+
+const [
+  registerView,
+  setRegisterView,
+] = useState("PRESENT");
+
+/* =====================================================
+   DRAWERS / MODALS
+===================================================== */
 
   const [
     selectedRecord,
@@ -927,48 +2316,74 @@ const [
   ===================================================== */
 
   useEffect(
-    () => {
-      if (
-        rangeType ===
-        "WEEK"
-      ) {
-        const range =
-          weekRange(
-            today
-          );
+  () => {
+    /*
+     * TODAY
+     */
+    if (
+      rangeType ===
+      "TODAY"
+    ) {
+      setFrom(
+        today
+      );
 
-        setFrom(
-          range.from
+      setTo(
+        today
+      );
+
+      return;
+    }
+
+    /*
+     * THIS WEEK
+     */
+    if (
+      rangeType ===
+      "WEEK"
+    ) {
+      const range =
+        weekRange(
+          today
         );
 
-        setTo(
-          range.to
-        );
-      }
+      setFrom(
+        range.from
+      );
 
-      if (
-        rangeType ===
-        "MONTH"
-      ) {
-        const range =
-          monthRange(
-            today
-          );
+      setTo(
+        range.to
+      );
 
-        setFrom(
-          range.from
+      return;
+    }
+
+    /*
+     * THIS MONTH
+     */
+    if (
+      rangeType ===
+      "MONTH"
+    ) {
+      const range =
+        monthRange(
+          today
         );
 
-        setTo(
-          range.to
-        );
-      }
-    },
-    [
-      rangeType,
-      today,
-    ]
-  );
+      setFrom(
+        range.from
+      );
+
+      setTo(
+        range.to
+      );
+    }
+  },
+  [
+    rangeType,
+    today,
+  ]
+);
 
   /* =====================================================
      ALL ATTENDANCE PAGES
@@ -979,9 +2394,21 @@ const [
       async (
         query
       ) => {
+        /*
+         * IMPORTANT:
+         * The management register must request includeUnmapped=true.
+         *
+         * Mapped ERP attendance lives in result.items.
+         * Unmapped eSSL workers are returned separately by the backend in
+         * result.biometric.items. They are worker/day register rows already;
+         * the browser must NOT render the 25K raw punch documents.
+         */
         const first =
           await getAttendance({
             ...query,
+
+            includeUnmapped:
+              true,
 
             page:
               1,
@@ -990,11 +2417,23 @@ const [
               500,
           });
 
-        let result = [
+        let mapped = [
           ...recordsOf(
             first
           ),
         ];
+
+        /*
+         * Biometric rows are read once from page 1 so that a backend response
+         * that attaches the same biometric block to every mapped page cannot
+         * duplicate workers in the register.
+         */
+        const biometric =
+          biometricRecordsOf(
+            first
+          ).map(
+            normalizeBiometricRegisterRecord
+          );
 
         const pages =
           Number(
@@ -1013,20 +2452,26 @@ const [
             await getAttendance({
               ...query,
 
+              includeUnmapped:
+                true,
+
               page,
 
               limit:
                 500,
             });
 
-          result.push(
+          mapped.push(
             ...recordsOf(
               next
             )
           );
         }
 
-        return result;
+        return mergeUniqueAttendanceRecords(
+          mapped,
+          biometric
+        );
       },
       []
     );
@@ -1093,6 +2538,13 @@ const [
                   workMode:
                     workMode ||
                     undefined,
+
+                  source:
+                    source ||
+                    undefined,
+
+                  includeUnmapped:
+                    true,
                 })
               : Promise.resolve(
                   []
@@ -1155,6 +2607,8 @@ const [
 
         workMode,
 
+        source,
+
         loadAllAttendance,
       ]
     );
@@ -1192,11 +2646,15 @@ const [
         today,
       ]
     );
+const rawTodayMode =
+  normalizedMode(
+    todayAttendance
+  );
 
-  const todayMode =
-    normalizedMode(
-      todayAttendance
-    );
+const todayMode =
+  rawTodayMode === "ON_DUTY"
+    ? "FIELD_VISIT"
+    : rawTodayMode;
 
   const attendanceStarted =
     Boolean(
@@ -1394,20 +2852,18 @@ const todaySource =
   );
 
   const isWebAttendance =
-    [
-      "WFH",
-      "FIELD_VISIT",
-      "ON_DUTY",
-    ].includes(
-      todayMode
-    ) ||
-    (
-      todayMode ===
-        "OFFICE" &&
-      todaySource.includes(
-        "WEB"
-      )
-    );
+  [
+    "WFH",
+    "FIELD_VISIT",
+  ].includes(
+    todayMode
+  ) ||
+  (
+    todayMode === "OFFICE" &&
+    todaySource.includes(
+      "WEB"
+    )
+  );
 
   /* =====================================================
      FILTER RECORDS
@@ -1676,160 +3132,473 @@ const todaySource =
       ]
     );
 
-  /* =====================================================
-     SUMMARY
-  ===================================================== */
+ /* =====================================================
+   WORKFORCE ATTENDANCE CLASSIFICATION
 
-  const summary =
-    useMemo(
-      () => {
-        const value = {
-          total:
-            filteredRecords
-              .length,
+   Frontend presentation rules:
 
-          present:
-            0,
+   1. Any employee with a genuine check-in is part of
+      the PRESENT workforce.
 
-          absent:
-            0,
+   2. LATE is a subset of PRESENT.
+      It does NOT remove the employee from Present.
 
-          late:
-            0,
+   3. Current business rule requested:
+      check-in AFTER 09:10 AM IST = Late.
 
-          wfh:
-            0,
+   4. WFH / FIELD VISIT / ON DUTY are subsets of
+      employees who have attendance.
 
-          field:
-            0,
-        };
+   5. ABSENT / NOT_MARKED remain absent workforce.
 
-        filteredRecords.forEach(
-          (
-            record
-          ) => {
-            if (
+   NOTE:
+   Backend should ultimately remain the authority for
+   payroll/final attendance. This frontend rule controls
+   workforce display and drill-down.
+===================================================== */
+
+const LATE_AFTER_HOUR = 9;
+const LATE_AFTER_MINUTE = 10;
+
+const hasAttendanceCheckIn = useCallback(
+  (record) => {
+    return Boolean(
+      record?.firstInAt ||
+      record?.firstIn?.time
+    );
+  },
+  []
+);
+
+const getIstTimeParts = useCallback(
+  (value) => {
+    if (!value) {
+      return null;
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return null;
+    }
+
+    const parts =
+      new Intl.DateTimeFormat(
+        "en-GB",
+        {
+          timeZone:
+            "Asia/Kolkata",
+
+          hour:
+            "2-digit",
+
+          minute:
+            "2-digit",
+
+          hourCycle:
+            "h23",
+        }
+      ).formatToParts(
+        date
+      );
+
+    const hour =
+      Number(
+        parts.find(
+          (part) =>
+            part.type ===
+            "hour"
+        )?.value
+      );
+
+    const minute =
+      Number(
+        parts.find(
+          (part) =>
+            part.type ===
+            "minute"
+        )?.value
+      );
+
+    if (
+      !Number.isFinite(hour) ||
+      !Number.isFinite(minute)
+    ) {
+      return null;
+    }
+
+    return {
+      hour,
+      minute,
+    };
+  },
+  []
+);
+
+const isRecordLate = useCallback(
+  (record) => {
+    /*
+     * Backend late flag remains respected.
+     */
+    if (
+      record?.isLate === true
+    ) {
+      return true;
+    }
+
+    const checkIn =
+      record?.firstInAt ||
+      record?.firstIn?.time;
+
+    if (!checkIn) {
+      return false;
+    }
+
+    const time =
+      getIstTimeParts(
+        checkIn
+      );
+
+    if (!time) {
+      return false;
+    }
+
+    const checkInMinutes =
+      time.hour * 60 +
+      time.minute;
+
+    const lateAfterMinutes =
+      LATE_AFTER_HOUR * 60 +
+      LATE_AFTER_MINUTE;
+
+    return (
+      checkInMinutes >
+      lateAfterMinutes
+    );
+  },
+  [
+    getIstTimeParts,
+  ]
+);
+
+const isRecordPresent = useCallback(
+  (record) => {
+    /*
+     * A valid check-in means the employee physically
+     * has attendance for the selected business date.
+     *
+     * This keeps a late employee inside PRESENT.
+     */
+    if (
+      hasAttendanceCheckIn(
+        record
+      )
+    ) {
+      return true;
+    }
+
+    return (
+      normalizeValue(
+        record?.presenceStatus
+      ) === "PRESENT"
+    );
+  },
+  [
+    hasAttendanceCheckIn,
+  ]
+);
+
+const isRecordAbsent = useCallback(
+  (record) => {
+    if (
+      isRecordPresent(
+        record
+      )
+    ) {
+      return false;
+    }
+
+    const attendanceStatus =
+      normalizeValue(
+        record?.presenceStatus
+      );
+
+    return [
+      "ABSENT",
+      "NOT_MARKED",
+      "NO_RECORD",
+    ].includes(
+      attendanceStatus
+    );
+  },
+  [
+    isRecordPresent,
+  ]
+);
+
+/* =====================================================
+   SUMMARY
+
+   Present includes Late/WFH/Field employees.
+
+   Therefore:
+   Present = overall attendance
+   Late    = subset of Present
+   WFH     = subset of Present
+   Field   = subset of Present
+===================================================== */
+
+const summary =
+  useMemo(
+    () => {
+      const value = {
+        total:
+          filteredRecords.length,
+
+        present:
+          0,
+
+        absent:
+          0,
+
+        late:
+          0,
+
+        wfh:
+          0,
+
+        field:
+          0,
+
+        onDuty:
+          0,
+      };
+
+      filteredRecords.forEach(
+        (record) => {
+          const present =
+            isRecordPresent(
               record
-                .presenceStatus ===
-              "PRESENT"
-            ) {
-              value.present +=
-                1;
-            }
+            );
 
-            if (
+          const mode =
+            normalizedMode(
               record
-                .presenceStatus ===
-              "ABSENT"
-            ) {
-              value.absent +=
-                1;
-            }
+            );
 
-            if (
+          if (present) {
+            value.present += 1;
+          }
+
+          if (
+            isRecordAbsent(
               record
-                .isLate
-            ) {
-              value.late +=
-                1;
-            }
+            )
+          ) {
+            value.absent += 1;
+          }
 
-            const mode =
+          /*
+           * Late remains part of Present.
+           */
+          if (
+            present &&
+            isRecordLate(
+              record
+            )
+          ) {
+            value.late += 1;
+          }
+
+          if (
+            present &&
+            mode === "WFH"
+          ) {
+            value.wfh += 1;
+          }
+
+          if (
+            present &&
+            mode ===
+              "FIELD_VISIT"
+          ) {
+            value.field += 1;
+          }
+
+          if (
+            present &&
+            mode ===
+              "ON_DUTY"
+          ) {
+            value.onDuty += 1;
+          }
+        }
+      );
+
+      return value;
+    },
+    [
+      filteredRecords,
+      isRecordPresent,
+      isRecordAbsent,
+      isRecordLate,
+    ]
+  );
+
+/* =====================================================
+   REGISTER DRILL-DOWN
+
+   Default = PRESENT
+===================================================== */
+
+const registerRecords =
+  useMemo(
+    () => {
+      switch (
+        registerView
+      ) {
+        case "ABSENT":
+          return filteredRecords.filter(
+            (record) =>
+              isRecordAbsent(
+                record
+              )
+          );
+
+        case "LATE":
+          return filteredRecords.filter(
+            (record) =>
+              isRecordPresent(
+                record
+              ) &&
+              isRecordLate(
+                record
+              )
+          );
+
+        case "WFH":
+          return filteredRecords.filter(
+            (record) =>
+              isRecordPresent(
+                record
+              ) &&
               normalizedMode(
                 record
-              );
+              ) === "WFH"
+          );
 
-            if (
-              mode ===
-              "WFH"
-            ) {
-              value.wfh +=
-                1;
-            }
+        case "FIELD":
+          return filteredRecords.filter(
+            (record) =>
+              isRecordPresent(
+                record
+              ) &&
+              normalizedMode(
+                record
+              ) ===
+                "FIELD_VISIT"
+          );
 
-            if (
-              [
-                "FIELD_VISIT",
-                "ON_DUTY",
-              ].includes(
-                mode
+        case "ON_DUTY":
+          return filteredRecords.filter(
+            (record) =>
+              isRecordPresent(
+                record
+              ) &&
+              normalizedMode(
+                record
+              ) ===
+                "ON_DUTY"
+          );
+
+        case "PRESENT":
+        default:
+          return filteredRecords.filter(
+            (record) =>
+              isRecordPresent(
+                record
               )
-            ) {
-              value.field +=
-                1;
-            }
-          }
-        );
-
-        return value;
-      },
-      [
-        filteredRecords,
-      ]
-    );
-
-  /* =====================================================
-     WORK MODE OPTIONS
-  ===================================================== */
-
-  const workModeOptions =
+          );
+      }
+    },
     [
-      {
-        code:
-          "OFFICE",
+      filteredRecords,
+      registerView,
+      isRecordPresent,
+      isRecordAbsent,
+      isRecordLate,
+    ]
+  );
 
-        title:
-          "Office",
+const registerViewLabel =
+  useMemo(
+    () => {
+      switch (
+        registerView
+      ) {
+        case "ABSENT":
+          return "Absent";
 
-        description:
-          "Biometric or office location",
+        case "LATE":
+          return "Late";
 
-        icon:
-          "▦",
-      },
+        case "WFH":
+          return "Work From Home";
 
-      {
-        code:
-          "WFH",
+        case "FIELD":
+          return "Field Visit";
 
-        title:
-          "Work From Home",
+        case "ON_DUTY":
+          return "On Duty";
 
-        description:
-          "Location verified",
+        case "PRESENT":
+        default:
+          return "Present";
+      }
+    },
+    [
+      registerView,
+    ]
+  );
 
-        icon:
-          "⌂",
-      },
+/* =====================================================
+   WORK MODE OPTIONS
+===================================================== */
 
-      {
-        code:
-          "FIELD_VISIT",
+/* =========================================================
+   WORK MODE OPTIONS
+   Production:
+   OFFICE / WFH / FIELD_VISIT only.
 
-        title:
-          "Field Visit",
+   ON_DUTY is intentionally not offered anymore.
+   Existing historical ON_DUTY records remain supported.
+========================================================= */
 
-        description:
-          "Live field location",
-
-        icon:
-          "⌖",
-      },
-
-      {
-        code:
-          "ON_DUTY",
-
-        title:
-          "On Duty",
-
-        description:
-          "Official outside duty",
-
-        icon:
-          "◎",
-      },
-    ];
+const workModeOptions = [
+  {
+    code: "OFFICE",
+    title: "Office",
+    description: "Office / biometric",
+    icon: "▦",
+  },
+  {
+    code: "WFH",
+    title: "Work From Home",
+    description: "Verified location",
+    icon: "⌂",
+  },
+  {
+    code: "FIELD_VISIT",
+    title: "Field Visit",
+    description: "Outside office",
+    icon: "⌖",
+  },
+];
 
 /* =========================================================
    START ATTENDANCE
@@ -1848,87 +3617,56 @@ const todaySource =
    START ATTENDANCE
 ========================================================= */
 
-const startAttendance =
-  async () => {
-    if (
-      !selectedWorkMode
-    ) {
-      setError(
-        "Choose how you are working today."
-      );
+const startAttendance = async () => {
+  if (!selectedWorkMode) {
+    setError(
+      "Select your work mode before starting attendance."
+    );
+    return;
+  }
 
-      return;
-    }
+  if (
+    ![
+      "OFFICE",
+      "WFH",
+      "FIELD_VISIT",
+    ].includes(selectedWorkMode)
+  ) {
+    setError(
+      "The selected attendance mode is not available."
+    );
+    return;
+  }
 
-    try {
-      setAttendanceActionLoading(
-        true
-      );
+  try {
+    setAttendanceActionLoading(true);
 
-      setError(
-        ""
-      );
+    setError("");
+    setSuccessMessage("");
 
-      setSuccessMessage(
-        ""
-      );
+    setAttendanceLocationStatus(
+      "REQUESTING"
+    );
 
-      /* ===================================================
-         STEP 1 — REQUEST LOCATION
-      =================================================== */
+    setAttendanceLocationMessage(
+      selectedWorkMode === "OFFICE"
+        ? "Verifying office location..."
+        : "Verifying current location..."
+    );
 
-      setAttendanceLocationStatus(
-        "REQUESTING"
-      );
+    const location =
+      await getBrowserLocation();
 
-      setAttendanceLocationMessage(
-        selectedWorkMode ===
-          "OFFICE"
-          ? "Checking your office location..."
-          : "Requesting your current location..."
-      );
+    setAttendanceLocationStatus(
+      "VERIFIED"
+    );
 
-      console.log(
-        "[Attendance] Requesting browser location for:",
-        selectedWorkMode
-      );
+    setAttendanceLocationMessage(
+      "Location verified."
+    );
 
-      /* ===================================================
-         THIS INVOKES BROWSER GEOLOCATION
-      =================================================== */
-
-      const location =
-        await getBrowserLocation();
-
-      console.log(
-        "[Attendance] Location obtained:",
-        {
-          latitude:
-            location.latitude,
-
-          longitude:
-            location.longitude,
-
-          accuracyMeters:
-            location.accuracyMeters,
-        }
-      );
-
-      setAttendanceLocationStatus(
-        "VERIFIED"
-      );
-
-      setAttendanceLocationMessage(
-        "Current location verified."
-      );
-
-      /* ===================================================
-         STEP 2 — CALL BACKEND
-
-         Only reached after valid location.
-      =================================================== */
-
-      const payload = {
+    const result =
+      await startWebAttendance({
         workMode:
           selectedWorkMode,
 
@@ -1940,113 +3678,59 @@ const startAttendance =
 
         accuracyMeters:
           location.accuracyMeters,
-      };
+      });
 
-      console.log(
-        "[Attendance] Starting attendance:",
-        payload
-      );
+    const backendMessage =
+      result?.message ||
+      result?.data?.message ||
+      "";
 
-      const result =
-        await startWebAttendance(
-          payload
-        );
-
-      console.log(
-        "[Attendance] Start response:",
-        result
-      );
-
-      const backendMessage =
-        result?.message ||
-        result?.data?.message ||
-        "";
-
-      /* ===================================================
-         SUCCESS MESSAGE
-      =================================================== */
-
-      if (
+    if (backendMessage) {
+      setSuccessMessage(
         backendMessage
-      ) {
-        setSuccessMessage(
-          backendMessage
-        );
-      } else if (
-        selectedWorkMode ===
-          "OFFICE"
-      ) {
-        setSuccessMessage(
-          "Office attendance started after location verification."
-        );
-      } else if (
-        selectedWorkMode ===
-          "WFH"
-      ) {
-        setSuccessMessage(
-          "Work From Home attendance started. Location verified."
-        );
-      } else if (
-        selectedWorkMode ===
-          "FIELD_VISIT"
-      ) {
-        setSuccessMessage(
-          "Field Visit attendance started. Location verified."
-        );
-      } else if (
-        selectedWorkMode ===
-          "ON_DUTY"
-      ) {
-        setSuccessMessage(
-          "On Duty attendance started. Location verified."
-        );
-      } else {
-        setSuccessMessage(
-          "Attendance started successfully."
-        );
-      }
-
-      /* ===================================================
-         REFRESH ATTENDANCE
-      =================================================== */
-
-      await load(
-        true
       );
-    } catch (
-      requestError
-    ) {
-      console.error(
-        "[Attendance] Start failed:",
-        requestError
-      );
+    } else {
+      const modeLabel =
+        workModeOptions.find(
+          (item) =>
+            item.code ===
+            selectedWorkMode
+        )?.title ||
+        "Attendance";
 
-      const message =
-        requestError
-          ?.response
-          ?.data
-          ?.message ||
-        requestError
-          ?.message ||
-        "Attendance could not be started.";
-
-      setAttendanceLocationStatus(
-        "ERROR"
-      );
-
-      setAttendanceLocationMessage(
-        message
-      );
-
-      setError(
-        message
-      );
-    } finally {
-      setAttendanceActionLoading(
-        false
+      setSuccessMessage(
+        `${modeLabel} attendance started successfully.`
       );
     }
-  };
+
+    await load(true);
+  } catch (requestError) {
+    const message =
+      requestError
+        ?.response
+        ?.data
+        ?.message ||
+      requestError
+        ?.message ||
+      "Attendance could not be started.";
+
+    setAttendanceLocationStatus(
+      "ERROR"
+    );
+
+    setAttendanceLocationMessage(
+      message
+    );
+
+    setError(
+      message
+    );
+  } finally {
+    setAttendanceActionLoading(
+      false
+    );
+  }
+};
 
  /* =========================================================
    STOP ATTENDANCE
@@ -2296,87 +3980,88 @@ const download =
           HEADER
       ================================================== */}
 
-      <header className="se-people-att-header">
+     <header className="se-people-att-header se-people-att-header--premium">
 
-        <div className="se-people-att-heading">
+  <div className="se-people-att-heading">
 
-          <button
-            type="button"
-            className="se-people-att-back"
-            onClick={() =>
-              navigate(
-                "/dashboard?app=people&page=overview"
-              )
-            }
-          >
-            ←
-          </button>
+    <button
+      type="button"
+      className="se-people-att-back"
+      aria-label="Back to People overview"
+      onClick={() =>
+        navigate(
+          "/dashboard?app=people&page=overview"
+        )
+      }
+    >
+      ←
+    </button>
 
-          <div>
+    <div className="se-att-title-block">
 
-            <span>
-              PEOPLE · ATTENDANCE
-            </span>
+      <span className="se-att-title-eyebrow">
+        PEOPLE / ATTENDANCE
+      </span>
 
-            <h1>
-              Attendance
-            </h1>
+      <h1>
+        Attendance
+      </h1>
 
-            <p>
-              Your workday, attendance history and workforce controls.
-            </p>
+      <p>
+        Workday & workforce attendance
+      </p>
 
-          </div>
+    </div>
 
-        </div>
+  </div>
 
-        <div className="se-people-att-header-actions">
+  <div className="se-people-att-header-actions">
 
-          <div className="se-people-att-range-chip">
+    <div className="se-people-att-range-chip">
 
-            <span>
-              CURRENT RANGE
-            </span>
+      <span>
+        CURRENT RANGE
+      </span>
 
-            <strong>
-              {rangeLabel(
-                from,
-                to
-              )}
-            </strong>
+      <strong>
+        {rangeLabel(
+          from,
+          to
+        )}
+      </strong>
 
-          </div>
+    </div>
 
-          <button
-            type="button"
-            className="se-people-att-refresh"
-            disabled={
-              refreshing
-            }
-            onClick={() =>
-              load(
-                true
-              )
-            }
-          >
+    <button
+      type="button"
+      className="se-people-att-refresh"
+      disabled={
+        refreshing
+      }
+      onClick={() =>
+        load(true)
+      }
+    >
 
-            <span
-              className={
-                refreshing
-                  ? "spin"
-                  : ""
-              }
-            >
-              ↻
-            </span>
+      <span
+        className={
+          refreshing
+            ? "spin"
+            : ""
+        }
+      >
+        ↻
+      </span>
 
-            Refresh
+      {refreshing
+        ? "Refreshing"
+        : "Refresh"}
 
-          </button>
+    </button>
 
-        </div>
+  </div>
 
-      </header>
+</header>
 
       {/* =================================================
           MAIN BUTTON NAVIGATION
@@ -2384,221 +4069,142 @@ const download =
           Only one workspace is shown at a time.
       ================================================== */}
 
-      <section className="se-people-att-nav se-people-att-nav--workspace">
+     <section className="se-people-att-nav se-people-att-nav--workspace">
 
-        <button
-          type="button"
-          className={
-            view ===
-            "DAY"
-              ? "active"
-              : ""
-          }
-          onClick={() =>
-            setView(
-              "DAY"
-            )
-          }
-        >
+  <button
+    type="button"
+    className={
+      view === "DAY"
+        ? "active"
+        : ""
+    }
+    onClick={() =>
+      setView("DAY")
+    }
+  >
+    <span>◉</span>
 
-          <span>
-            ◉
-          </span>
+    <div>
+      <strong>
+        My Day
+      </strong>
+    </div>
+  </button>
 
-          <div>
 
-            <strong>
-              My Day
-            </strong>
+  <button
+    type="button"
+    className={
+      view === "HISTORY"
+        ? "active"
+        : ""
+    }
+    onClick={() =>
+      setView("HISTORY")
+    }
+  >
+    <span>◷</span>
 
-            <small>
-              Start and manage today
-            </small>
+    <div>
+      <strong>
+        History
+      </strong>
+    </div>
+  </button>
 
-          </div>
 
-        </button>
+  {access.canViewRegister ? (
+    <button
+      type="button"
+      className={
+        view === "REGISTER"
+          ? "active"
+          : ""
+      }
+      onClick={() =>
+        setView("REGISTER")
+      }
+    >
+      <span>▦</span>
 
-        <button
-          type="button"
-          className={
-            view ===
-            "HISTORY"
-              ? "active"
-              : ""
-          }
-          onClick={() =>
-            setView(
-              "HISTORY"
-            )
-          }
-        >
+      <div>
+        <strong>
+          Workforce
+        </strong>
+      </div>
+    </button>
+  ) : null}
 
-          <span>
-            ◷
-          </span>
 
-          <div>
+  {access.canApproveRegularization ? (
+    <button
+      type="button"
+      className={
+        view === "APPROVALS"
+          ? "active"
+          : ""
+      }
+      onClick={() =>
+        setView("APPROVALS")
+      }
+    >
+      <span>✓</span>
 
-            <strong>
-              My History
-            </strong>
+      <div>
+        <strong>
+          Regularization
+        </strong>
+      </div>
+    </button>
+  ) : null}
 
-            <small>
-              Personal attendance
-            </small>
 
-          </div>
+  {access.canViewLocations ? (
+    <button
+      type="button"
+      className={
+        view === "LOCATIONS"
+          ? "active"
+          : ""
+      }
+      onClick={() =>
+        setView("LOCATIONS")
+      }
+    >
+      <span>⌖</span>
 
-        </button>
+      <div>
+        <strong>
+          Locations
+        </strong>
+      </div>
+    </button>
+  ) : null}
 
-        {access
-          .canViewRegister ? (
-          <button
-            type="button"
-            className={
-              view ===
-              "REGISTER"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setView(
-                "REGISTER"
-              )
-            }
-          >
 
-            <span>
-              ▦
-            </span>
+  {access.canExport ? (
+    <button
+      type="button"
+      className={
+        view === "REPORTS"
+          ? "active"
+          : ""
+      }
+      onClick={() =>
+        setView("REPORTS")
+      }
+    >
+      <span>↓</span>
 
-            <div>
+      <div>
+        <strong>
+          Reports
+        </strong>
+      </div>
+    </button>
+  ) : null}
 
-              <strong>
-                Workforce
-              </strong>
-
-              <small>
-                {
-                  managementScopeTitle
-                }
-              </small>
-
-            </div>
-
-          </button>
-        ) : null}
-
-        {access
-          .canApproveRegularization ? (
-          <button
-            type="button"
-            className={
-              view ===
-              "APPROVALS"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setView(
-                "APPROVALS"
-              )
-            }
-          >
-
-            <span>
-              ✓
-            </span>
-
-            <div>
-
-              <strong>
-                Regularization
-              </strong>
-
-              <small>
-                Review requests
-              </small>
-
-            </div>
-
-          </button>
-        ) : null}
-
-        {access
-          .canViewLocations ? (
-          <button
-            type="button"
-            className={
-              view ===
-              "LOCATIONS"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setView(
-                "LOCATIONS"
-              )
-            }
-          >
-
-            <span>
-              ⌖
-            </span>
-
-            <div>
-
-              <strong>
-                Locations
-              </strong>
-
-              <small>
-                WFH & field tracking
-              </small>
-
-            </div>
-
-          </button>
-        ) : null}
-
-        {access
-          .canExport ? (
-          <button
-            type="button"
-            className={
-              view ===
-              "REPORTS"
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setView(
-                "REPORTS"
-              )
-            }
-          >
-
-            <span>
-              ↓
-            </span>
-
-            <div>
-
-              <strong>
-                Reports
-              </strong>
-
-              <small>
-                Export attendance
-              </small>
-
-            </div>
-
-          </button>
-        ) : null}
-
-      </section>
+</section>
 
       <section className="se-people-att-content">
 
@@ -2684,218 +4290,239 @@ const download =
         "DAY" ? (
           <>
 
-            <section className="se-att-day-head">
+           <section
+  className={`se-att-day-head ${
+    attendanceStarted
+      ? "is-started"
+      : ""
+  }`}
+>
+
+  <div className="se-att-day-intro">
+
+    <span className="se-att-eyebrow">
+      TODAY
+    </span>
+
+    <h2>
+      {attendanceCompleted
+        ? "Workday completed"
+        : attendanceStarted
+          ? "Workday in progress"
+          : "Ready for work?"}
+    </h2>
+
+    <p>
+      {attendanceCompleted
+        ? "Your attendance for today is complete."
+        : attendanceStarted
+          ? "Your working time is being recorded."
+          : "Select where you're working and start attendance."}
+    </p>
+
+  </div>
+
+
+  <div
+    className={`se-att-day-status ${
+      attendanceCompleted
+        ? "is-completed"
+        : attendanceStarted
+          ? "is-working"
+          : "is-waiting"
+    }`}
+  >
+
+    <span className="se-att-status-pulse" />
+
+    <div>
+
+      <small>
+        WORKDAY
+      </small>
+
+      <strong>
+        {attendanceCompleted
+          ? "Completed"
+          : attendanceStarted
+            ? "Working"
+            : "Not started"}
+      </strong>
+
+    </div>
+
+  </div>
+
+</section>
+
+          {!attendanceStarted ? (
+
+  <section className="se-att-start-card se-att-start-card--premium">
+
+    <div className="se-att-start-heading">
+
+      <div>
+
+        <span>
+          START ATTENDANCE
+        </span>
+
+        <h3>
+          Where are you working?
+        </h3>
+
+      </div>
+
+      <div className="se-att-location-secure">
+        <span>⌖</span>
+        Location verified
+      </div>
+
+    </div>
+
+
+    <div className="se-att-mode-grid">
+
+      {workModeOptions.map(
+        (option) => {
+
+          const active =
+            selectedWorkMode ===
+            option.code;
+
+          return (
+            <button
+              key={
+                option.code
+              }
+              type="button"
+              className={
+                active
+                  ? `se-att-mode-card active mode-${option.code.toLowerCase()}`
+                  : `se-att-mode-card mode-${option.code.toLowerCase()}`
+              }
+              onClick={() => {
+
+                setSelectedWorkMode(
+                  option.code
+                );
+
+                setAttendanceLocationStatus(
+                  "IDLE"
+                );
+
+                setAttendanceLocationMessage(
+                  ""
+                );
+              }}
+            >
+
+              <span className="se-att-mode-card-icon">
+                {option.icon}
+              </span>
 
               <div>
 
-                <span className="se-att-eyebrow">
-                  MY WORKDAY
-                </span>
-
-                <h2>
-                  Start your workday.
-                </h2>
-
-                <p>
-                  Choose how you are working today. Office attendance is normally recorded through biometric, with verified office-location attendance available when biometric is unavailable. WFH, Field Visit and On Duty use verified location attendance.
-                </p>
-
-              </div>
-
-              <div className="se-att-day-status">
-
-                <small>
-                  TODAY
-                </small>
-
                 <strong>
-                  {attendanceCompleted
-                    ? "Completed"
-                    : attendanceStarted
-                      ? "Working"
-                      : "Not started"}
+                  {option.title}
                 </strong>
 
-                <span
-                  className={
-                    attendanceCompleted
-                      ? "done"
-                      : attendanceStarted
-                        ? "working"
-                        : ""
-                  }
-                >
-                  {attendanceCompleted
-                    ? "✓ Day completed"
-                    : attendanceStarted
-                      ? `● ${todayMode}`
-                      : "○ Waiting for attendance"}
-                </span>
+                <small>
+                  {option.description}
+                </small>
 
               </div>
 
-            </section>
+              <i>
+                {active
+                  ? "✓"
+                  : ""}
+              </i>
 
-            {!attendanceStarted ? (
-              <section className="se-att-start-card">
+            </button>
+          );
+        }
+      )}
 
-                <div className="se-att-start-heading">
+    </div>
 
-                  <div>
 
-                    <span>
-                      START ATTENDANCE
-                    </span>
+    {selectedWorkMode ? (
 
-                    <h3>
-                      Where are you working today?
-                    </h3>
+      <div className="se-att-start-footer">
 
-                    <p>
-                      Select one option before starting attendance.
-                    </p>
+        <div className="se-att-selected-mode">
 
-                  </div>
+          <small>
+            SELECTED
+          </small>
 
-                  <div className="se-att-start-step">
-                    Step 1 of 2
-                  </div>
+          <strong>
+            {
+              workModeOptions.find(
+                (item) =>
+                  item.code ===
+                  selectedWorkMode
+              )?.title
+            }
+          </strong>
 
-                </div>
+          <span
+            className={`se-att-location-message status-${attendanceLocationStatus.toLowerCase()}`}
+          >
+            {attendanceLocationStatus ===
+            "REQUESTING"
+              ? "Verifying location..."
+              : attendanceLocationStatus ===
+                  "VERIFIED"
+                ? "✓ Location verified"
+                : attendanceLocationStatus ===
+                    "ERROR"
+                  ? attendanceLocationMessage
+                  : selectedWorkMode ===
+                      "OFFICE"
+                    ? "Biometric or verified office location"
+                    : selectedWorkMode ===
+                        "WFH"
+                      ? "Current location will be verified"
+                      : "Field location will be recorded"}
+          </span>
 
-                <div className="se-att-mode-grid">
+        </div>
 
-                  {workModeOptions.map(
-                    (
-                      option
-                    ) => (
-                      <button
-                        key={
-                          option.code
-                        }
-                        type="button"
-                        className={
-                          selectedWorkMode ===
-                          option.code
-                            ? `se-att-mode-card active mode-${option.code.toLowerCase()}`
-                            : `se-att-mode-card mode-${option.code.toLowerCase()}`
-                        }
-                        onClick={() =>
-                          setSelectedWorkMode(
-                            option.code
-                          )
-                        }
-                      >
 
-                        <span className="se-att-mode-card-icon">
-                          {
-                            option.icon
-                          }
-                        </span>
+        <button
+          type="button"
+          className="se-att-start-button"
+          disabled={
+            attendanceActionLoading
+          }
+          onClick={
+            startAttendance
+          }
+        >
 
-                        <div>
+          {attendanceActionLoading
+            ? attendanceLocationStatus ===
+                "REQUESTING"
+              ? "Verifying..."
+              : "Starting..."
+            : (
+              <>
+                Start Attendance
+                <span>→</span>
+              </>
+            )}
 
-                          <strong>
-                            {
-                              option.title
-                            }
-                          </strong>
+        </button>
 
-                          <small>
-                            {
-                              option.description
-                            }
-                          </small>
+      </div>
 
-                        </div>
+    ) : null}
 
-                        <i>
-                          {selectedWorkMode ===
-                          option.code
-                            ? "✓"
-                            : "○"}
-                        </i>
+  </section>
 
-                      </button>
-                    )
-                  )}
-
-                </div>
-
-                {selectedWorkMode ? (
-                  <div className="se-att-start-footer">
-
-                    <div>
-
-                      <small>
-                        SELECTED MODE
-                      </small>
-
-                      <strong>
-                        {
-                          workModeOptions.find(
-                            (
-                              item
-                            ) =>
-                              item.code ===
-                              selectedWorkMode
-                          )?.title
-                        }
-                      </strong>
-
-                     <span>
-  {attendanceLocationStatus ===
-  "REQUESTING"
-    ? selectedWorkMode ===
-        "OFFICE"
-      ? "Checking your office location..."
-      : "Requesting location permission..."
-    : attendanceLocationStatus ===
-        "VERIFIED"
-      ? "✓ Current location verified"
-      : attendanceLocationStatus ===
-          "ERROR"
-        ? attendanceLocationMessage
-        : selectedWorkMode ===
-            "OFFICE"
-          ? "Biometric is automatic. If biometric is unavailable, verified office location can be used."
-          : selectedWorkMode ===
-              "WFH"
-            ? "Your current location will be verified before Work From Home attendance starts."
-            : selectedWorkMode ===
-                "FIELD_VISIT"
-              ? "Your current field location will be recorded when attendance starts."
-              : selectedWorkMode ===
-                  "ON_DUTY"
-                ? "Your current location will be recorded for official duty attendance."
-                : ""}
-</span>
-
-                    </div>
-
-                    <button
-  type="button"
-  className="se-att-start-button"
-  disabled={
-    attendanceActionLoading
-  }
-  onClick={
-    startAttendance
-  }
->
-  {attendanceActionLoading
-    ? attendanceLocationStatus ===
-        "REQUESTING"
-      ? "Getting Location..."
-      : "Starting..."
-    : "Start Attendance →"}
-</button>
-
-                  </div>
-                ) : null}
-
-              </section>
-            ) : (
+) : (
               <section className="se-att-active-session">
 
   <div className="se-att-active-indicator">
@@ -2908,18 +4535,13 @@ const download =
       ACTIVE ATTENDANCE
     </small>
 
-    <h3>
-      {todayMode ===
-      "WFH"
-        ? "Working from home"
-        : todayMode ===
-            "FIELD_VISIT"
-          ? "Field visit in progress"
-          : todayMode ===
-              "ON_DUTY"
-            ? "On duty"
-            : "Office attendance"}
-    </h3>
+   <h3>
+  {todayMode === "WFH"
+    ? "Working from home"
+    : todayMode === "FIELD_VISIT"
+      ? "Field visit in progress"
+      : "Office attendance"}
+</h3>
 
     {isWebAttendance ? (
       <div className="se-att-active-location">
@@ -3163,7 +4785,7 @@ const download =
         "HISTORY" ? (
           <>
 
-            <section className="se-att-section-heading">
+            {/* <section className="se-att-section-heading">
 
               <div>
 
@@ -3176,14 +4798,34 @@ const download =
                 </h2>
 
                 <p>
-                  Review previous attendance without mixing it with management records.
+                  Review your daily attendance and calendar in one workspace.
                 </p>
 
               </div>
 
-            </section>
+              <button
+                type="button"
+                className="se-att-today-button"
+                onClick={() => {
+                  setRangeType(
+                    "CUSTOM"
+                  );
 
-            <AttendanceFilters
+                  setFrom(
+                    today
+                  );
+
+                  setTo(
+                    today
+                  );
+                }}
+              >
+                Today
+              </button>
+
+            </section> */}
+
+            {/* <AttendanceFilters
               rangeType={
                 rangeType
               }
@@ -3250,22 +4892,44 @@ const download =
               onReset={
                 resetFilters
               }
-            />
+            /> */}
 
-            <AttendanceRegister
-              loading={
-                loading
-              }
-              records={
-                personalFilteredRecords
-              }
-              canViewLocation={
-                false
-              }
-              onOpen={
-                setSelectedRecord
-              }
-            />
+           <div className="se-att-history-workspace se-att-history-workspace--premium">
+
+  <div className="se-att-history-register-card">
+
+    <AttendanceRegister
+      loading={
+        loading
+      }
+      records={
+        personalFilteredRecords
+      }
+      canViewLocation={
+        false
+      }
+      onOpen={
+        setSelectedRecord
+      }
+      compact
+    />
+
+  </div>
+
+
+  <PersonalAttendanceCalendar
+    records={
+      myRecords
+    }
+    from={
+      from
+    }
+    to={
+      to
+    }
+  />
+
+</div>
 
           </>
         ) : null}
@@ -3293,12 +4957,34 @@ const download =
                 </h2>
 
                 <p>
-                  Filter only the records you need. Department, office and hierarchy access remain backend controlled.
+                  One worker per day. Biometric scans are consolidated into first IN and final OUT for the register.
                 </p>
 
               </div>
 
-              <div className="se-att-scope-pill">
+              <div className="se-att-register-heading-actions">
+
+                <button
+                  type="button"
+                  className="se-att-today-button"
+                  onClick={() => {
+                    setRangeType(
+                      "CUSTOM"
+                    );
+
+                    setFrom(
+                      today
+                    );
+
+                    setTo(
+                      today
+                    );
+                  }}
+                >
+                  Today
+                </button>
+
+                <div className="se-att-scope-pill">
 
                 <small>
                   YOUR SCOPE
@@ -3310,15 +4996,156 @@ const download =
                   }
                 </strong>
 
+                </div>
+
               </div>
 
             </section>
 
-            <AttendanceSummary
-              summary={
-                summary
-              }
-            />
+            <div
+  className="se-att-workforce-summary"
+  role="group"
+  aria-label="Attendance workforce filters"
+>
+
+  <button
+    type="button"
+    className={`se-att-workforce-card se-att-workforce-card--present ${
+      registerView === "PRESENT"
+        ? "is-active"
+        : ""
+    }`}
+    onClick={() =>
+      setRegisterView(
+        "PRESENT"
+      )
+    }
+  >
+    <span className="se-att-workforce-card-label">
+      Present
+    </span>
+
+    <strong>
+      {summary.present}
+    </strong>
+
+    <small>
+      Checked in workforce
+    </small>
+  </button>
+
+
+  <button
+    type="button"
+    className={`se-att-workforce-card se-att-workforce-card--absent ${
+      registerView === "ABSENT"
+        ? "is-active"
+        : ""
+    }`}
+    onClick={() =>
+      setRegisterView(
+        "ABSENT"
+      )
+    }
+  >
+    <span className="se-att-workforce-card-label">
+      Absent
+    </span>
+
+    <strong>
+      {summary.absent}
+    </strong>
+
+    <small>
+      No attendance marked
+    </small>
+  </button>
+
+
+  <button
+    type="button"
+    className={`se-att-workforce-card se-att-workforce-card--late ${
+      registerView === "LATE"
+        ? "is-active"
+        : ""
+    }`}
+    onClick={() =>
+      setRegisterView(
+        "LATE"
+      )
+    }
+  >
+    <span className="se-att-workforce-card-label">
+      Late
+    </span>
+
+    <strong>
+      {summary.late}
+    </strong>
+
+    <small>
+      After 09:10 AM
+    </small>
+  </button>
+
+
+  <button
+    type="button"
+    className={`se-att-workforce-card se-att-workforce-card--wfh ${
+      registerView === "WFH"
+        ? "is-active"
+        : ""
+    }`}
+    onClick={() =>
+      setRegisterView(
+        "WFH"
+      )
+    }
+  >
+    <span className="se-att-workforce-card-label">
+      Work From Home
+    </span>
+
+    <strong>
+      {summary.wfh}
+    </strong>
+
+    <small>
+      Remote workforce
+    </small>
+  </button>
+
+
+  <button
+    type="button"
+    className={`se-att-workforce-card se-att-workforce-card--field ${
+      registerView === "FIELD"
+        ? "is-active"
+        : ""
+    }`}
+    onClick={() =>
+      setRegisterView(
+        "FIELD"
+      )
+    }
+  >
+    <span className="se-att-workforce-card-label">
+      Field Visit
+    </span>
+
+    <strong>
+      {summary.field}
+    </strong>
+
+    <small>
+      Working in field
+    </small>
+  </button>
+
+
+
+
+</div>
 
             <AttendanceFilters
               rangeType={
@@ -3390,20 +5217,35 @@ const download =
             />
 
             <AttendanceRegister
-              loading={
-                loading
-              }
-              records={
-                filteredRecords
-              }
-              canViewLocation={
-                access
-                  .canViewLocations
-              }
-              onOpen={
-                setSelectedRecord
-              }
-            />
+  loading={
+    loading
+  }
+
+  records={
+    registerRecords
+  }
+
+  viewLabel={
+    registerViewLabel
+  }
+
+  activeView={
+    registerView
+  }
+
+  isRecordLate={
+    isRecordLate
+  }
+
+  canViewLocation={
+    access
+      .canViewLocations
+  }
+
+  onOpen={
+    setSelectedRecord
+  }
+/>
 
           </>
         ) : null}
@@ -3464,8 +5306,8 @@ const download =
             </h2>
 
             <p>
-              Open a workforce attendance record to view its authorized WFH, field visit or on-duty location trail.
-            </p>
+  Review verified Work From Home and Field Visit attendance locations.
+</p>
 
             <button
               type="button"
