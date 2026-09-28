@@ -264,6 +264,63 @@ const ORG_UNITS = [
     type: "DEPARTMENT",
   },
 
+    // =========================================================
+  // OPERATIONS SUPPORT UNITS
+  //
+  // These operational units currently come under Operations.
+  // Employee reporting to Varun is stored in Employee.reportsTo,
+  // NOT here.
+  // =========================================================
+
+  {
+    code: "OPS_FLOOR_SHOP",
+    name: "Floor Shop",
+    parentCode: "OPERATIONS",
+    type: "UNIT",
+  },
+
+  {
+    code: "OPS_STORE",
+    name: "Store",
+    parentCode: "OPERATIONS",
+    type: "UNIT",
+  },
+
+  {
+    code: "OPS_LOGISTICS",
+    name: "Logistics",
+    parentCode: "OPERATIONS",
+    type: "UNIT",
+  },
+
+  {
+    code: "OPS_BACKEND",
+    name: "Backend Operations",
+    parentCode: "OPERATIONS",
+    type: "UNIT",
+  },
+
+  {
+    code: "OPS_OFFICE",
+    name: "Operations Office",
+    parentCode: "OPERATIONS",
+    type: "UNIT",
+  },
+
+  {
+    code: "OPS_HOUSEKEEPING",
+    name: "Housekeeping",
+    parentCode: "OPERATIONS",
+    type: "UNIT",
+  },
+
+  {
+    code: "OPS_GARDEN",
+    name: "Garden",
+    parentCode: "OPERATIONS",
+    type: "UNIT",
+  },
+
   {
     code: "MFG_CUTTING",
     name: "Cutting",

@@ -59,6 +59,11 @@ const EmployeeAttendanceProfile =
     "./employeeAttendanceProfile.model"
   );
 
+const AttendanceRegularization =
+  require(
+    "./attendanceRegularization.model"
+  );
+
 const AttendanceLocationLogModule =
   require(
     "./attendanceLocationLog.model"
@@ -1514,18 +1519,61 @@ const calculateAttendance =
           ).getTime()
       );
 
-    const first =
-      sorted[0] ||
-      null;
+   /*
+ * FACE BIOMETRIC RULE
+ *
+ * 1. First punch = check-in.
+ * 2. Any punch during the next 60 minutes is treated
+ *    as a duplicate/repeated face scan.
+ * 3. A punch becomes eligible for checkout only when
+ *    it is at least 60 minutes after check-in.
+ * 4. If multiple eligible punches exist, latest one
+ *    becomes checkout.
+ */
 
-    const last =
-      sorted.length >
-        1
-        ? sorted[
-            sorted.length -
-              1
-          ]
-        : null;
+const first =
+  sorted[0] ||
+  null;
+
+const CHECKOUT_MINIMUM_GAP_MINUTES =
+  60;
+
+const checkoutThresholdAt =
+  first?.punchTime
+    ? new Date(
+        new Date(
+          first.punchTime
+        ).getTime() +
+          CHECKOUT_MINIMUM_GAP_MINUTES *
+            60 *
+            1000
+      )
+    : null;
+
+const checkoutCandidates =
+  first &&
+  checkoutThresholdAt
+    ? sorted.filter(
+        (
+          punch,
+          index
+        ) =>
+          index >
+            0 &&
+          new Date(
+            punch.punchTime
+          ).getTime() >=
+            checkoutThresholdAt.getTime()
+      )
+    : [];
+
+const last =
+  checkoutCandidates.length
+    ? checkoutCandidates[
+        checkoutCandidates.length -
+          1
+      ]
+    : null;
 
     const offset =
       shift.utcOffsetMinutes ??
@@ -1736,52 +1784,27 @@ const calculateAttendance =
           : 0;
     }
 
-    let presenceStatus =
-      "NOT_MARKED";
+   /*
+ * ATTENDANCE STATUS RULE
+ *
+ * Biometric attendance does NOT automatically decide
+ * HALF_DAY from working duration.
+ *
+ * A valid biometric check-in means the employee attended.
+ *
+ * Working hours, early exit and short hours remain available
+ * separately for HR/admin reporting.
+ */
 
-    if (
-      firstInAt
-    ) {
-      if (
-        !lastOutAt
-      ) {
-        presenceStatus =
-          policy
-            .singlePunchCountsAsPresent
-            ? "PRESENT"
-            : "NOT_MARKED";
-      } else if (
-        totalWorkingMinutes >=
-        Number(
-          policy
-            .minimumFullDayMinutes ||
-          0
-        )
-      ) {
-        presenceStatus =
-          "PRESENT";
-      } else if (
-        totalWorkingMinutes >=
-        Number(
-          policy
-            .minimumHalfDayMinutes ||
-          0
-        )
-      ) {
-        presenceStatus =
-          "HALF_DAY";
-      } else {
-        /*
-         * Below minimum half-day threshold.
-         *
-         * Final payroll policy can later decide ABSENT
-         * vs HALF_DAY.
-         */
-        presenceStatus =
-          "HALF_DAY";
-      }
-    }
+let presenceStatus =
+  "NOT_MARKED";
 
+if (
+  firstInAt
+) {
+  presenceStatus =
+    "PRESENT";
+}
     return {
       sorted,
 
@@ -2213,8 +2236,8 @@ async function rebuildAttendanceDay(
           upsert:
             true,
 
-          new:
-            true,
+          returnDocument:
+            "after",
 
           setDefaultsOnInsert:
             true,
@@ -2715,9 +2738,9 @@ if (
        IMPORTANT STANDARD RULE:
 
        1. First punch of calendar day = check-in.
-       2. Punches less than 120 minutes after check-in are
+       2. Punches less than 60 minutes after check-in are
           treated as additional/duplicate biometric scans.
-       3. Latest punch >= 120 minutes after check-in becomes
+       3. Latest punch >= 60 minutes after check-in becomes
           checkout.
        4. If no such punch exists -> missing checkout.
        5. Tomorrow always starts a new attendance day.
@@ -2862,7 +2885,7 @@ if (
           /*
            * Checkout threshold:
            *
-           * check-in + 120 minutes
+           * check-in + 60 minutes
            */
           {
             $set: {
@@ -2875,14 +2898,14 @@ if (
                     "minute",
 
                   amount:
-                    120,
+  60,
                 },
               },
             },
           },
 
           /*
-           * Keep punches occurring at least two hours
+           * Keep punches occurring at least 60 minutes
            * after first punch.
            */
           {
@@ -3513,14 +3536,37 @@ const getAttendance =
         officeId;
     }
 
-    if (
+   if (
+  presenceStatus
+) {
+  const normalizedPresenceStatus =
+    String(
       presenceStatus
-    ) {
-      query.presenceStatus =
-        String(
-          presenceStatus
-        ).toUpperCase();
-    }
+    )
+      .trim()
+      .toUpperCase();
+
+  /*
+   * LATE is not a presenceStatus in Attendance.
+   *
+   * Late employee:
+   * presenceStatus = PRESENT
+   * isLate = true
+   */
+  if (
+    normalizedPresenceStatus ===
+    "LATE"
+  ) {
+    query.presenceStatus =
+      "PRESENT";
+
+    query.isLate =
+      true;
+  } else {
+    query.presenceStatus =
+      normalizedPresenceStatus;
+  }
+}
 
     if (
       workMode
@@ -3636,17 +3682,559 @@ if (
     });
 }
 
-return {
-  /*
-   * Existing mapped Attendance.
-   */
-  items,
+/* =========================================================
+   COMPLETE WORKFORCE REGISTER
+
+   Attendance collection contains people who have attendance.
+
+   Employee Master contains the actual workforce.
+
+   Therefore, for a single-day management register, append
+   employees who have no Attendance document for that date.
+
+   Existing Attendance always wins, including:
+   - OFFICE
+   - WFH
+   - FIELD_VISIT
+   - ON_DUTY
+   - ON_LEAVE
+   - WEEK_OFF
+   - HOLIDAY
+========================================================= */
+
+const normalizedAttendanceItems =
+  items.map(
+    (item) => {
+      const hasCheckIn =
+        Boolean(
+          item?.firstIn?.time
+        );
+
+      const hasCheckOut =
+        Boolean(
+          item?.lastOut?.time
+        );
+
+      const missingCheckOut =
+        Boolean(
+          hasCheckIn &&
+          !hasCheckOut
+        );
+
+      const attendanceState =
+        missingCheckOut
+          ? "MISSING_CHECKOUT"
+          : hasCheckIn && hasCheckOut
+            ? "COMPLETE"
+            : item?.presenceStatus === "ABSENT"
+              ? "ABSENT"
+              : item?.presenceStatus || "NOT_MARKED";
+
+      return {
+        ...item,
+
+        /*
+         * A live/open biometric day must never show elapsed time
+         * as worked time. Only a real qualifying checkout closes
+         * the duration.
+         */
+        totalPresenceMinutes:
+          missingCheckOut
+            ? 0
+            : Number(
+                item?.totalPresenceMinutes ||
+                0
+              ),
+
+        totalWorkingMinutes:
+          missingCheckOut
+            ? 0
+            : Number(
+                item?.totalWorkingMinutes ||
+                0
+              ),
+
+        missingCheckOut,
+
+        attendanceState,
+
+        /*
+         * Frontend/regularization UI can use these fields directly.
+         * This does not auto-approve or fabricate a checkout.
+         */
+        regularizationRequired:
+          missingCheckOut,
+
+        regularizationSuggestedType:
+          missingCheckOut
+            ? "MISSING_CHECKOUT"
+            : null,
+      };
+    }
+  );
+
+let workforceItems =
+  normalizedAttendanceItems;
+
+const isSingleBusinessDate =
+  Boolean(
+    from &&
+    to &&
+    String(from) ===
+      String(to)
+  );
+
+if (
+  isSingleBusinessDate
+) {
+  const businessDate =
+    String(from);
+
+  const existingEmployeeIds =
+    new Set(
+      normalizedAttendanceItems
+        .filter(
+          (
+            item
+          ) =>
+            item?.employeeId
+        )
+        .map(
+          (
+            item
+          ) =>
+            String(
+              item.employeeId
+            )
+        )
+    );
 
   /*
-   * New biometric-only workers.
+   * ACTIVE employees and NOTICE_PERIOD employees are
+   * part of the working workforce.
    *
-   * Existing clients can safely ignore this property.
+   * ONBOARDING / INACTIVE / EXITED are excluded.
    */
+  const employeeQuery = {
+    status: {
+      $in: [
+        "ACTIVE",
+        "NOTICE_PERIOD",
+      ],
+    },
+  };
+
+  /* =====================================================
+     SECURITY: APPLY THE SAME AUTHORIZED EMPLOYEE SCOPE
+
+     Attendance query authorization uses attendance fields
+     such as employeeId/departmentId. Employee Master uses
+     _id/department, so the scope must be translated here.
+  ===================================================== */
+
+  const accessType =
+    String(
+      access?.type ||
+      "SELF"
+    )
+      .trim()
+      .toUpperCase();
+
+  if (
+    accessType === "SELF"
+  ) {
+    employeeQuery._id =
+      actorEmployee?._id ||
+      null;
+  } else if (
+    accessType === "TEAM"
+  ) {
+    const teamIds =
+      await getReportingTreeIds(
+        actorEmployee?._id
+      );
+
+    employeeQuery._id = {
+      $in: teamIds,
+    };
+  } else if (
+    accessType === "DEPARTMENT"
+  ) {
+    const allowedDepartmentIds =
+      Array.isArray(
+        access?.departmentIds
+      ) &&
+      access.departmentIds.length
+        ? access.departmentIds
+        : actorEmployee?.department
+          ? [actorEmployee.department]
+          : [];
+
+    employeeQuery.department = {
+      $in: allowedDepartmentIds,
+    };
+  }
+
+  /*
+   * Explicit filters only narrow the authorized scope.
+   */
+  if (
+    employeeId
+  ) {
+    const explicitEmployeeId =
+      new mongoose.Types.ObjectId(
+        employeeId
+      );
+
+    if (
+      employeeQuery._id?.$in
+    ) {
+      employeeQuery._id.$in =
+        employeeQuery._id.$in.filter(
+          (id) =>
+            String(id) ===
+            String(
+              explicitEmployeeId
+            )
+        );
+    } else if (
+      employeeQuery._id &&
+      String(
+        employeeQuery._id
+      ) !==
+        String(
+          explicitEmployeeId
+        )
+    ) {
+      employeeQuery._id = {
+        $in: [],
+      };
+    } else {
+      employeeQuery._id =
+        explicitEmployeeId;
+    }
+  }
+
+  if (
+    departmentId
+  ) {
+    const explicitDepartmentId =
+      new mongoose.Types.ObjectId(
+        departmentId
+      );
+
+    if (
+      employeeQuery.department?.$in
+    ) {
+      employeeQuery.department.$in =
+        employeeQuery.department.$in.filter(
+          (id) =>
+            String(id) ===
+            String(
+              explicitDepartmentId
+            )
+        );
+    } else {
+      employeeQuery.department =
+        explicitDepartmentId;
+    }
+  }
+
+  if (
+    officeId &&
+    validObjectId(
+      officeId
+    )
+  ) {
+    const officeProfiles =
+      await EmployeeAttendanceProfile
+        .find({
+          officeId:
+            new mongoose.Types.ObjectId(
+              officeId
+            ),
+
+          attendanceEnabled:
+            true,
+        })
+        .select(
+          "employeeId"
+        )
+        .lean();
+
+    const officeEmployeeIds =
+      officeProfiles.map(
+        (profile) =>
+          profile.employeeId
+      );
+
+    if (
+      employeeQuery._id?.$in
+    ) {
+      const allowed =
+        new Set(
+          officeEmployeeIds.map(
+            String
+          )
+        );
+
+      employeeQuery._id.$in =
+        employeeQuery._id.$in.filter(
+          (id) =>
+            allowed.has(
+              String(id)
+            )
+        );
+    } else if (
+      employeeQuery._id
+    ) {
+      if (
+        !officeEmployeeIds.some(
+          (id) =>
+            String(id) ===
+            String(
+              employeeQuery._id
+            )
+        )
+      ) {
+        employeeQuery._id = {
+          $in: [],
+        };
+      }
+    } else {
+      employeeQuery._id = {
+        $in:
+          officeEmployeeIds,
+      };
+    }
+  }
+
+  const workforceEmployees =
+    await Employee
+      .find(
+        employeeQuery
+      )
+      .select(
+        [
+          "_id",
+          "user",
+          "employeeCode",
+          "biometricCode",
+          "fullName",
+          "companyCode",
+          "orgUnitCode",
+          "department",
+          "designation",
+          "reportsTo",
+          "workLocation",
+          "status",
+        ].join(" ")
+      )
+      .lean();
+
+  const canIncludeSyntheticAbsent =
+    (!presenceStatus ||
+      String(
+        presenceStatus
+      )
+        .trim()
+        .toUpperCase() ===
+        "ABSENT") &&
+    !workMode;
+
+  const missingEmployees =
+    canIncludeSyntheticAbsent
+      ? workforceEmployees.filter(
+          (employee) =>
+            !existingEmployeeIds.has(
+              String(
+                employee._id
+              )
+            )
+        )
+      : [];
+
+  const absentRows =
+    missingEmployees.map(
+      (
+        employee
+      ) => ({
+        /*
+         * Synthetic ID only for frontend row identity.
+         * This is NOT written into MongoDB.
+         */
+        _id:
+          `ABSENT:${businessDate}:${employee._id}`,
+
+        employeeId:
+          employee._id,
+
+        userId:
+          employee.user ||
+          null,
+
+        employeeCode:
+          employee.employeeCode ||
+          "",
+
+        biometricCode:
+          employee.biometricCode ||
+          null,
+
+        employeeName:
+          employee.fullName ||
+          "",
+
+        companyCode:
+          employee.companyCode ||
+          null,
+
+        orgUnitCode:
+          employee.orgUnitCode ||
+          null,
+
+        departmentId:
+          employee.department ||
+          null,
+
+        departmentName:
+          "",
+
+        designationName:
+          employee.designation ||
+          "",
+
+        reportingManagerId:
+          employee.reportsTo ||
+          null,
+
+        workLocation:
+          employee.workLocation ||
+          "",
+
+        employeeStatus:
+          employee.status,
+
+        businessDate,
+
+        /*
+         * No Attendance exists for this employee/date.
+         */
+        presenceStatus:
+          "ABSENT",
+
+        attendanceState:
+          "ABSENT",
+
+        workMode:
+          null,
+
+        firstIn: {
+          time:
+            null,
+
+          source:
+            null,
+
+          punchId:
+            null,
+        },
+
+        lastOut: {
+          time:
+            null,
+
+          source:
+            null,
+
+          punchId:
+            null,
+        },
+
+        totalWorkingMinutes:
+          0,
+
+        lateMinutes:
+          0,
+
+        earlyExitMinutes:
+          0,
+
+        shortMinutes:
+          0,
+
+        overtimeMinutes:
+          0,
+
+        isLate:
+          false,
+
+        isEarlyExit:
+          false,
+
+        isShortHours:
+          false,
+
+        missingCheckIn:
+          true,
+
+        missingCheckOut:
+          false,
+
+        regularizationRequired:
+          false,
+
+        regularizationSuggestedType:
+          null,
+
+        primarySource:
+          null,
+
+        processingStatus:
+          "NOT_MARKED",
+
+        synthetic:
+          true,
+
+        noAttendanceRecord:
+          true,
+      })
+    );
+
+  workforceItems = [
+    ...normalizedAttendanceItems,
+    ...absentRows,
+  ];
+
+  /*
+   * Keep deterministic ordering for the UI.
+   */
+  workforceItems.sort(
+    (
+      a,
+      b
+    ) =>
+      String(
+        a.employeeName ||
+          a.employeeCode ||
+          ""
+      ).localeCompare(
+        String(
+          b.employeeName ||
+            b.employeeCode ||
+            ""
+        )
+      )
+  );
+}
+
+const workforceTotal =
+  workforceItems.length;
+
+return {
+  items:
+    workforceItems,
+
   biometric,
 
   pagination: {
@@ -3656,17 +4244,20 @@ return {
     limit:
       safeLimit,
 
-    total,
+    total:
+      workforceTotal,
 
     pages:
-      Math.ceil(
-        total /
-          safeLimit
+      Math.max(
+        1,
+        Math.ceil(
+          workforceTotal /
+            safeLimit
+        )
       ),
   },
 };
-  };
-
+  }
 /* =========================================================
    MONTHLY SUMMARY
 ========================================================= */
@@ -4388,45 +4979,32 @@ const calculateRegularizedAttendance =
           : 0;
     }
 
-    let presenceStatus =
-      "NOT_MARKED";
+ /*
+ * PRESENCE RULE
+ *
+ * A valid check-in means the employee attended the workplace.
+ *
+ * Working-duration problems are tracked independently through:
+ *
+ * - isShortHours
+ * - shortMinutes
+ * - isEarlyExit
+ * - earlyExitMinutes
+ * - missingCheckOut
+ *
+ * Do not automatically convert a biometric employee to
+ * HALF_DAY only because working duration is short.
+ */
 
-    if (
-      firstInAt
-    ) {
-      if (
-        !lastOutAt
-      ) {
-        presenceStatus =
-          policy
-            .singlePunchCountsAsPresent
-            ? "PRESENT"
-            : "NOT_MARKED";
-      } else if (
-        totalWorkingMinutes >=
-        Number(
-          policy
-            .minimumFullDayMinutes ||
-          0
-        )
-      ) {
-        presenceStatus =
-          "PRESENT";
-      } else if (
-        totalWorkingMinutes >=
-        Number(
-          policy
-            .minimumHalfDayMinutes ||
-          0
-        )
-      ) {
-        presenceStatus =
-          "HALF_DAY";
-      } else {
-        presenceStatus =
-          "HALF_DAY";
-      }
-    }
+let presenceStatus =
+  "NOT_MARKED";
+
+if (
+  firstInAt
+) {
+  presenceStatus =
+    "PRESENT";
+}
 
     return {
       expectedStartAt,
@@ -6867,6 +7445,10 @@ module.exports = {
   requestRegularization,
 
   approveRegularization,
+
+  rejectRegularization,
+
+  getRegularizations,
 
   // KEEP THE REST OF YOUR CURRENT EXPORTS
 

@@ -44,6 +44,10 @@ const ApiError =
     "../utils/ApiError"
   );
 
+  const Office = require(
+  "../attendance/Office.model"
+);
+
 const User =
   UserModule.User ||
   UserModule;
@@ -484,6 +488,91 @@ const resolveApprover =
     departmentId,
     requesterId
   ) => {
+    /* =====================================================
+       1. CHECK REQUESTER
+
+       SUPER_ADMIN controls all departments.
+
+       If SUPER_ADMIN raises an MPR:
+       - Prefer another active SUPER_ADMIN as currentApprover.
+       - If no other SUPER_ADMIN exists, requester becomes
+         currentApprover.
+       - Any SUPER_ADMIN may still approve the MPR.
+    ===================================================== */
+
+    const requester =
+      await User
+        .findById(
+          requesterId
+        )
+        .select(
+          "_id displayName email role status"
+        )
+        .lean();
+
+    if (
+      requester &&
+      requester.status ===
+        "ACTIVE" &&
+      requester.role ===
+        "SUPER_ADMIN"
+    ) {
+      /* -----------------------------------------------
+         First preference:
+         another active SUPER_ADMIN
+      ----------------------------------------------- */
+
+      const anotherSuperAdmin =
+        await findGlobalSuperAdmin(
+          requesterId
+        );
+
+      if (
+        anotherSuperAdmin
+      ) {
+        return {
+          approver:
+            anotherSuperAdmin._id,
+
+          approvalDepartment:
+            null,
+
+          source:
+            "GLOBAL_SUPER_ADMIN",
+        };
+      }
+
+
+      /* -----------------------------------------------
+         Fallback:
+         requester is the only active SUPER_ADMIN
+      ----------------------------------------------- */
+
+      return {
+        approver:
+          requester._id,
+
+        approvalDepartment:
+          null,
+
+        source:
+          "GLOBAL_SUPER_ADMIN",
+      };
+    }
+
+
+    /* =====================================================
+       2. NORMAL DEPARTMENT APPROVAL
+
+       For Department Head / HR / normal permitted users:
+
+       Department Super Admin
+              ↓
+       Parent Department Super Admin
+              ↓
+       Global SUPER_ADMIN
+    ===================================================== */
+
     const departmentApprover =
       await departmentService
         .getDepartmentApprover(
@@ -524,6 +613,16 @@ const resolveApprover =
           "DEPARTMENT",
       };
     }
+
+
+    /* =====================================================
+       3. GLOBAL SUPER ADMIN FALLBACK
+
+       No department / parent approver found.
+
+       Assign an active global SUPER_ADMIN.
+       Requester remains excluded here for normal users.
+    ===================================================== */
 
     const globalApprover =
       await findGlobalSuperAdmin(
@@ -3541,6 +3640,28 @@ const startHiring =
     );
   };
 
+
+  /* =========================================================
+   ACTIVE OFFICE LOOKUP
+   Used by Manpower Request work-location dropdown
+========================================================= */
+
+const getActiveOffices = async () => {
+  const offices = await Office.find({
+    status: "ACTIVE",
+  })
+    .select(
+      "_id name shortLocation code city state status"
+    )
+    .sort({
+      shortLocation: 1,
+      name: 1,
+    })
+    .lean();
+
+  return offices;
+};
+
 /* =========================================================
    EXPORT
 ========================================================= */
@@ -3585,4 +3706,5 @@ module.exports = {
   isHrUser,
 
   canManageHrHiring,
+  getActiveOffices
 };

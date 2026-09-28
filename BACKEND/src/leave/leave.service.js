@@ -256,23 +256,24 @@ const calculateCalendarDays = ({
   }
 
   if (
-    durationType ===
-      "FIRST_HALF" ||
-    durationType ===
-      "SECOND_HALF"
+  durationType ===
+    "HALF_DAY" ||
+  durationType ===
+    "FIRST_HALF" ||
+  durationType ===
+    "SECOND_HALF"
+) {
+  if (
+    fromDate !==
+    toDate
   ) {
-    if (
-      fromDate !==
-      toDate
-    ) {
-      throw createServiceError(
-        "Half-day leave can only be applied for a single date."
-      );
-    }
-
-    return 0.5;
+    throw createServiceError(
+      "Half-day leave can only be applied for a single date."
+    );
   }
 
+  return 0.5;
+}
   return difference + 1;
 };
 
@@ -1247,18 +1248,20 @@ const validateRequestAgainstPolicy =
     }
 
     if (
-      (
-        durationType ===
-          "FIRST_HALF" ||
-        durationType ===
-          "SECOND_HALF"
-      ) &&
-      !policy.allowHalfDay
-    ) {
-      throw createServiceError(
-        `${leaveType.name} does not allow half-day leave.`
-      );
-    }
+  (
+    durationType ===
+      "HALF_DAY" ||
+    durationType ===
+      "FIRST_HALF" ||
+    durationType ===
+      "SECOND_HALF"
+  ) &&
+  !policy.allowHalfDay
+) {
+  throw createServiceError(
+    `${leaveType.name} does not allow half-day leave.`
+  );
+}
 
     if (
       Number(

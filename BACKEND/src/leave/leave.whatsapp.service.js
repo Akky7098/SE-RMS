@@ -155,16 +155,13 @@ const getDurationLabel = (
 
   if (
     duration ===
-    "FIRST_HALF"
-  ) {
-    return "First Half";
-  }
-
-  if (
+      "HALF_DAY" ||
     duration ===
-    "SECOND_HALF"
+      "FIRST_HALF" ||
+    duration ===
+      "SECOND_HALF"
   ) {
-    return "Second Half";
+    return "Half Day";
   }
 
   return "Full Day";
@@ -359,19 +356,19 @@ const looksLikeLeaveRequest = (
     /\b(?:EMPLOYEE\s*CODE|EMP\s*CODE|EMP\s*ID|EMPLOYEE\s*ID)\b/
       .test(value);
 
-  const hasLeaveType =
-    /\b(?:LEAVE\s*TYPE|TYPE)\s*[:\-]/
-      .test(value);
+ const hasDate =
+  /\b(?:FROM(?:\s*DATE)?|TO(?:\s*DATE)?|DATE|LEAVE\s*DATE)\s*[:=\-]/
+    .test(value);
 
-  const hasDate =
-    /\b(?:FROM|DATE)\s*[:\-]/
-      .test(value);
+const hasReason =
+  /\b(?:REASON|LEAVE\s*REASON|PURPOSE)\s*[:=\-]/
+    .test(value);
 
-  return (
-    hasEmployeeCode &&
-    hasLeaveType &&
-    hasDate
-  );
+return (
+  hasEmployeeCode &&
+  hasDate &&
+  hasReason
+);
 };
 
 /* =========================================================
@@ -476,65 +473,114 @@ const parseDate = (
     return "";
   }
 
-  let match =
+  let match;
+
+  /*
+   * YYYY-MM-DD
+   * YYYY/MM/DD
+   * YYYY.MM.DD
+   *
+   * Example:
+   * 2026-10-05
+   */
+  match =
     raw.match(
-      /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/
+      /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/
     );
 
   if (match) {
-    const year =
-      Number(
-        match[1]
-      );
-
-    const month =
-      Number(
-        match[2]
-      );
-
-    const day =
-      Number(
-        match[3]
-      );
-
     return validateDateParts({
-      year,
-      month,
-      day,
+      year:
+        Number(
+          match[1]
+        ),
+
+      month:
+        Number(
+          match[2]
+        ),
+
+      day:
+        Number(
+          match[3]
+        ),
     });
   }
 
+  /*
+   * DD-MM-YYYY
+   * DD/MM/YYYY
+   * DD.MM.YYYY
+   *
+   * Example:
+   * 05/10/2026
+   */
   match =
     raw.match(
-      /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/
+      /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/
     );
 
   if (match) {
-    const day =
-      Number(
-        match[1]
-      );
+    return validateDateParts({
+      year:
+        Number(
+          match[3]
+        ),
 
-    const month =
-      Number(
-        match[2]
-      );
+      month:
+        Number(
+          match[2]
+        ),
 
-    const year =
+      day:
+        Number(
+          match[1]
+        ),
+    });
+  }
+
+  /*
+   * Friendly WhatsApp date:
+   *
+   * DD-MM-YY
+   * DD/MM/YY
+   * DD.MM.YY
+   *
+   * Example:
+   * 05/10/26
+   *
+   * 26 -> 2026
+   */
+  match =
+    raw.match(
+      /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})$/
+    );
+
+  if (match) {
+    const shortYear =
       Number(
         match[3]
       );
 
     return validateDateParts({
-      year,
-      month,
-      day,
+      year:
+        2000 +
+        shortYear,
+
+      month:
+        Number(
+          match[2]
+        ),
+
+      day:
+        Number(
+          match[1]
+        ),
     });
   }
 
   return "";
 };
-
 const validateDateParts = ({
   year,
   month,
@@ -607,7 +653,7 @@ const parseDuration = (
       value
     )
       .replace(
-        /[_\-]+/g,
+        /[_-]+/g,
         " "
       )
       .replace(
@@ -616,38 +662,65 @@ const parseDuration = (
       )
       .trim();
 
+  /*
+   * Nothing supplied =
+   * normal full-day leave.
+   */
   if (!normalized) {
     return "FULL_DAY";
   }
 
+  /*
+   * Human-friendly half-day inputs.
+   */
   if (
     [
-      "FIRST HALF",
-      "1ST HALF",
-      "FIRST",
-      "MORNING",
-      "HALF DAY FIRST",
-      "HALF DAY MORNING",
+      "HALF",
+      "HALF DAY",
+      "HALFDAY",
+      "0.5",
+      "0.5 DAY",
+      "HALF LEAVE",
+      "HALF DAY LEAVE",
     ].includes(
       normalized
     )
   ) {
-    return "FIRST_HALF";
+    return "HALF_DAY";
+  }
+
+  /*
+   * Keep accepting old wording too,
+   * but normalize WhatsApp to HALF_DAY.
+   */
+  if (
+    [
+      "FIRST HALF",
+      "1ST HALF",
+      "FIRST HALF DAY",
+      "HALF DAY FIRST",
+      "HALF DAY MORNING",
+      "MORNING HALF",
+    ].includes(
+      normalized
+    )
+  ) {
+    return "HALF_DAY";
   }
 
   if (
     [
       "SECOND HALF",
       "2ND HALF",
-      "SECOND",
-      "AFTERNOON",
+      "SECOND HALF DAY",
       "HALF DAY SECOND",
       "HALF DAY AFTERNOON",
+      "AFTERNOON HALF",
     ].includes(
       normalized
     )
   ) {
-    return "SECOND_HALF";
+    return "HALF_DAY";
   }
 
   if (
@@ -656,6 +729,8 @@ const parseDuration = (
       "FULL DAY",
       "FULLDAY",
       "DAY",
+      "1 DAY",
+      "ONE DAY",
     ].includes(
       normalized
     )
@@ -664,18 +739,10 @@ const parseDuration = (
   }
 
   /*
-   * Generic "half day" is ambiguous.
-   * Do not guess which half.
+   * Unknown duration:
+   * Do not trouble WhatsApp user.
+   * Default to normal full day.
    */
-
-  if (
-    normalized.includes(
-      "HALF"
-    )
-  ) {
-    return "";
-  }
-
   return "FULL_DAY";
 };
 
@@ -2559,50 +2626,82 @@ const handleIncomingLeaveMessage =
       };
     }
 
-    if (
-      !parsed.leaveTypeText
-    ) {
-      await sendPrivate(
-        user.whatsappNumber,
-        "❌ *LEAVE NOT APPLIED*\n\nPlease mention the Leave Type, for example *CL*, *SL* or *PL*."
-      );
+   /*
+ * Friendly WhatsApp behavior:
+ *
+ * If Leave Type is omitted completely,
+ * default to Loss of Pay.
+ *
+ * IMPORTANT:
+ * We still resolve it from LeaveType master.
+ * We do NOT hard-code a MongoDB ID.
+ */
 
-      return {
-        handled:
-          true,
-      };
-    }
+let leaveType;
 
-    const leaveType =
+if (
+  parsed.leaveTypeText
+) {
+  leaveType =
+    await resolveLeaveType(
+      parsed.leaveTypeText
+    );
+} else {
+  /*
+   * Try the common names/codes used for
+   * Loss of Pay.
+   */
+  leaveType =
+    await resolveLeaveType(
+      "LWP"
+    );
+
+  if (!leaveType) {
+    leaveType =
       await resolveLeaveType(
-        parsed.leaveTypeText
+        "LOP"
       );
+  }
 
-    if (!leaveType) {
-      await sendPrivate(
-        user.whatsappNumber,
-        `❌ *LEAVE NOT APPLIED*\n\nLeave Type *${parsed.leaveTypeText}* is not available.`
+  if (!leaveType) {
+    leaveType =
+      await resolveLeaveType(
+        "Loss of Pay"
       );
+  }
 
-      return {
-        handled:
-          true,
-      };
-    }
-
-    if (
-      !parsed.durationType
-    ) {
-      await sendPrivate(
-        user.whatsappNumber,
-        "❌ *LEAVE NOT APPLIED*\n\nPlease write *First Half* or *Second Half* for half-day leave."
+  if (!leaveType) {
+    leaveType =
+      await resolveLeaveType(
+        "Leave Without Pay"
       );
+  }
+}
 
-      return {
-        handled:
-          true,
-      };
-    }
+if (!leaveType) {
+  if (
+    parsed.leaveTypeText
+  ) {
+    await sendPrivate(
+      user.whatsappNumber,
+      `❌ *LEAVE NOT APPLIED*\n\nLeave Type *${parsed.leaveTypeText}* is not available.`
+    );
+  } else {
+    await sendPrivate(
+      user.whatsappNumber,
+      "❌ *LEAVE NOT APPLIED*\n\nLoss of Pay leave is not configured in SE-RMS. Please contact HR."
+    );
+  }
+
+  return {
+    handled:
+      true,
+  };
+}
+
+    
+
+   
 
     if (
       !parsed.fromDate ||
@@ -2610,7 +2709,7 @@ const handleIncomingLeaveMessage =
     ) {
       await sendPrivate(
         user.whatsappNumber,
-        "❌ *LEAVE NOT APPLIED*\n\nPlease enter a valid leave date, for example *15/10/2026*."
+       "❌ *LEAVE NOT APPLIED*\n\nPlease enter a valid leave date, for example *05/10/26* or *05/10/2026*."
       );
 
       return {

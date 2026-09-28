@@ -36,6 +36,7 @@ const {
   getMyHiring,
 
   startHiring,
+  getActiveOffices,
 } =
   require(
     "./manpower.controller"
@@ -144,6 +145,25 @@ router.get(
 );
 
 /* =========================================================
+   OFFICE LOOKUP
+========================================================= */
+
+/* =========================================================
+   OFFICE LOOKUP
+
+   GET
+   /api/v1/manpower/offices
+
+   IMPORTANT:
+   Must remain BEFORE /:requirementId
+========================================================= */
+
+router.get(
+  "/offices",
+  getActiveOffices
+);
+
+/* =========================================================
    HR QUEUE
 
    All approved/current hiring visible to HR.
@@ -193,6 +213,8 @@ router.post(
   "/:requirementId/start-hiring",
   startHiring
 );
+
+
 
 /* =========================================================
    DETAILS

@@ -18,6 +18,7 @@ const LEAVE_REQUEST_STATUSES = [
 
 const LEAVE_DURATION_TYPES = [
   "FULL_DAY",
+  "HALF_DAY",
   "FIRST_HALF",
   "SECOND_HALF",
 ];

@@ -1870,6 +1870,28 @@ const startHiring =
     }
   );
 
+  /* =========================================================
+   GET ACTIVE OFFICES
+   GET /api/v1/manpower/offices
+========================================================= */
+
+const getActiveOffices = async (req, res, next) => {
+  try {
+    const offices =
+      await manpowerService.getActiveOffices();
+
+    return res.status(200).json({
+      success: true,
+
+      data: {
+        offices,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 /* =========================================================
    EXPORT
 ========================================================= */
@@ -1904,4 +1926,5 @@ module.exports = {
   getMyHiring,
 
   startHiring,
+  getActiveOffices,
 };

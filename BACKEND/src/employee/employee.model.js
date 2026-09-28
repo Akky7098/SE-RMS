@@ -55,7 +55,13 @@ const EMPLOYEE_SOURCES = [
 
 const EMPLOYEE_COMPANY_CODES = [
   "SANDEEP_EDGETECH",
+  "SANDEEP_ENTERPRISES",
   "VANIJA",
+  "VESS",
+  "SI",
+  "FERMECH",
+  "SF",
+  "MULTIPACK",
 ];
 
 /* =========================================================
@@ -109,19 +115,16 @@ const employeeSchema =
           true,
       },
 
-      biometricCode: {
-        type:
-          String,
+     biometricCode: {
+  type:
+    String,
 
-        trim:
-          true,
+  trim:
+    true,
 
-        default:
-          null,
-
-        index:
-          true,
-      },
+  default:
+    null,
+},
 
       /* =====================================================
          PERSONAL
@@ -266,24 +269,15 @@ const employeeSchema =
       ===================================================== */
 
       user: {
-        type:
-          mongoose.Schema.Types.ObjectId,
+  type:
+    mongoose.Schema.Types.ObjectId,
 
-        ref:
-          "User",
+  ref:
+    "User",
 
-        default:
-          null,
-
-        unique:
-          true,
-
-        sparse:
-          true,
-
-        index:
-          true,
-      },
+  default:
+    null,
+},
 
       /* =====================================================
          EMPLOYMENT
@@ -400,14 +394,14 @@ const employeeSchema =
         default:
           null,
 
-        unique:
-          true,
+        // unique:
+        //   true,
 
-        sparse:
-          true,
+        // sparse:
+        //   true,
 
-        index:
-          true,
+        // index:
+        //   true,
       },
 
       recruitmentJoining: {
@@ -420,14 +414,14 @@ const employeeSchema =
         default:
           null,
 
-        unique:
-          true,
+        // unique:
+        //   true,
 
-        sparse:
-          true,
+        // sparse:
+        //   true,
 
-        index:
-          true,
+        // index:
+        //   true,
       },
 
       onboarding: {
@@ -440,14 +434,14 @@ const employeeSchema =
         default:
           null,
 
-        unique:
-          true,
+        // unique:
+        //   true,
 
-        sparse:
-          true,
+        // sparse:
+        //   true,
 
-        index:
-          true,
+        // index:
+        //   true,
       },
 
       /* =====================================================
@@ -491,15 +485,15 @@ const employeeSchema =
 
 employeeSchema.index(
   {
-    officialEmail:
-      1,
+    officialEmail: 1,
   },
   {
-    unique:
-      true,
-
-    sparse:
-      true,
+    unique: true,
+    partialFilterExpression: {
+      officialEmail: {
+        $type: "string",
+      },
+    },
   }
 );
 
@@ -572,6 +566,63 @@ employeeSchema.index(
 
     sparse:
       true,
+  }
+);
+
+employeeSchema.index(
+  {
+    user: 1,
+  },
+  {
+    unique: true,
+
+    partialFilterExpression: {
+      user: {
+        $type: "objectId",
+      },
+    },
+  }
+);
+
+employeeSchema.index(
+  {
+    recruitmentSelection: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: {
+      recruitmentSelection: {
+        $type: "objectId",
+      },
+    },
+  }
+);
+
+employeeSchema.index(
+  {
+    recruitmentJoining: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: {
+      recruitmentJoining: {
+        $type: "objectId",
+      },
+    },
+  }
+);
+
+employeeSchema.index(
+  {
+    onboarding: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: {
+      onboarding: {
+        $type: "objectId",
+      },
+    },
   }
 );
 

@@ -2503,6 +2503,324 @@ const parseSkills =
           index
       );
 
+
+      /* =========================================================
+   POSITION → DEFAULT SKILLS
+
+   Used only when WhatsApp user does not provide Skills.
+
+   IMPORTANT:
+   - Explicit Skills always win.
+   - Conservative role-based inference only.
+   - Unknown positions receive safe generic skills.
+========================================================= */
+
+const inferSkillsFromPosition =
+  (
+    positionTitle,
+    department
+  ) => {
+    const position =
+      normalizeKey(
+        positionTitle
+      );
+
+    const dept =
+      normalizeKey(
+        department
+      );
+
+    if (
+      !position
+    ) {
+      return [];
+    }
+
+    /* =====================================================
+       QUALITY
+    ===================================================== */
+
+    if (
+      position.includes(
+        "quality"
+      ) ||
+      position.includes(
+        "qc"
+      ) ||
+      position.includes(
+        "qa"
+      ) ||
+      dept.includes(
+        "quality"
+      )
+    ) {
+      if (
+        position.includes(
+          "operator"
+        )
+      ) {
+        return [
+          "Quality Inspection",
+          "Quality Control",
+          "Measuring Instruments",
+          "Quality Documentation",
+        ];
+      }
+
+      if (
+        position.includes(
+          "engineer"
+        )
+      ) {
+        return [
+          "Quality Assurance",
+          "Quality Control",
+          "Root Cause Analysis",
+          "Quality Documentation",
+        ];
+      }
+
+      return [
+        "Quality Control",
+        "Quality Inspection",
+        "Quality Documentation",
+      ];
+    }
+
+
+    /* =====================================================
+       DISPATCH / LOGISTICS
+    ===================================================== */
+
+    if (
+      position.includes(
+        "dispatch"
+      ) ||
+      position.includes(
+        "logistic"
+      ) ||
+      dept.includes(
+        "dispatch"
+      ) ||
+      dept.includes(
+        "logistic"
+      )
+    ) {
+      return [
+        "Logistics",
+        "Dispatch Documentation",
+        "Material Coordination",
+        "Inventory Coordination",
+      ];
+    }
+
+
+    /* =====================================================
+       STORE / WAREHOUSE
+    ===================================================== */
+
+    if (
+      position.includes(
+        "store"
+      ) ||
+      position.includes(
+        "warehouse"
+      ) ||
+      dept.includes(
+        "store"
+      )
+    ) {
+      return [
+        "Inventory Management",
+        "Material Handling",
+        "Stock Management",
+        "Store Documentation",
+      ];
+    }
+
+
+    /* =====================================================
+       SALES
+    ===================================================== */
+
+    if (
+      position.includes(
+        "sales"
+      ) ||
+      position.includes(
+        "business development"
+      ) ||
+      dept.includes(
+        "sales"
+      )
+    ) {
+      return [
+        "Sales",
+        "Customer Communication",
+        "Negotiation",
+        "CRM",
+      ];
+    }
+
+
+    /* =====================================================
+       PURCHASE / PROCUREMENT
+    ===================================================== */
+
+    if (
+      position.includes(
+        "purchase"
+      ) ||
+      position.includes(
+        "procurement"
+      ) ||
+      dept.includes(
+        "purchase"
+      )
+    ) {
+      return [
+        "Procurement",
+        "Vendor Management",
+        "Purchase Documentation",
+        "Negotiation",
+      ];
+    }
+
+
+    /* =====================================================
+       PRODUCTION / MANUFACTURING
+    ===================================================== */
+
+    if (
+      position.includes(
+        "production"
+      ) ||
+      position.includes(
+        "manufacturing"
+      ) ||
+      dept.includes(
+        "production"
+      )
+    ) {
+      return [
+        "Production Operations",
+        "Manufacturing Process",
+        "Safety Compliance",
+        "Production Documentation",
+      ];
+    }
+
+
+    /* =====================================================
+       MAINTENANCE
+    ===================================================== */
+
+    if (
+      position.includes(
+        "maintenance"
+      ) ||
+      dept.includes(
+        "maintenance"
+      )
+    ) {
+      return [
+        "Machine Maintenance",
+        "Preventive Maintenance",
+        "Troubleshooting",
+        "Safety Compliance",
+      ];
+    }
+
+
+    /* =====================================================
+       HR
+    ===================================================== */
+
+    if (
+      position.includes(
+        "hr"
+      ) ||
+      position.includes(
+        "human resource"
+      ) ||
+      dept ===
+        "hr"
+    ) {
+      return [
+        "Human Resources",
+        "Employee Coordination",
+        "Documentation",
+        "Communication",
+      ];
+    }
+
+
+    /* =====================================================
+       ACCOUNTS / FINANCE
+    ===================================================== */
+
+    if (
+      position.includes(
+        "account"
+      ) ||
+      position.includes(
+        "finance"
+      ) ||
+      dept.includes(
+        "account"
+      ) ||
+      dept.includes(
+        "finance"
+      )
+    ) {
+      return [
+        "Accounting",
+        "Excel",
+        "Financial Documentation",
+        "Reconciliation",
+      ];
+    }
+
+
+    /* =====================================================
+       IT
+    ===================================================== */
+
+    if (
+      position.includes(
+        "developer"
+      ) ||
+      position.includes(
+        "software"
+      ) ||
+      position.includes(
+        "it executive"
+      ) ||
+      dept ===
+        "it"
+    ) {
+      return [
+        "IT Operations",
+        "Technical Troubleshooting",
+        "Computer Systems",
+        "Documentation",
+      ];
+    }
+
+
+    /* =====================================================
+       GENERIC FALLBACK
+
+       Do not invent technical expertise for an unknown role.
+    ===================================================== */
+
+    return [
+      "Communication",
+      "Documentation",
+      "Team Coordination",
+    ];
+  };
+
 /* =========================================================
    PARSE REQUEST
 ========================================================= */
@@ -2709,37 +3027,60 @@ const parseManpowerRequest =
        EMPLOYMENT
     ----------------------------------------------------- */
 
-    const employmentType =
-      parseEmployment(
-        fields.employmentType
-      );
+    /*
+ * WhatsApp default:
+ *
+ * If employment type is not mentioned,
+ * normal manpower requirement is treated
+ * as FULL_TIME.
+ *
+ * Explicit user input always wins.
+ */
 
-    if (
-      fields.employmentType &&
-      !employmentType
-    ) {
-      errors.push(
-        "Employment Type is invalid. Use Full Time, Part Time, Contract, Temporary or Intern"
-      );
-    }
+const employmentType =
+  fields.employmentType
+    ? parseEmployment(
+        fields.employmentType
+      )
+    : "FULL_TIME";
+
+if (
+  fields.employmentType &&
+  !employmentType
+) {
+  errors.push(
+    "Employment Type is invalid. Use Full Time, Part Time, Contract, Temporary or Intern"
+  );
+}
 
     /* -----------------------------------------------------
        SHIFT
     ----------------------------------------------------- */
 
-    const shiftAvailability =
-      parseShift(
-        fields.shiftAvailability
-      );
+   /*
+ * WhatsApp default:
+ *
+ * If shift is omitted, use DAY.
+ *
+ * Explicit shift always wins:
+ * General / Day / Night / Flexible / Any.
+ */
 
-    if (
-      fields.shiftAvailability &&
-      !shiftAvailability
-    ) {
-      errors.push(
-        "Shift is invalid. Use General, Day, Night, Flexible or Any"
-      );
-    }
+const shiftAvailability =
+  fields.shiftAvailability
+    ? parseShift(
+        fields.shiftAvailability
+      )
+    : "DAY";
+
+if (
+  fields.shiftAvailability &&
+  !shiftAvailability
+) {
+  errors.push(
+    "Shift is invalid. Use General, Day, Night, Flexible or Any"
+  );
+}
 
     /* -----------------------------------------------------
        PRIORITY
@@ -2781,9 +3122,25 @@ const parseManpowerRequest =
        SKILLS
     ----------------------------------------------------- */
 
-    const requiredSkills =
-      parseSkills(
-        fields.requiredSkills
+    /*
+ * Explicit skills always have priority.
+ *
+ * If user omitted Skills completely,
+ * infer sensible defaults from Position + Department.
+ */
+
+const explicitSkills =
+  parseSkills(
+    fields.requiredSkills
+  );
+
+const requiredSkills =
+  explicitSkills.length >
+  0
+    ? explicitSkills
+    : inferSkillsFromPosition(
+        fields.positionTitle,
+        fields.department
       );
 
     /* -----------------------------------------------------
