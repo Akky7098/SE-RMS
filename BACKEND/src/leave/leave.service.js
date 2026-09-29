@@ -1015,13 +1015,38 @@ const recalculateBalance =
 
 const getMyBalances =
   async ({
-    user,
+    user = null,
+    employeeId = null,
     year,
   }) => {
+    /*
+     * WEB / APP:
+     *   resolve employee from authenticated user.
+     *
+     * Trusted internal flows such as WhatsApp:
+     *   resolve employee directly from Employee Master.
+     */
+
     const employee =
-      await findEmployeeForUser(
-        user
+      employeeId
+        ? await findEmployeeById(
+            employeeId
+          )
+        : await findEmployeeForUser(
+            user
+          );
+
+    if (
+      normalizeUpper(
+        employee.status
+      ) !== "ACTIVE"
+    ) {
+      throw createServiceError(
+        "Active employee profile could not be found.",
+        403,
+        "EMPLOYEE_PROFILE_REQUIRED"
       );
+    }
 
     const selectedYear =
       Number(
@@ -1050,8 +1075,10 @@ const getMyBalances =
 
     return {
       employee,
+
       year:
         selectedYear,
+
       balances,
     };
   };
@@ -1347,14 +1374,61 @@ const validateRequestAgainstPolicy =
 
 const createLeaveRequest =
   async ({
-    user,
+    user = null,
+    employeeId = null,
     payload,
     requestMeta = {},
   }) => {
+    /*
+     * Employee resolution
+     *
+     * WEB / APP:
+     *   existing authenticated User -> Employee behavior.
+     *
+     * WHATSAPP / trusted internal integration:
+     *   Employee Master _id -> Employee.
+     *
+     * This means an employee does NOT need an RMS User
+     * account merely to submit leave through WhatsApp.
+     */
+
     const employee =
-      await findEmployeeForUser(
-        user
+      employeeId
+        ? await findEmployeeById(
+            employeeId
+          )
+        : await findEmployeeForUser(
+            user
+          );
+
+    if (
+      normalizeUpper(
+        employee.status
+      ) !== "ACTIVE"
+    ) {
+      throw createServiceError(
+        "Employee is not active.",
+        403,
+        "EMPLOYEE_INACTIVE"
       );
+    }
+
+    /*
+     * Audit actor.
+     *
+     * Dashboard request:
+     *   authenticated user id.
+     *
+     * WhatsApp employee without RMS user:
+     *   null is intentional.
+     *
+     * Employee identity is separately stored
+     * in LeaveRequest.employeeId.
+     */
+
+    const actorUserId =
+      getUserId(user) ||
+      null;
 
     const leaveTypeId =
       payload
@@ -1487,7 +1561,7 @@ const createLeaveRequest =
         year,
 
         userId:
-          getUserId(user),
+          actorUserId,
       });
 
     await recalculateBalance(
@@ -1638,14 +1712,10 @@ const createLeaveRequest =
                       ),
 
                     createdBy:
-                      getUserId(
-                        user
-                      ),
+                      actorUserId,
 
                     updatedBy:
-                      getUserId(
-                        user
-                      ),
+                      actorUserId,
                   },
                 ],
                 {
@@ -1673,7 +1743,7 @@ const createLeaveRequest =
               totalDays;
 
             balance.updatedBy =
-              getUserId(user);
+              actorUserId;
 
             balance.available =
               calculateAvailableBalance(
@@ -1727,9 +1797,7 @@ const createLeaveRequest =
                       requestNumber,
 
                     performedBy:
-                      getUserId(
-                        user
-                      ),
+                      actorUserId,
                   },
                 ],
                 {
@@ -1810,7 +1878,7 @@ const createLeaveRequest =
         )
         .populate(
           "employeeId",
-          "employeeCode fullName designation orgUnitCode"
+          "employeeCode fullName designation orgUnitCode mobileNumber"
         )
         .populate(
           "currentApproverEmployeeId",

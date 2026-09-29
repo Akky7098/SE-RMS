@@ -589,15 +589,15 @@ const leaveRequestSchema =
 },
 
       createdBy: {
-        type:
-          Schema.Types.ObjectId,
+  type:
+    Schema.Types.ObjectId,
 
-        ref:
-          "User",
+  ref:
+    "User",
 
-        required:
-          true,
-      },
+  default:
+    null,
+},
 
       updatedBy: {
         type:

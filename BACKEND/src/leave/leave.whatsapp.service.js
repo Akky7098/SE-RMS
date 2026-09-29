@@ -1036,82 +1036,171 @@ const isFriendlyNameMatch = (
     );
 };
 
+
+
 /* =========================================================
    RESOLVE USER FROM WHATSAPP
 
    User.whatsappNumber is authoritative.
 ========================================================= */
 
-const resolveSenderUser = async ({
-  senderJid,
-  participant,
-  participantAlt,
-}) => {
-  const phoneCandidates =
-    getPhoneCandidates({
-      senderJid,
-      participant,
-      participantAlt,
-    });
+// const resolveSenderUser = async ({
+//   senderJid,
+//   participant,
+//   participantAlt,
+// }) => {
+//   const phoneCandidates =
+//     getPhoneCandidates({
+//       senderJid,
+//       participant,
+//       participantAlt,
+//     });
 
-  if (
-    !phoneCandidates.length
-  ) {
-    return null;
-  }
+//   if (
+//     !phoneCandidates.length
+//   ) {
+//     return null;
+//   }
 
-  const users =
-    await User
-      .find({
-        status:
-          "ACTIVE",
+//   const users =
+//     await User
+//       .find({
+//         status:
+//           "ACTIVE",
 
-        whatsappNumber: {
-          $in:
-            phoneCandidates,
-        },
-      })
-      .select(
-        "_id displayName whatsappNumber employee systemRole role status"
-      )
-      .lean();
+//         whatsappNumber: {
+//           $in:
+//             phoneCandidates,
+//         },
+//       })
+//       .select(
+//         "_id displayName whatsappNumber employee systemRole role status"
+//       )
+//       .lean();
 
-  if (
-    users.length !==
-    1
-  ) {
-    return null;
-  }
+//   if (
+//     users.length !==
+//     1
+//   ) {
+//     return null;
+//   }
 
-  return users[0];
-};
+//   return users[0];
+// };
 
 /* =========================================================
    RESOLVE EMPLOYEE
 ========================================================= */
 
-const resolveSenderEmployee =
-  async (
-    user
-  ) => {
-    if (!user?._id) {
-      return null;
+// const resolveSenderEmployee =
+//   async (
+//     user
+//   ) => {
+//     if (!user?._id) {
+//       return null;
+//     }
+
+//     return Employee
+//       .findOne({
+//         user:
+//           user._id,
+
+//         status:
+//           "ACTIVE",
+//       })
+//       .select(
+//         "_id employeeCode fullName designation orgUnitCode department reportsTo user employmentType gender status"
+//       )
+//       .lean();
+//   };
+
+
+
+/* =========================================================
+   RESOLVE EMPLOYEE FROM EMPLOYEE MASTER
+
+   IMPORTANT:
+   - Employee Code is the identity authority.
+   - WhatsApp sender number is NOT used to identify employee.
+   - Name is only used as a friendly validation.
+   - Employee.mobileNumber is used for private WhatsApp reply.
+========================================================= */
+
+const resolveEmployeeFromMaster =
+  async ({
+    employeeCode,
+    employeeName,
+  }) => {
+    const code =
+      normalizeUpper(
+        employeeCode
+      );
+
+    if (!code) {
+      return {
+        employee: null,
+        error:
+          "EMPLOYEE_CODE_REQUIRED",
+      };
     }
 
-    return Employee
-      .findOne({
-        user:
-          user._id,
+    const employee =
+      await Employee
+        .findOne({
+          employeeCode:
+            code,
 
-        status:
-          "ACTIVE",
-      })
-      .select(
-        "_id employeeCode fullName designation orgUnitCode department reportsTo user employmentType gender status"
+          status:
+            "ACTIVE",
+        })
+        .select(
+          "_id employeeCode fullName mobileNumber designation orgUnitCode department reportsTo user employmentType gender status"
+        )
+        .lean();
+
+    if (!employee) {
+      return {
+        employee: null,
+        error:
+          "EMPLOYEE_NOT_FOUND",
+      };
+    }
+
+    /*
+     * Employee Code already uniquely identified the employee.
+     *
+     * Name is only an additional safety check.
+     *
+     * Examples:
+     *
+     * Employee Master:
+     * SE1209 -> Gaurav Paliwal
+     *
+     * Gaurav          -> valid
+     * GAURAV          -> valid
+     * Gaurav Paliwal  -> valid
+     * Ankit           -> invalid
+     */
+
+    if (
+      employeeName &&
+      !isFriendlyNameMatch(
+        employeeName,
+        employee.fullName
       )
-      .lean();
-  };
+    ) {
+      return {
+        employee,
+        error:
+          "EMPLOYEE_NAME_MISMATCH",
+      };
+    }
 
+    return {
+      employee,
+      error: null,
+    };
+  };
 /* =========================================================
    LEAVE TYPE MATCHER
 
@@ -1313,7 +1402,6 @@ const getBalanceAvailable = (
 
 const getAvailableLeaveOptions =
   async ({
-    user,
     employee,
     date,
     excludeLeaveTypeId = null,
@@ -1354,11 +1442,15 @@ const getAvailableLeaveOptions =
           .lean(),
 
         leaveService
-          .getMyBalances({
-            user,
-            year:
-              targetYear,
-          }),
+  .getMyBalances({
+    user: null,
+
+    employeeId:
+      employee._id,
+
+    year:
+      targetYear,
+  }),
       ]);
 
     const balances =
@@ -1521,10 +1613,8 @@ const getAvailableLeaveOptions =
 
     return options;
   };
-
 const buildAlternativeLeaveMessage =
   async ({
-    user,
     employee,
     requestedLeaveType,
     parsed,
@@ -1534,19 +1624,17 @@ const buildAlternativeLeaveMessage =
 
     try {
       options =
-        await getAvailableLeaveOptions({
-          user,
+  await getAvailableLeaveOptions({
+    employee,
 
-          employee,
+    date:
+      parsed
+        ?.fromDate,
 
-          date:
-            parsed
-              ?.fromDate,
-
-          excludeLeaveTypeId:
-            requestedLeaveType
-              ?._id,
-        });
+    excludeLeaveTypeId:
+      requestedLeaveType
+        ?._id,
+  });
     } catch (
       optionError
     ) {
@@ -1959,15 +2047,37 @@ const buildEmployeeDecisionMessage = ({
 const notifyEmployeeLeaveSubmitted =
   async ({
     request,
-    employeeUser,
+    employee,
   }) => {
     const phone =
       normalizePhone(
-        employeeUser
-          ?.whatsappNumber
+        employee
+          ?.mobileNumber
       );
 
     if (!phone) {
+      console.warn(
+        "[LEAVE][EMPLOYEE_NOTIFY][SKIPPED] Employee mobileNumber not available",
+        {
+          employeeId:
+            employee?._id
+              ? String(
+                  employee._id
+                )
+              : null,
+
+          employeeCode:
+            employee
+              ?.employeeCode ||
+            null,
+
+          requestNumber:
+            request
+              ?.requestNumber ||
+            null,
+        }
+      );
+
       return false;
     }
 
@@ -2405,38 +2515,61 @@ const notifyEmployeeDecision =
           employeeId
         )
         .select(
-          "_id user"
+          "_id employeeCode fullName mobileNumber"
         )
         .lean();
 
-    if (!employee?.user) {
+    if (!employee) {
+      console.warn(
+        "[LEAVE][EMPLOYEE_DECISION_NOTIFY][SKIPPED] Employee not found",
+        {
+          employeeId:
+            String(
+              employeeId
+            ),
+
+          requestNumber:
+            request
+              ?.requestNumber ||
+            null,
+        }
+      );
+
       return false;
     }
 
-    const employeeUser =
-      await User
-        .findOne({
-          _id:
-            employee.user,
+    const phone =
+      normalizePhone(
+        employee
+          .mobileNumber
+      );
 
-          status:
-            "ACTIVE",
-        })
-        .select(
-          "_id whatsappNumber"
-        )
-        .lean();
+    if (!phone) {
+      console.warn(
+        "[LEAVE][EMPLOYEE_DECISION_NOTIFY][SKIPPED] Employee mobileNumber not available",
+        {
+          employeeId:
+            String(
+              employee._id
+            ),
 
-    if (
-      !employeeUser
-        ?.whatsappNumber
-    ) {
+          employeeCode:
+            employee
+              .employeeCode ||
+            null,
+
+          requestNumber:
+            request
+              ?.requestNumber ||
+            null,
+        }
+      );
+
       return false;
     }
 
     return sendPrivate(
-      employeeUser
-        .whatsappNumber,
+      phone,
       buildEmployeeDecisionMessage({
         request,
         approved,
@@ -2455,6 +2588,10 @@ const notifyEmployeeDecision =
    - Manager gets private approval only after successful create.
 ========================================================= */
 
+
+
+
+
 const handleIncomingLeaveMessage =
   async ({
     jid,
@@ -2464,16 +2601,27 @@ const handleIncomingLeaveMessage =
     messageId,
     text,
   }) => {
+    /*
+     * ---------------------------------------------------------
+     * 1. ONLY PROCESS CONFIGURED LEAVE GROUP
+     * ---------------------------------------------------------
+     */
+
     if (
       !LEAVE_GROUP_ID ||
       String(jid) !==
         LEAVE_GROUP_ID
     ) {
       return {
-        ignored:
-          true,
+        ignored: true,
       };
     }
+
+    /*
+     * ---------------------------------------------------------
+     * 2. IGNORE NORMAL GROUP CONVERSATION
+     * ---------------------------------------------------------
+     */
 
     if (
       !looksLikeLeaveRequest(
@@ -2481,27 +2629,41 @@ const handleIncomingLeaveMessage =
       )
     ) {
       return {
-        ignored:
-          true,
+        ignored: true,
       };
     }
 
-    const user =
-      await resolveSenderUser({
-        senderJid,
-        participant,
-        participantAlt,
-      });
-
     /*
-     * If sender cannot be safely identified, do not post
-     * an error in the group because we have no trusted
-     * private number to reply to.
+     * ---------------------------------------------------------
+     * 3. PARSE MESSAGE FIRST
+     *
+     * Employee Code is now the identity authority.
+     * Sender WhatsApp number is NOT used for employee lookup.
+     * ---------------------------------------------------------
      */
 
-    if (!user) {
+    const parsed =
+      parseLeaveApplication(
+        text
+      );
+
+    /*
+     * ---------------------------------------------------------
+     * 4. EMPLOYEE CODE IS REQUIRED
+     * ---------------------------------------------------------
+     *
+     * Without Employee Code we cannot safely determine which
+     * Employee Master record owns this leave.
+     *
+     * We intentionally do NOT reply in group.
+     * ---------------------------------------------------------
+     */
+
+    if (
+      !parsed.employeeCode
+    ) {
       console.warn(
-        "LEAVE WHATSAPP USER NOT RESOLVED =>",
+        "[LEAVE][EMPLOYEE_RESOLVE][FAILED] EMPLOYEE_CODE_REQUIRED",
         {
           senderJid,
           participant,
@@ -2511,328 +2673,380 @@ const handleIncomingLeaveMessage =
       );
 
       return {
-        handled:
-          true,
+        handled: true,
+        failed: true,
+        code:
+          "EMPLOYEE_CODE_REQUIRED",
       };
     }
+
+    /*
+     * ---------------------------------------------------------
+     * 5. RESOLVE DIRECTLY FROM EMPLOYEE MASTER
+     * ---------------------------------------------------------
+     */
+
+    const employeeResolution =
+      await resolveEmployeeFromMaster({
+        employeeCode:
+          parsed.employeeCode,
+
+        employeeName:
+          parsed.employeeName,
+      });
 
     const employee =
-      await resolveSenderEmployee(
-        user
-      );
-
-    if (!employee) {
-      await sendPrivate(
-        user.whatsappNumber,
-        "❌ *LEAVE NOT APPLIED*\n\nYour active employee profile could not be found. Please contact HR."
-      );
-
-      return {
-        handled:
-          true,
-      };
-    }
-
-    const parsed =
-      parseLeaveApplication(
-        text
-      );
+      employeeResolution
+        .employee;
 
     /*
-     * Employee code is required because it is simple,
-     * strong and avoids applying leave for the wrong person.
+     * ---------------------------------------------------------
+     * 6. EMPLOYEE CODE NOT FOUND
+     * ---------------------------------------------------------
+     *
+     * We don't have a trusted Employee.mobileNumber because
+     * the employee record itself could not be resolved.
+     *
+     * Therefore:
+     * - no group reply
+     * - no sender-number fallback
+     * ---------------------------------------------------------
      */
 
     if (
-      !parsed.employeeCode
+      employeeResolution
+        .error ===
+      "EMPLOYEE_NOT_FOUND"
     ) {
-      await sendPrivate(
-        user.whatsappNumber,
-        [
-          "❌ *LEAVE NOT APPLIED*",
-          "",
-          "Please include your Employee Code.",
-          "",
-          "Example:",
-          `Employee Code: ${
-            employee.employeeCode
-          }`,
-        ].join("\n")
+      console.warn(
+        "[LEAVE][EMPLOYEE_RESOLVE][FAILED] EMPLOYEE_NOT_FOUND",
+        {
+          employeeCode:
+            parsed.employeeCode,
+
+          employeeName:
+            parsed.employeeName,
+
+          messageId,
+        }
       );
 
       return {
-        handled:
-          true,
-      };
-    }
-
-    if (
-      normalizeUpper(
-        employee.employeeCode
-      ) !==
-      parsed.employeeCode
-    ) {
-      await sendPrivate(
-        user.whatsappNumber,
-        [
-          "❌ *LEAVE NOT APPLIED*",
-          "",
-          "The Employee Code does not match your SE-RMS profile.",
-          "",
-          `Your Employee Code: *${
-            employee.employeeCode
-          }*`,
-        ].join("\n")
-      );
-
-      return {
-        handled:
-          true,
+        handled: true,
+        failed: true,
+        code:
+          "EMPLOYEE_NOT_FOUND",
       };
     }
 
     /*
-     * Name is forgiving.
+     * ---------------------------------------------------------
+     * 7. EMPLOYEE NAME MISMATCH
+     * ---------------------------------------------------------
      *
-     * "Sandeep" for "Sandeep Jain" is accepted.
-     * Missing name is accepted.
-     *
-     * Only an obviously different supplied name is rejected.
+     * Employee Code found a real Employee Master record,
+     * therefore we CAN safely send the error to that employee's
+     * registered mobileNumber.
+     * ---------------------------------------------------------
      */
 
     if (
-      parsed.employeeName &&
-      !isFriendlyNameMatch(
-        parsed.employeeName,
-        employee.fullName
-      )
+      employeeResolution
+        .error ===
+      "EMPLOYEE_NAME_MISMATCH"
     ) {
-      await sendPrivate(
-        user.whatsappNumber,
-        [
-          "❌ *LEAVE NOT APPLIED*",
-          "",
-          "The name in the message does not match your employee profile.",
-          "",
-          `Your name: *${
-            employee.fullName
-          }*`,
-        ].join("\n")
+      const employeePhone =
+        normalizePhone(
+          employee
+            ?.mobileNumber
+        );
+
+      console.warn(
+        "[LEAVE][EMPLOYEE_RESOLVE][FAILED] EMPLOYEE_NAME_MISMATCH",
+        {
+          employeeCode:
+            employee
+              ?.employeeCode,
+
+          suppliedName:
+            parsed.employeeName,
+
+          actualName:
+            employee
+              ?.fullName,
+
+          messageId,
+        }
       );
 
+      if (employeePhone) {
+        await sendPrivate(
+          employeePhone,
+          [
+            "❌ *LEAVE NOT APPLIED*",
+            "",
+            `Employee Code *${employee.employeeCode}* belongs to *${employee.fullName}*.`,
+            "",
+            `The entered Employee Name *${parsed.employeeName}* does not match this employee.`,
+            "",
+            "Please correct the Employee Name and submit the leave request again.",
+          ].join("\n")
+        );
+      }
+
       return {
-        handled:
-          true,
+        handled: true,
+        failed: true,
+        code:
+          "EMPLOYEE_NAME_MISMATCH",
       };
     }
 
-   /*
- * Friendly WhatsApp behavior:
- *
- * If Leave Type is omitted completely,
- * default to Loss of Pay.
- *
- * IMPORTANT:
- * We still resolve it from LeaveType master.
- * We do NOT hard-code a MongoDB ID.
- */
+    /*
+     * ---------------------------------------------------------
+     * 8. EMPLOYEE MUST HAVE REGISTERED MOBILE NUMBER
+     * ---------------------------------------------------------
+     */
 
-let leaveType;
-
-if (
-  parsed.leaveTypeText
-) {
-  leaveType =
-    await resolveLeaveType(
-      parsed.leaveTypeText
-    );
-} else {
-  /*
-   * Try the common names/codes used for
-   * Loss of Pay.
-   */
-  leaveType =
-    await resolveLeaveType(
-      "LWP"
-    );
-
-  if (!leaveType) {
-    leaveType =
-      await resolveLeaveType(
-        "LOP"
+    const employeePhone =
+      normalizePhone(
+        employee
+          ?.mobileNumber
       );
-  }
 
-  if (!leaveType) {
-    leaveType =
-      await resolveLeaveType(
-        "Loss of Pay"
+    if (!employeePhone) {
+      console.warn(
+        "[LEAVE][EMPLOYEE_RESOLVE][FAILED] EMPLOYEE_MOBILE_MISSING",
+        {
+          employeeId:
+            employee?._id
+              ? String(
+                  employee._id
+                )
+              : null,
+
+          employeeCode:
+            employee
+              ?.employeeCode,
+
+          employeeName:
+            employee
+              ?.fullName,
+
+          messageId,
+        }
       );
-  }
 
-  if (!leaveType) {
-    leaveType =
-      await resolveLeaveType(
-        "Leave Without Pay"
+      return {
+        handled: true,
+        failed: true,
+        code:
+          "EMPLOYEE_MOBILE_MISSING",
+      };
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 9. VALIDATE LEAVE TYPE
+     * ---------------------------------------------------------
+     */
+
+    if (
+      !parsed.leaveTypeText
+    ) {
+      await sendPrivate(
+        employeePhone,
+        "❌ *LEAVE NOT APPLIED*\n\nPlease mention Leave Type, for example CL, SL, PL or LWP."
       );
-  }
-}
 
-if (!leaveType) {
-  if (
-    parsed.leaveTypeText
-  ) {
-    await sendPrivate(
-      user.whatsappNumber,
-      `❌ *LEAVE NOT APPLIED*\n\nLeave Type *${parsed.leaveTypeText}* is not available.`
-    );
-  } else {
-    await sendPrivate(
-      user.whatsappNumber,
-      "❌ *LEAVE NOT APPLIED*\n\nLoss of Pay leave is not configured in SE-RMS. Please contact HR."
-    );
-  }
+      return {
+        handled: true,
+        failed: true,
+        code:
+          "LEAVE_TYPE_REQUIRED",
+      };
+    }
 
-  return {
-    handled:
-      true,
-  };
-}
+    const leaveType =
+      await resolveLeaveType(
+        parsed.leaveTypeText
+      );
 
-    
+    if (!leaveType) {
+      await sendPrivate(
+        employeePhone,
+        `❌ *LEAVE NOT APPLIED*\n\nLeave Type *${parsed.leaveTypeText}* was not found. Please use a valid leave type such as CL, SL, PL or LWP.`
+      );
 
-   
+      return {
+        handled: true,
+        failed: true,
+        code:
+          "LEAVE_TYPE_NOT_FOUND",
+      };
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 10. VALIDATE DATE
+     * ---------------------------------------------------------
+     */
 
     if (
       !parsed.fromDate ||
       !parsed.toDate
     ) {
       await sendPrivate(
-        user.whatsappNumber,
-       "❌ *LEAVE NOT APPLIED*\n\nPlease enter a valid leave date, for example *05/10/26* or *05/10/2026*."
+        employeePhone,
+        "❌ *LEAVE NOT APPLIED*\n\nPlease mention a valid leave date.\n\nExample:\n*From:* 05/10/2026\n*To:* 05/10/2026"
       );
 
       return {
-        handled:
-          true,
+        handled: true,
+        failed: true,
+        code:
+          "LEAVE_DATE_REQUIRED",
       };
     }
+
+    /*
+     * ---------------------------------------------------------
+     * 11. VALIDATE REASON
+     * ---------------------------------------------------------
+     */
 
     if (
       !parsed.reason
     ) {
       await sendPrivate(
-        user.whatsappNumber,
+        employeePhone,
         "❌ *LEAVE NOT APPLIED*\n\nPlease mention a short Reason for leave."
       );
 
       return {
-        handled:
-          true,
+        handled: true,
+        failed: true,
+        code:
+          "LEAVE_REASON_REQUIRED",
       };
     }
 
+
+    /*
+     * ---------------------------------------------------------
+     * 13. CREATE LEAVE USING EXISTING LEAVE ENGINE
+     * ---------------------------------------------------------
+     */
+
     try {
       /*
-       * Reuse the SAME leave engine as frontend.
+       * Reuse EXACTLY the same leave engine as frontend.
        *
-       * No separate WhatsApp balance logic is used for
-       * actually creating the request.
+       * Existing service remains authority for:
+       * - policy
+       * - balance
+       * - overlap
+       * - leave days
+       * - workflow
+       * - reporting manager
        */
 
       const request =
-        await leaveService
-          .createLeaveRequest({
-            user,
+  await leaveService
+    .createLeaveRequest({
+      user: null,
 
-            payload: {
-              leaveTypeId:
-                leaveType._id,
+      employeeId:
+        employee._id,
 
-              fromDate:
-                parsed.fromDate,
+      payload: {
+        leaveTypeId:
+          leaveType._id,
 
-              toDate:
-                parsed.toDate,
+        fromDate:
+          parsed.fromDate,
 
-              durationType:
-                parsed.durationType,
+        toDate:
+          parsed.toDate,
 
-              reason:
-                parsed.reason,
+        durationType:
+          parsed.durationType,
 
-              emergency:
-                parsed.emergency,
+        reason:
+          parsed.reason,
 
-              emergencyReason:
-                parsed.emergencyReason,
+        emergency:
+          parsed.emergency,
 
-              contactDuringLeave:
-                parsed.contactDuringLeave,
+        emergencyReason:
+          parsed.emergencyReason,
 
-              attachments:
-                [],
+        contactDuringLeave:
+          parsed.contactDuringLeave,
 
-              source:
-                "WHATSAPP",
-            },
+        attachments:
+          [],
 
-            requestMeta: {
-              ipAddress:
-                "",
+        source:
+          "WHATSAPP",
+      },
 
-              userAgent:
-                "SE-RMS WhatsApp",
-            },
+      requestMeta: {
+        ipAddress:
+          "",
 
-            notifyWhatsApp:
-              false,
-          });
-
+        userAgent:
+          "SE-RMS WhatsApp",
+      },
+    });
       /*
-       * Employee private confirmation.
+       * -------------------------------------------------------
+       * 14. PRIVATE EMPLOYEE CONFIRMATION
+       *
+       * Employee.mobileNumber is authoritative.
+       * -------------------------------------------------------
        */
 
       await notifyEmployeeLeaveSubmitted({
         request,
-        employeeUser:
-          user,
+        employee,
       });
 
       /*
-       * Manager notification happens ONLY after successful
-       * creation.
+       * -------------------------------------------------------
+       * 15. MANAGER NOTIFICATION
        *
-       * If balance/policy/overlap fails, createLeaveRequest
-       * throws above and execution never reaches here.
+       * ONLY after successful leave creation.
+       *
+       * Do not change existing manager approval logic.
+       * -------------------------------------------------------
        */
 
       try {
-  const managerNotification =
-    await notifyManagerForApproval({
-      request,
-    });
+        const managerNotification =
+          await notifyManagerForApproval({
+            request,
+          });
 
-  console.log(
-    "[LEAVE][MANAGER_NOTIFY][FINAL_RESULT]",
-    managerNotification
-  );
-} catch (
-  notificationError
-) {
-  console.error(
-    "[LEAVE][MANAGER_NOTIFY][FINAL_ERROR] =>",
-    notificationError
-      ?.stack ||
-    notificationError
-      ?.message ||
-    notificationError
-  );
-}
+        console.log(
+          "[LEAVE][MANAGER_NOTIFY][FINAL_RESULT]",
+          managerNotification
+        );
+      } catch (
+        notificationError
+      ) {
+        console.error(
+          "[LEAVE][MANAGER_NOTIFY][FINAL_ERROR] =>",
+          notificationError
+            ?.stack ||
+            notificationError
+              ?.message ||
+            notificationError
+        );
+      }
 
       return {
-        handled:
-          true,
+        handled: true,
 
         requestId:
           String(
@@ -2847,17 +3061,16 @@ if (!leaveType) {
       error
     ) {
       /*
+       * -------------------------------------------------------
+       * 16. EXISTING BALANCE / POLICY ERROR HANDLING
+       * -------------------------------------------------------
+       *
        * IMPORTANT:
        *
-       * If balance is unavailable:
-       *
-       * 1. Do NOT create another leave automatically.
-       * 2. Do NOT automatically convert to LWP.
-       * 3. Do NOT notify manager.
-       * 4. Fetch employee's actual available alternatives.
-       * 5. Send alternatives privately.
-       *
-       * For every other error, use normal friendly error.
+       * - no automatic second leave
+       * - no automatic LWP conversion
+       * - no manager notification after failed creation
+       * - send alternatives privately to Employee.mobileNumber
        */
 
       const errorCode =
@@ -2870,26 +3083,24 @@ if (!leaveType) {
           "INSUFFICIENT_LEAVE_BALANCE"
       ) {
         const alternativeMessage =
-          await buildAlternativeLeaveMessage({
-            user,
+  await buildAlternativeLeaveMessage({
+    employee,
 
-            employee,
+    requestedLeaveType:
+      leaveType,
 
-            requestedLeaveType:
-              leaveType,
+    parsed,
 
-            parsed,
-
-            error,
-          });
+    error,
+  });
 
         await sendPrivate(
-          user.whatsappNumber,
+          employeePhone,
           alternativeMessage
         );
       } else {
         await sendPrivate(
-          user.whatsappNumber,
+          employeePhone,
           getFriendlyErrorMessage(
             error
           )
@@ -2897,11 +3108,9 @@ if (!leaveType) {
       }
 
       return {
-        handled:
-          true,
+        handled: true,
 
-        failed:
-          true,
+        failed: true,
 
         code:
           error?.code ||
@@ -2923,7 +3132,7 @@ module.exports = {
 
   parseLeaveApplication,
 
-  resolveSenderUser,
+  resolveEmployeeFromMaster,
 
   resolveLeaveType,
 

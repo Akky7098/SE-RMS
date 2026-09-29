@@ -96,6 +96,13 @@ const employeeActivationRoutes =
     "./employee/activation/employeeActivation.routes"
   );
 
+
+  const payrollRoutes =
+  require(
+    "./payroll/payroll.routes"
+  );
+
+
 /* =========================================================
    ATTENDANCE / SHIFT / TIMESHEET
 ========================================================= */
@@ -202,6 +209,9 @@ const joiningRoutes =
     "./selection/joining/joining.routes"
   );
 
+
+
+
 /* =========================================================
    ERROR MIDDLEWARE
 ========================================================= */
@@ -265,19 +275,21 @@ app.use(
         );
       }
 
-      if (
-        env
-          .frontendUrls
-          .includes(
-            origin
-          )
-      ) {
-        return callback(
-          null,
-          true
-        );
-      }
+      const allowedOrigins = [
+  ...env.frontendUrls,
+  "https://api.nuvanata.io",
+];
 
+if (
+  allowedOrigins.includes(
+    origin
+  )
+) {
+  return callback(
+    null,
+    true
+  );
+}
       return callback(
         new Error(
           `CORS origin not allowed: ${origin}`
@@ -638,6 +650,11 @@ app.use(
 app.use(
   "/api/v1/timesheets",
   timesheetRoutes
+);
+
+app.use(
+  "/api/v1/payroll",
+  payrollRoutes
 );
 
 /* =========================================================

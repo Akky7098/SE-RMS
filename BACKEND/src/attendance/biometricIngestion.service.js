@@ -148,15 +148,29 @@ const findEmployeeByBiometricCode =
       return null;
     }
 
-    return Employee.findOne({
-      biometricCode:
-        code,
+    /*
+     * Primary authoritative mapping:
+     * Employee.biometricCode
+     *
+     * We intentionally do NOT use employeeCode
+     * as an automatic fallback because employeeCode
+     * and biometricCode are separate business identifiers.
+     */
+    const employee =
+      await Employee.findOne({
+        biometricCode:
+          code,
 
-      status: {
-        $ne:
-          "EXITED",
-      },
-    }).lean();
+        status: {
+          $ne:
+            "EXITED",
+        },
+      }).lean();
+
+    return (
+      employee ||
+      null
+    );
   };
 
 /* =========================================================
@@ -457,6 +471,20 @@ const ingestRawPunch =
       );
     }
 
+    /*
+     * =====================================================
+     * RESOLVE EMPLOYEE DIRECTLY FROM EMPLOYEE MASTER
+     * =====================================================
+     *
+     * Employee.biometricCode is authoritative.
+     *
+     * Example:
+     *
+     * Employee.biometricCode = SE1325
+     * Machine biometricCode   = SE1325
+     *
+     * => automatically maps to that employee.
+     */
     const employee =
       await findEmployeeByBiometricCode(
         code
@@ -493,6 +521,9 @@ const ingestRawPunch =
         employee
       );
 
+    const now =
+      new Date();
+
     const insertDocument = {
       attendanceDeviceId:
         device._id,
@@ -528,9 +559,8 @@ const ingestRawPunch =
         actualPunchTime,
 
       /*
-       * businessDate intentionally null here.
-
-       * Shift/business-date processor sets this later.
+       * Shift/business-date processor
+       * will calculate this.
        */
       businessDate:
         null,
@@ -547,7 +577,7 @@ const ingestRawPunch =
       machineUserId:
         normalizeText(
           machineUserId ||
-            code
+          code
         ),
 
       machineVerifyMode:
@@ -603,57 +633,151 @@ const ingestRawPunch =
       processingAttempts:
         0,
 
+      processingError:
+        "",
+
       rawPayload,
 
       receivedAt:
-        new Date(),
+        now,
     };
 
     try {
-      const punch =
-        await RawAttendancePunch.findOneAndUpdate(
-          {
-            externalEventKey,
-          },
-
-          {
-            $setOnInsert:
-              insertDocument,
-          },
-
-          {
-            upsert:
-              true,
-
-            new:
-              true,
-
-            setDefaultsOnInsert:
-              true,
-
-            rawResult:
-              true,
-          }
-        );
-
       /*
-       * Mongoose return shape varies depending on version when
-       * rawResult/includeResultMetadata is used.
-
-       * Normalize it.
+       * ===================================================
+       * UPSERT RAW PUNCH
+       * ===================================================
+       *
+       * IMPORTANT FIX:
+       *
+       * Previously everything was inside $setOnInsert.
+       *
+       * Therefore an existing UNMAPPED punch remained
+       * UNMAPPED forever even after Employee Master had
+       * the correct biometricCode.
+       *
+       * Now:
+       *
+       * 1. New punches are inserted normally.
+       * 2. Existing punches are automatically repaired
+       *    when Employee Master can resolve them.
+       * 3. PROCESSED punches are NOT reset.
        */
-      const document =
-        punch?.value ||
-        punch;
 
-      const wasInserted =
-        Boolean(
-          punch?.lastErrorObject
-            ?.upserted
-        );
+      let existing =
+        await RawAttendancePunch.findOne({
+          externalEventKey,
+        });
+
+      let document;
+      let wasInserted =
+        false;
+
+      if (
+        !existing
+      ) {
+        try {
+          document =
+            await RawAttendancePunch.create(
+              insertDocument
+            );
+
+          wasInserted =
+            true;
+        } catch (
+          error
+        ) {
+          /*
+           * Another simultaneous device request may
+           * have inserted the exact same punch.
+           */
+          if (
+            error?.code !==
+            11000
+          ) {
+            throw error;
+          }
+
+          existing =
+            await RawAttendancePunch.findOne({
+              externalEventKey,
+            });
+
+          document =
+            existing;
+        }
+      } else {
+        document =
+          existing;
+      }
 
       /*
-       * Keep device directory updated independently.
+       * ===================================================
+       * SELF-HEAL EXISTING UNMAPPED PUNCH
+       * ===================================================
+       */
+
+      if (
+        employee &&
+        document &&
+        document.processingStatus !==
+          "PROCESSED" &&
+        (
+          !document.employeeId ||
+          document.processingStatus ===
+            "UNMAPPED"
+        )
+      ) {
+        document =
+          await RawAttendancePunch.findByIdAndUpdate(
+            document._id,
+
+            {
+              $set: {
+                employeeId:
+                  employee._id,
+
+                userId:
+                  employee.user ||
+                  null,
+
+                companyCode:
+                  employeeSnapshot.companyCode ||
+                  null,
+
+                orgUnitCode:
+                  employeeSnapshot.orgUnitCode ||
+                  null,
+
+                departmentId:
+                  employeeSnapshot.departmentId ||
+                  null,
+
+                officeId:
+                  device.officeId ||
+                  document.officeId ||
+                  null,
+
+                resolved:
+                  true,
+
+                processingStatus:
+                  "PENDING",
+
+                processingError:
+                  "",
+              },
+            },
+
+            {
+              new:
+                true,
+            }
+          );
+      }
+
+      /*
+       * Keep machine directory synchronized separately.
        */
       await upsertMachineUser({
         device,
@@ -689,10 +813,12 @@ const ingestRawPunch =
 
         mapped:
           Boolean(
+            document?.employeeId ||
             employee
           ),
 
         employeeId:
+          document?.employeeId ||
           employee?._id ||
           null,
       };
@@ -700,16 +826,79 @@ const ingestRawPunch =
       error
     ) {
       /*
-       * Duplicate race between simultaneous device requests.
+       * Duplicate race fallback.
        */
       if (
         error?.code ===
         11000
       ) {
-        const existing =
+        let existing =
           await RawAttendancePunch.findOne({
             externalEventKey,
           });
+
+        /*
+         * Even in duplicate race condition,
+         * repair an old UNMAPPED punch.
+         */
+        if (
+          employee &&
+          existing &&
+          existing.processingStatus !==
+            "PROCESSED" &&
+          (
+            !existing.employeeId ||
+            existing.processingStatus ===
+              "UNMAPPED"
+          )
+        ) {
+          existing =
+            await RawAttendancePunch.findByIdAndUpdate(
+              existing._id,
+
+              {
+                $set: {
+                  employeeId:
+                    employee._id,
+
+                  userId:
+                    employee.user ||
+                    null,
+
+                  companyCode:
+                    employeeSnapshot.companyCode ||
+                    null,
+
+                  orgUnitCode:
+                    employeeSnapshot.orgUnitCode ||
+                    null,
+
+                  departmentId:
+                    employeeSnapshot.departmentId ||
+                    null,
+
+                  officeId:
+                    device.officeId ||
+                    existing.officeId ||
+                    null,
+
+                  resolved:
+                    true,
+
+                  processingStatus:
+                    "PENDING",
+
+                  processingError:
+                    "",
+                },
+              },
+
+              {
+                new:
+                  true,
+              }
+            );
+        }
 
         return {
           punch:
@@ -764,17 +953,56 @@ const mapPendingPunchesForEmployee =
         employee.biometricCode
       );
 
+    if (
+      !code
+    ) {
+      return {
+        matched:
+          0,
+      };
+    }
+
+    /*
+     * =====================================================
+     * REPAIR RAW PUNCH MAPPING
+     * =====================================================
+     *
+     * Do NOT touch punches that have already successfully
+     * reached PROCESSED.
+     *
+     * This repairs:
+     *
+     * UNMAPPED + employeeId null
+     *
+     * and any other not-yet-processed punch whose employee
+     * mapping was missing.
+     */
     const result =
       await RawAttendancePunch.updateMany(
         {
           biometricCode:
             code,
 
-          employeeId:
-            null,
+          processingStatus: {
+            $in: [
+              "UNMAPPED",
+              "PENDING",
+            ],
+          },
 
-          processingStatus:
-            "UNMAPPED",
+          $or: [
+            {
+              employeeId:
+                null,
+            },
+
+            {
+              employeeId: {
+                $exists:
+                  false,
+              },
+            },
+          ],
         },
 
         {
@@ -809,6 +1037,12 @@ const mapPendingPunchesForEmployee =
           },
         }
       );
+
+    /*
+     * =====================================================
+     * REPAIR BIOMETRIC MACHINE USER DIRECTORY
+     * =====================================================
+     */
 
     await BiometricMachineUser.updateMany(
       {
