@@ -691,8 +691,8 @@ const approveRequest =
       await notifyEmployeeDecision({
   request,
 
-  action:
-    "APPROVED",
+  approved:
+    true,
 
   comment:
     req.body
@@ -757,8 +757,8 @@ const rejectRequest =
       await notifyEmployeeDecision({
   request,
 
-  action:
-    "REJECTED",
+  approved:
+    false,
 
   comment:
     req.body
@@ -1259,28 +1259,35 @@ const processPublicApproval =
             comment,
           });
 
-      const approverName =
+     const approverName =
   result
     ?.approver
     ?.displayName ||
   "";
 
-await notifyEmployeeDecision({
-  request:
-    result.request,
+const approved =
+  result.action ===
+  "APPROVED";
 
-  action:
-    result.action,
+try {
+  await notifyEmployeeDecision({
+    request:
+      result.request,
 
-  comment,
+    approved,
 
-  approverName,
-});
+    comment,
 
-      const approved =
-        result.action ===
-        "APPROVED";
-
+    approverName,
+  });
+} catch (notifyError) {
+  console.error(
+    "[LEAVE][PUBLIC_APPROVAL][EMPLOYEE_NOTIFY_FAILED]",
+    notifyError?.stack ||
+      notifyError?.message ||
+      notifyError
+  );
+}
       return res
         .status(200)
         .send(
