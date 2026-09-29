@@ -4,9 +4,7 @@ const leaveService =
 const {
   sendManagerApprovalRequestSafely,
 
-  notifyEmployeeApproved,
-
-  notifyEmployeeRejected,
+  notifyEmployeeDecision,
 } =
   require(
     "./leave.whatsapp.service"
@@ -690,12 +688,22 @@ const approveRequest =
               ),
           });
 
-      await notifyEmployeeApproved(
-        request,
-        req.user
-          ?.displayName ||
-          ""
-      );
+      await notifyEmployeeDecision({
+  request,
+
+  action:
+    "APPROVED",
+
+  comment:
+    req.body
+      ?.comment ||
+    "",
+
+  approverName:
+    req.user
+      ?.displayName ||
+    "",
+});
 
       return sendSuccess(
         res,
@@ -746,15 +754,22 @@ const rejectRequest =
               ),
           });
 
-      await notifyEmployeeRejected(
-        request,
-        req.body
-          ?.comment ||
-          "",
-        req.user
-          ?.displayName ||
-          ""
-      );
+      await notifyEmployeeDecision({
+  request,
+
+  action:
+    "REJECTED",
+
+  comment:
+    req.body
+      ?.comment ||
+    "",
+
+  approverName:
+    req.user
+      ?.displayName ||
+    "",
+});
 
       return sendSuccess(
         res,
@@ -1245,26 +1260,22 @@ const processPublicApproval =
           });
 
       const approverName =
-        result
-          ?.approver
-          ?.displayName ||
-        "";
+  result
+    ?.approver
+    ?.displayName ||
+  "";
 
-      if (
-        result.action ===
-        "APPROVED"
-      ) {
-        await notifyEmployeeApproved(
-          result.request,
-          approverName
-        );
-      } else {
-        await notifyEmployeeRejected(
-          result.request,
-          comment,
-          approverName
-        );
-      }
+await notifyEmployeeDecision({
+  request:
+    result.request,
+
+  action:
+    result.action,
+
+  comment,
+
+  approverName,
+});
 
       const approved =
         result.action ===
