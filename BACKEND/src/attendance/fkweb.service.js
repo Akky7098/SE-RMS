@@ -16,6 +16,13 @@ const {
     "./biometricIngestion.service"
   );
 
+  const {
+  processRawPunch,
+} =
+  require(
+    "./attendance.service"
+  );
+
 /* =========================================================
    PROVIDER
 ========================================================= */
@@ -302,22 +309,42 @@ const processPunch =
       ).toUpperCase() ||
       "LIVE";
 
+    /*
+     * Preserve the employee name supplied by the
+     * biometric machine.
+     *
+     * This is especially useful for unmapped punches
+     * because HR/Admin can see both:
+     *
+     * biometricCode
+     * biometricEmployeeName
+     */
+    const biometricEmployeeName =
+      normalizeText(
+        event?.employeeName ||
+        event?.payload
+          ?.user_name ||
+        event?.payload
+          ?.employee_name ||
+        event?.payload
+          ?.name
+      );
+
+    /*
+     * STEP 1:
+     *
+     * Always preserve the raw biometric punch first.
+     *
+     * RawAttendancePunch remains the permanent machine
+     * evidence even if attendance calculation fails later.
+     */
     const result =
       await ingestRawPunch({
         device,
 
         biometricCode,
 
-        biometricEmployeeName:
-          normalizeText(
-            event?.employeeName ||
-            event?.payload
-              ?.user_name ||
-            event?.payload
-              ?.employee_name ||
-            event?.payload
-              ?.name
-          ),
+        biometricEmployeeName,
 
         punchTime,
 
@@ -373,20 +400,139 @@ const processPunch =
       });
 
     /*
-     * lastPunchReceivedAt represents actual device punch
-     * activity. It is updated even when ingestRawPunch detects
-     * a duplicate because the device really communicated the
-     * punch to SE-RMS.
+     * STEP 2:
+     *
+     * The machine successfully communicated this punch
+     * to SE-RMS.
+     *
+     * Keep device activity tracking independent from
+     * attendance processing.
      */
-
     await markPunchReceived(
       device,
       punchTime
     );
 
-    return result;
-  };
+    /*
+     * STEP 3:
+     *
+     * If Employee Master mapping exists, immediately send
+     * this raw punch through the canonical attendance
+     * processor.
+     *
+     * This is the missing link that previously caused:
+     *
+     * processingStatus: "PENDING"
+     * processingAttempts: 0
+     *
+     * to remain indefinitely.
+     */
+    if (
+      result?.mapped &&
+      result?.punch?._id
+    ) {
+      try {
+        const processingResult =
+          await processRawPunch(
+            result.punch._id
+          );
 
+        return {
+          ...result,
+
+          attendanceProcessed:
+            true,
+
+          attendance:
+            processingResult
+              ?.attendance ||
+            null,
+
+          businessDate:
+            processingResult
+              ?.businessDate ||
+            null,
+
+          processingStatus:
+            processingResult
+              ?.punch
+              ?.processingStatus ||
+            "PROCESSED",
+        };
+      } catch (
+        error
+      ) {
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT throw away the machine punch.
+         *
+         * ingestRawPunch() has already stored the raw
+         * machine evidence.
+         *
+         * processRawPunch() records the processing failure
+         * on RawAttendancePunch so it can later be retried
+         * by processPendingPunches().
+         */
+        console.error(
+          "[FKWEB] Attendance processing failed after raw punch ingestion:",
+          {
+            rawPunchId:
+              result?.punch?._id ||
+              null,
+
+            biometricCode,
+
+            biometricEmployeeName,
+
+            punchTime,
+
+            message:
+              error?.message ||
+              String(
+                error
+              ),
+          }
+        );
+
+        return {
+          ...result,
+
+          attendanceProcessed:
+            false,
+
+          attendanceProcessingError:
+            error?.message ||
+            String(
+              error
+            ),
+        };
+      }
+    }
+
+    /*
+     * STEP 4:
+     *
+     * No Employee Master mapping exists yet.
+     *
+     * Keep the raw punch as UNMAPPED. Do not create false
+     * Attendance data.
+     *
+     * biometricCode + biometricEmployeeName remain
+     * available for mapping/admin visibility.
+     */
+    return {
+      ...result,
+
+      attendanceProcessed:
+        false,
+
+      attendanceProcessingReason:
+        result?.mapped
+          ? "RAW_PUNCH_ID_MISSING"
+          : "UNMAPPED_EMPLOYEE",
+    };
+  };
 /* =========================================================
    HISTORICAL PUNCHES
 

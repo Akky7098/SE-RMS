@@ -13,6 +13,12 @@ const {
   "./biometricIngestion.service"
 );
 
+const {
+  processRawPunch,
+} =
+  require(
+    "./attendance.service"
+  );
 /* =========================================================
    CONSTANTS
 ========================================================= */
@@ -921,71 +927,119 @@ const processAttendanceLog =
 
       try {
         const result =
-          await ingestRawPunch({
-            device,
+  await ingestRawPunch({
+    device,
 
-            biometricCode:
-              parsed.biometricCode,
+    biometricCode,
 
-            punchTime:
-              parsed.punchTime,
+    biometricEmployeeName,
 
-            source,
+    punchTime,
 
-            workMode:
-              "OFFICE",
+    source,
 
-            machineUserId:
-              parsed.biometricCode,
+    workMode:
+      "OFFICE",
 
-            machineVerifyMode:
-              parsed.machineVerifyMode,
+    machineRecordId,
 
-            machineInOutMode:
-              parsed.machineInOutMode,
+    machineUserId:
+      biometricCode,
 
-            syncBatchId,
+    machineVerifyMode,
 
-            rawPayload: {
-              protocol:
-                ESSL_INTEGRATION_TYPE,
+    machineInOutMode,
 
-              workCode:
-                parsed.workCode,
+    syncBatchId,
 
-              raw:
-                parsed.raw,
+    rawPayload,
+  });
 
-              historical:
-                source ===
-                "HISTORICAL_SYNC",
-            },
-          });
+if (
+  result?.inserted
+) {
+  stats.inserted +=
+    1;
+} else {
+  stats.duplicates +=
+    1;
+}
 
-        if (
-          result.inserted
-        ) {
-          stats.inserted +=
-            1;
-        } else {
-          stats.duplicates +=
-            1;
-        }
+if (
+  result?.mapped
+) {
+  stats.mapped +=
+    1;
+} else {
+  stats.unmapped +=
+    1;
+}
 
-        if (
-          result.mapped
-        ) {
-          stats.mapped +=
-            1;
-        } else {
-          stats.unmapped +=
-            1;
-        }
+/*
+ * Machine successfully delivered the punch.
+ *
+ * Keep heartbeat/punch-received tracking independent from
+ * attendance calculation.
+ */
+await markPunchReceived(
+  device,
+  punchTime
+);
 
-        await markPunchReceived(
-          device,
-          parsed.punchTime
-        );
+/*
+ * Immediately process mapped raw punches into Attendance.
+ *
+ * Raw punch ingestion remains authoritative and permanent.
+ * Attendance processing failure must NOT destroy or roll back
+ * the machine evidence.
+ */
+if (
+  result?.mapped &&
+  result?.punch?._id
+) {
+  try {
+    await processRawPunch(
+      result.punch._id
+    );
+  } catch (
+    processingError
+  ) {
+    console.error(
+      "[ESSL] Attendance processing failed after raw punch ingestion:",
+      {
+        rawPunchId:
+          result?.punch?._id ||
+          null,
+
+        biometricCode,
+
+        biometricEmployeeName,
+
+        punchTime,
+
+        message:
+          processingError
+            ?.message ||
+          String(
+            processingError
+          ),
+      }
+    );
+
+    /*
+     * IMPORTANT:
+     *
+     * Do not throw here.
+     *
+     * processRawPunch() already records:
+     *
+     * processingStatus = ERROR
+     * processingError  = ...
+     *
+     * processPendingPunches() can retry it later.
+     */
+  }
+}
       } catch (
         error
       ) {
