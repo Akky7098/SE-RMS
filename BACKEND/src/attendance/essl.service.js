@@ -19,6 +19,13 @@ const {
   require(
     "./attendance.service"
   );
+
+  const {
+  EsslCommand,
+} =
+  require(
+    "./esslCommand.model"
+  );
 /* =========================================================
    CONSTANTS
 ========================================================= */
@@ -382,7 +389,7 @@ const buildHistoricalAttendanceCommand =
 ========================================================= */
 
 const getPendingDeviceCommand =
-  (
+  async (
     serial
   ) => {
     const normalizedSerial =
@@ -397,23 +404,83 @@ const getPendingDeviceCommand =
     }
 
     /*
-     * Historical migration is complete.
-     *
-     * NEVER automatically send DATA QUERY ATTLOG during
-     * normal live production operation.
-     *
-     * Returning null allows the terminal's normal
-     * realtime ATTLOG flow to continue.
+     * Only this registered eSSL terminal is currently
+     * allowed to receive historical recovery commands.
      */
-    return null;
-  };
+    if (
+      normalizedSerial !==
+      ESSL_SONIPAT_SERIAL
+    ) {
+      return null;
+    }
 
+    /*
+     * Atomically claim exactly ONE pending command.
+     *
+     * PENDING -> SENT happens in the same DB operation,
+     * preventing repeated /getrequest polls from receiving
+     * the same command.
+     */
+    const command =
+      await EsslCommand
+        .findOneAndUpdate(
+          {
+            deviceSerialNumber:
+              normalizedSerial,
+
+            status:
+              "PENDING",
+          },
+          {
+            $set: {
+              status:
+                "SENT",
+
+              sentAt:
+                new Date(),
+            },
+          },
+          {
+            sort: {
+              queuedAt: 1,
+            },
+
+            new: true,
+          }
+        )
+        .lean();
+
+    if (
+      !command
+    ) {
+      return null;
+    }
+
+    console.log(
+      "[ESSL] Queued device command sent:",
+      {
+        serial:
+          normalizedSerial,
+
+        commandId:
+          command.commandId,
+
+        from:
+          command.from,
+
+        to:
+          command.to,
+      }
+    );
+
+    return command.commandText;
+  };
 /* =========================================================
    DEVICE COMMAND RESULT
 ========================================================= */
 
 const processDeviceCommandResult =
-  (
+  async (
     req,
     body
   ) => {
@@ -458,21 +525,36 @@ const processDeviceCommandResult =
           )
         : null;
 
-    if (
-      serial ===
-        ESSL_SONIPAT_SERIAL &&
-      commandId ===
-        ESSL_HISTORY_COMMAND_ID
-    ) {
-      /*
-       * A response proves the terminal received/executed
-       * the command.
-       *
-       * Do not continuously resend it.
-       */
-      historicalCommandAcknowledged =
-        true;
+   if (
+  serial &&
+  commandId
+) {
+  await EsslCommand.updateOne(
+    {
+      deviceSerialNumber:
+        serial,
+
+      commandId,
+    },
+    {
+      $set: {
+        status:
+          returnCode === null ||
+          returnCode >= 0
+            ? "ACKNOWLEDGED"
+            : "FAILED",
+
+        acknowledgedAt:
+          new Date(),
+
+        returnCode,
+
+        rawResult:
+          text,
+      },
     }
+  );
+}
 
     console.log(
       "eSSL device command result:",
@@ -496,7 +578,8 @@ const processDeviceCommandResult =
       returnCode,
 
       acknowledged:
-        historicalCommandAcknowledged,
+  returnCode === null ||
+  returnCode >= 0,
     };
   };
 

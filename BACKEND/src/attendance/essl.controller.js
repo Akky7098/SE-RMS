@@ -131,9 +131,9 @@ exports.getRequest =
         );
 
       const command =
-        getPendingDeviceCommand(
-          serial
-        );
+  await getPendingDeviceCommand(
+    serial
+  );
 
       if (
         command
@@ -370,10 +370,10 @@ exports.deviceCommand =
         );
 
       const result =
-        processDeviceCommandResult(
-          req,
-          body
-        );
+  await processDeviceCommandResult(
+    req,
+    body
+  );
 
       console.log(
         "eSSL devicecmd received:",
