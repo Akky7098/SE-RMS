@@ -47,21 +47,17 @@ const ESSL_HISTORY_COMMAND_ID =
   "900001";
 
 /*
- * Historical request state.
+ * Historical biometric migration is complete.
  *
  * IMPORTANT:
+ * Keep automatic historical DATA QUERY disabled during
+ * normal production operation.
  *
- * This is deliberately simple for the initial migration.
- *
- * The command remains available to /getrequest until the
- * terminal reports a device-command response.
- *
- * After Node restarts it becomes pending again. That is safe
- * because RawAttendancePunch ingestion is idempotent and
- * duplicates are already handled by ingestRawPunch().
+ * Historical recovery must be triggered explicitly,
+ * never automatically after every Node restart.
  */
 let historicalCommandAcknowledged =
-  false;
+  true;
 
 let historicalCommandDelivered =
   false;
@@ -161,7 +157,6 @@ const getDeviceSerial =
 /* =========================================================
    PARSE ESSL DATE
 ========================================================= */
-
 const parseEsslTime =
   (
     value
@@ -171,10 +166,18 @@ const parseEsslTime =
         value
       );
 
+    /*
+     * eSSL ADMS ATTLOG timestamps:
+     *
+     * 2026-10-06 08:15:23
+     * 2026-10-06T08:15:23
+     *
+     * Machine time is IST.
+     */
     const match =
-      text.match(
-        /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/
-      );
+  text.match(
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/
+  );
 
     if (
       !match
@@ -197,7 +200,6 @@ const parseEsslTime =
 
     return date;
   };
-
 /* =========================================================
    RESOLVE REGISTERED DEVICE
 ========================================================= */
@@ -389,38 +391,21 @@ const getPendingDeviceCommand =
       );
 
     if (
-      normalizedSerial !==
-      ESSL_SONIPAT_SERIAL
+      !normalizedSerial
     ) {
       return null;
     }
 
-    if (
-      historicalCommandAcknowledged
-    ) {
-      return null;
-    }
-
-    const command =
-      buildHistoricalAttendanceCommand();
-
-    historicalCommandDelivered =
-      true;
-
-    console.log(
-      "eSSL historical command delivered:",
-      {
-        serial:
-          normalizedSerial,
-
-        commandId:
-          ESSL_HISTORY_COMMAND_ID,
-
-        command,
-      }
-    );
-
-    return command;
+    /*
+     * Historical migration is complete.
+     *
+     * NEVER automatically send DATA QUERY ATTLOG during
+     * normal live production operation.
+     *
+     * Returning null allows the terminal's normal
+     * realtime ATTLOG flow to continue.
+     */
+    return null;
   };
 
 /* =========================================================
@@ -533,13 +518,6 @@ const resolveAttendanceSource =
   (
     body
   ) => {
-    if (
-      historicalCommandDelivered &&
-      !historicalCommandAcknowledged
-    ) {
-      return "HISTORICAL_SYNC";
-    }
-
     const rows =
       String(
         body ||
@@ -558,6 +536,14 @@ const resolveAttendanceSource =
           Boolean
         );
 
+    /*
+     * Determine source from the actual punch timestamp.
+     *
+     * Do NOT use historical-command in-memory state here.
+     * Live ATTLOG and historical ATTLOG can reach the same
+     * endpoint.
+     */
+
     for (
       const row of rows
     ) {
@@ -572,19 +558,46 @@ const resolveAttendanceSource =
         continue;
       }
 
+      /*
+       * Calculate today's start in IST.
+       *
+       * Server timezone must not decide whether a punch
+       * belongs to today in India.
+       */
       const now =
         new Date();
 
-      const todayStart =
+      const istNow =
         new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate()
+          now.getTime() +
+          (330 * 60 * 1000)
+        );
+
+      const year =
+        istNow.getUTCFullYear();
+
+      const month =
+        istNow.getUTCMonth();
+
+      const day =
+        istNow.getUTCDate();
+
+      const todayStartIstUtc =
+        new Date(
+          Date.UTC(
+            year,
+            month,
+            day,
+            0,
+            0,
+            0
+          ) -
+          (330 * 60 * 1000)
         );
 
       if (
         parsed.punchTime <
-        todayStart
+        todayStartIstUtc
       ) {
         return "HISTORICAL_SYNC";
       }
@@ -926,148 +939,164 @@ const processAttendanceLog =
       }
 
       try {
-        const result =
-  await ingestRawPunch({
-    device,
+  const biometricCode =
+    parsed.biometricCode;
 
-    biometricCode,
+  const punchTime =
+    parsed.punchTime;
 
-    biometricEmployeeName,
+  const machineVerifyMode =
+    parsed.machineVerifyMode;
 
-    punchTime,
+  const machineInOutMode =
+    parsed.machineInOutMode;
 
-    source,
+  const biometricEmployeeName =
+  normalizeText(
+    parsed.biometricEmployeeName ||
+    ""
+  );
 
-    workMode:
-      "OFFICE",
+  const machineRecordId =
+    "";
 
-    machineRecordId,
+  const rawPayload = {
+    protocol:
+      ESSL_INTEGRATION_TYPE,
 
-    machineUserId:
+    workCode:
+      parsed.workCode,
+
+    raw:
+      parsed.raw,
+
+    historical:
+      source ===
+      "HISTORICAL_SYNC",
+  };
+
+  const result =
+    await ingestRawPunch({
+      device,
+
       biometricCode,
 
-    machineVerifyMode,
+      biometricEmployeeName,
 
-    machineInOutMode,
+      punchTime,
 
-    syncBatchId,
+      source,
 
-    rawPayload,
-  });
+      workMode:
+        "OFFICE",
 
-if (
-  result?.inserted
-) {
-  stats.inserted +=
-    1;
-} else {
-  stats.duplicates +=
-    1;
-}
+      machineRecordId,
 
-if (
-  result?.mapped
-) {
-  stats.mapped +=
-    1;
-} else {
-  stats.unmapped +=
-    1;
-}
-
-/*
- * Machine successfully delivered the punch.
- *
- * Keep heartbeat/punch-received tracking independent from
- * attendance calculation.
- */
-await markPunchReceived(
-  device,
-  punchTime
-);
-
-/*
- * Immediately process mapped raw punches into Attendance.
- *
- * Raw punch ingestion remains authoritative and permanent.
- * Attendance processing failure must NOT destroy or roll back
- * the machine evidence.
- */
-if (
-  result?.mapped &&
-  result?.punch?._id
-) {
-  try {
-    await processRawPunch(
-      result.punch._id
-    );
-  } catch (
-    processingError
-  ) {
-    console.error(
-      "[ESSL] Attendance processing failed after raw punch ingestion:",
-      {
-        rawPunchId:
-          result?.punch?._id ||
-          null,
-
+      machineUserId:
         biometricCode,
 
-        biometricEmployeeName,
+      machineVerifyMode,
 
-        punchTime,
+      machineInOutMode,
 
-        message:
-          processingError
-            ?.message ||
-          String(
-            processingError
-          ),
-      }
-    );
+      syncBatchId,
 
-    /*
-     * IMPORTANT:
-     *
-     * Do not throw here.
-     *
-     * processRawPunch() already records:
-     *
-     * processingStatus = ERROR
-     * processingError  = ...
-     *
-     * processPendingPunches() can retry it later.
-     */
+      rawPayload,
+    });
+
+  if (
+    result?.inserted
+  ) {
+    stats.inserted +=
+      1;
+  } else {
+    stats.duplicates +=
+      1;
   }
+
+  if (
+    result?.mapped
+  ) {
+    stats.mapped +=
+      1;
+  } else {
+    stats.unmapped +=
+      1;
+  }
+
+  await markPunchReceived(
+    device,
+    punchTime
+  );
+
+  if (
+    result?.mapped &&
+    result?.punch?._id
+  ) {
+    try {
+
+      await processRawPunch(
+        result.punch._id
+      );
+
+    } catch (
+      processingError
+    ) {
+
+      console.error(
+        "[ESSL] Attendance processing failed after raw punch ingestion:",
+        {
+          rawPunchId:
+            result?.punch?._id ||
+            null,
+
+          biometricCode,
+
+          biometricEmployeeName,
+
+          punchTime,
+
+          message:
+            processingError
+              ?.message ||
+            String(
+              processingError
+            ),
+        }
+      );
+    }
+  }
+
+} catch (
+  error
+) {
+
+  stats.errors +=
+    1;
+
+  console.error(
+    "eSSL punch ingestion failed:",
+    {
+      device:
+        device?.code ||
+        device?.serialNumber ||
+        device?._id,
+
+      biometricCode:
+        parsed.biometricCode,
+
+      punchTime:
+        parsed.punchTime,
+
+      source,
+
+      error:
+        error?.message ||
+        error,
+    }
+  );
 }
-      } catch (
-        error
-      ) {
-        stats.errors +=
-          1;
-
-        console.error(
-          "eSSL punch ingestion failed:",
-          {
-            device:
-              device?.code ||
-              device?.serialNumber ||
-              device?._id,
-
-            biometricCode:
-              parsed.biometricCode,
-
-            punchTime:
-              parsed.punchTime,
-
-            source,
-
-            error:
-              error?.message ||
-              error,
-          }
-        );
-      }
+       
     }
 
     console.log(
