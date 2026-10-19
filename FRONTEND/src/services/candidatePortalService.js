@@ -4,9 +4,7 @@ import axios from "axios";
    PUBLIC API BASE
 ========================================================= */
 
-const API_BASE =
-  process.env.REACT_APP_API_URL ||
-  "http://localhost:5000/api/v1";
+import { API_BASE_URL as API_BASE } from "../config/urls";
 
 const PUBLIC_BASE =
   API_BASE.replace(

@@ -1,3 +1,4 @@
+import { publicAsset } from "../../config/urls";
 import React, {
   useEffect,
   useState,
@@ -98,7 +99,7 @@ const DashboardPwa = () => {
 
       <header className="se-pwa-dashboard-header">
         <img
-          src="/se-logo.png"
+          src={publicAsset("se-logo.png")}
           alt="Sandeep Edgetech"
         />
 

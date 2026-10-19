@@ -1,3 +1,5 @@
+import { employeeShiftDepartment, shiftDepartmentOptions } from "./utils/shiftDepartments";
+
 import React, {
   useCallback,
   useEffect,
@@ -16,6 +18,7 @@ import {
 
 import {
   getEmployees,
+  getEmployeeMeta,
 } from "../../../../services/employeeService";
 
 import {
@@ -174,34 +177,8 @@ const getEmployeeName = (
    backend now uses orgUnitCode as primary roster scope.
 ========================================================= */
 
-const getEmployeeDepartmentValue = (
-  employee
-) => {
-  return String(
-    employee?.orgUnitCode ||
-    employee?.departmentCode ||
-    employee?.department?._id ||
-    employee?.departmentId ||
-    employee?.departmentName ||
-    ""
-  );
-};
-
-/* =========================================================
-   DEPARTMENT LABEL
-========================================================= */
-
-const getEmployeeDepartmentLabel = (
-  employee
-) => {
-  return (
-    employee?.department?.name ||
-    employee?.departmentName ||
-    employee?.orgUnitCode ||
-    employee?.departmentCode ||
-    ""
-  );
-};
+const getEmployeeDepartmentValue = (employee) => employeeShiftDepartment(employee).value;
+const getEmployeeDepartmentLabel = (employee) => employeeShiftDepartment(employee).label;
 
 /* =========================================================
    OFFICE VALUE
@@ -383,6 +360,7 @@ const isSameAssignment = (
 ========================================================= */
 
 function ShiftPage() {
+  const [organizationUnits, setOrganizationUnits] = useState([]);
   const navigate =
     useNavigate();
 
@@ -837,13 +815,22 @@ function ShiftPage() {
           return;
         }
 
+        // Metadata contains all configured units, including Manufacturing subdivisions.
+        // A metadata outage must not prevent loading the permitted employee records.
+        try {
+          const meta = await getEmployeeMeta();
+          setOrganizationUnits(meta.organizationUnits || []);
+        } catch (error) {
+          console.warn("Shift department metadata unavailable:", error?.message);
+        }
+
         const first =
           await getEmployees({
             page:
               1,
 
             limit:
-              500,
+              100,
 
             status:
               "ACTIVE",
@@ -880,7 +867,7 @@ function ShiftPage() {
               page,
 
               limit:
-                500,
+                100,
 
               status:
                 "ACTIVE",
@@ -1404,65 +1391,10 @@ function ShiftPage() {
      DEPARTMENTS
   ======================================================= */
 
-  const departments =
-    useMemo(
-      () => {
-        const map =
-          new Map();
-
-        safeEmployees.forEach(
-          (
-            employee
-          ) => {
-            const value =
-              getEmployeeDepartmentValue(
-                employee
-              );
-
-            const label =
-              getEmployeeDepartmentLabel(
-                employee
-              );
-
-            if (
-              value &&
-              label
-            ) {
-              map.set(
-                value,
-                label
-              );
-            }
-          }
-        );
-
-        return [
-          ...map.entries(),
-        ]
-          .map(
-            ([
-              value,
-              label,
-            ]) => ({
-              value,
-
-              label,
-            })
-          )
-          .sort(
-            (
-              a,
-              b
-            ) =>
-              a.label.localeCompare(
-                b.label
-              )
-          );
-      },
-      [
-        safeEmployees,
-      ]
-    );
+  const departments = useMemo(
+    () => shiftDepartmentOptions(safeEmployees, organizationUnits),
+    [safeEmployees, organizationUnits]
+  );
 
   /* =======================================================
      OFFICES
@@ -5798,6 +5730,7 @@ safeRosters.some(
       ==================================================== */}
 
       <ShiftAssignmentForm
+        organizationUnits={organizationUnits}
         open={
           assignmentModalOpen
         }

@@ -1,0 +1,303 @@
+.se-lva.se-pya {
+  background: #f2f1ed;
+  color: #253044;
+}
+.se-pya .se-lva-primary {
+  background: #7b5421;
+  border-color: #7b5421;
+}
+.se-pya .se-lva-dialog > header,
+.se-pya .se-lva-tabs button[aria-pressed="true"] {
+  background: #293b52;
+  border-color: #293b52;
+}
+.se-pya .se-lva-review {
+  color: #744f22;
+  background: #f6eddd;
+}
+.se-pya-month {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  max-width: 220px;
+  font-size: 12px;
+  font-weight: 650;
+}
+.se-pya-month input,
+.se-pya-run-choice select,
+.se-pya-review input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border: 1px solid #cbd2dc;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #fff;
+  color: #26384f;
+  font-size: 16px;
+}
+.se-pya-run-choice {
+  display: grid;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 650;
+  margin: 14px 0;
+}
+.se-pya-banner,
+.se-pya-pay {
+  color: #fff;
+  background: linear-gradient(120deg, #26364d, #3b506b);
+  border-radius: 16px;
+  padding: 17px;
+  margin: 14px 0;
+}
+.se-pya-banner .se-lva-toolbar {
+  align-items: flex-start;
+}
+.se-pya-banner h2 {
+  font-size: 19px;
+  max-width: 65%;
+}
+.se-pya-banner > span,
+.se-pya-pay > span {
+  display: block;
+  color: #c8d6e7;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 1px;
+}
+.se-pya-banner > strong,
+.se-pya-pay > strong {
+  display: block;
+  font-size: clamp(25px, 7vw, 34px);
+  line-height: 1.3;
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.se-pya-banner p,
+.se-pya-pay small {
+  font-size: 12px;
+  color: #d3dfed;
+  margin-bottom: 0;
+}
+.se-pya-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+.se-pya-totals > div {
+  border: 1px solid #d9dce1;
+  border-radius: 12px;
+  padding: 13px;
+  background: #fff;
+  min-width: 0;
+}
+.se-pya-totals span {
+  display: block;
+  color: #677488;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.se-pya-totals strong {
+  font-size: clamp(14px, 4.2vw, 17px);
+  display: block;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+.se-pya-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0;
+}
+.se-pya-actions > button {
+  flex: 1;
+}
+.se-pya-card-pay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  margin: 12px 0;
+}
+.se-pya-card-pay span {
+  font-size: 12px;
+  color: #69778a;
+}
+.se-pya-card-pay strong,
+.se-pya-net {
+  color: #293d56;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+.se-pya-review {
+  border: 1px solid #d8dfe8;
+  padding: 14px;
+  border-radius: 12px;
+  margin-top: 18px;
+}
+.se-pya-review label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-weight: 650;
+  font-size: 14px;
+}
+.se-pya-choice-list {
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #d4dae3;
+  border-radius: 11px;
+  margin-bottom: 15px;
+}
+.se-pya .se-lva-history > summary {
+  margin-bottom: 12px;
+}
+@media (max-width: 359px) {
+  .se-pya-banner h2 {
+    font-size: 17px;
+    max-width: 56%;
+  }
+  .se-pya .se-lva-status {
+    font-size: 10px;
+  }
+}
+.se-pya-top-controls {
+  gap: 8px;
+}
+.se-pya-top-controls .se-pya-month {
+  flex: 1;
+}
+.se-pya-top-controls > .se-lva-secondary {
+  width: 44px;
+  flex-shrink: 0;
+  padding: 7px;
+  font-size: 22px;
+}
+.se-pya-top-controls > .se-lva-primary {
+  font-size: 14px;
+  padding: 10px;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+.se-pya-run-summary {
+  padding: 14px 16px;
+}
+.se-pya-run-summary .se-lva-toolbar {
+  margin: 0 0 7px;
+}
+.se-pya-run-summary .se-lva-toolbar > span:first-child {
+  color: #c9d7e7;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.se-pya-run-summary > strong {
+  font-size: 29px;
+  margin: 3px 0;
+}
+.se-pya-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* Mobile payroll: coloured surfaces and clear card hierarchy. */
+.se-pya .se-lva-dialog {
+  background: #eef1f5;
+}
+
+.se-pya .se-lva-dialog-body {
+  background: linear-gradient(160deg, #eef1f5, #f4efe6);
+}
+
+.se-pya .se-lva-card,
+.se-pya .se-lva-request {
+  background: linear-gradient(125deg, #263b53, #354d68);
+  border-color: #405b77;
+  color: #fff;
+  box-shadow: 0 5px 14px #23364d12;
+}
+
+.se-pya .se-lva-card p,
+.se-pya .se-lva-request > p,
+.se-pya .se-lva-card small,
+.se-pya .se-lva-request small,
+.se-pya .se-pya-card-pay span {
+  color: #d9e3ee;
+}
+
+.se-pya .se-lva-request header > span,
+.se-pya .se-lva-request .se-pya-card-pay strong {
+  color: #fff;
+}
+
+.se-pya .se-lva-card details {
+  border-top: 1px solid #ffffff30;
+  padding-top: 12px;
+}
+
+.se-pya .se-lva-card details summary {
+  color: #fff;
+  font-weight: 650;
+  min-height: 44px;
+  display: list-item;
+  align-content: center;
+}
+
+.se-pya .se-lva-card .se-lva-status {
+  background: #fff;
+  color: #293b52;
+  border: 1px solid #fff;
+}
+
+.se-pya .se-pya-totals > div:first-child {
+  background: #304d64;
+  border-color: #304d64;
+  color: #fff;
+}
+
+.se-pya .se-pya-totals > div:last-child {
+  background: #65452f;
+  border-color: #65452f;
+  color: #fff;
+}
+
+.se-pya .se-pya-totals span {
+  color: #f0ede8;
+}
+
+.se-pya .se-lva-history > summary {
+  background: #344961;
+  color: #fff;
+  border: 1px solid #344961;
+}
+
+.se-pya .se-lva-history[open] > summary {
+  background: #26394f;
+}
+
+.se-pya .se-pya-review,
+.se-pya .se-pya-choice-list {
+  background: #fff;
+  border-color: #c8d2de;
+}
+
+.se-pya .se-lva-form > footer {
+  background: #f8f9fb;
+  border-top-color: #cbd4df;
+}
+
+.se-pya button.se-lva-request:active {
+  background: #1e3046;
+}
+
+.se-pya button:focus-visible,
+.se-pya summary:focus-visible {
+  outline: 3px solid #b27823;
+  outline-offset: 3px;
+}

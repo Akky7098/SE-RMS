@@ -1,3 +1,4 @@
+import { publicAsset } from "../../config/urls";
 import React from "react";
 
 const LoadingScreen = () => {
@@ -21,7 +22,7 @@ const LoadingScreen = () => {
         }}
       >
         <img
-          src="/se-logo.png"
+          src={publicAsset("se-logo.png")}
           alt="Sandeep Edgetech"
           style={{
             width: "180px",

@@ -1,3 +1,4 @@
+import { publicAsset } from "../../config/urls";
 import React, {
   useCallback,
   useEffect,
@@ -565,7 +566,7 @@ const TimesheetWeb =
             </button>
 
             <img
-              src="/se-logo.png"
+              src={publicAsset("se-logo.png")}
               alt="Sandeep Edgetech"
             />
 

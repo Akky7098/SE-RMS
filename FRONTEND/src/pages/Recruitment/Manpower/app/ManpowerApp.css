@@ -1,0 +1,591 @@
+/* Mobile recruitment register, request form and details. */
+.se-mpa {
+  --mpa-ink: #302a25;
+  --mpa-muted: #80746a;
+  --mpa-line: #e9dfd4;
+  --mpa-accent: #99551e;
+  min-height: 65vh;
+  padding: 18px 18px 24px;
+  background: linear-gradient(155deg, #fbf2e6, #f7f5f1 45%, #f0eaf4);
+  color: var(--mpa-ink);
+  font-size: 14px;
+}
+
+.se-mpa h2,
+.se-mpa h3,
+.se-mpa p {
+  margin-top: 0;
+}
+
+.se-mpa-overview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 23px;
+  border: 1px solid #e6cfad;
+  border-radius: 22px;
+  background: linear-gradient(120deg, #f6dfbd, #f5ebdf);
+}
+
+.se-mpa-overview > div > span,
+.se-mpa-form-heading > span {
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.7px;
+  color: #8f6135;
+}
+
+.se-mpa-overview h2 {
+  margin: 10px 0 8px;
+  font-size: 27px;
+  line-height: 1.15;
+  letter-spacing: -0.9px;
+}
+
+.se-mpa-overview p {
+  margin-bottom: 0;
+  color: #78614c;
+  line-height: 1.6;
+}
+
+.se-mpa .se-mpa-primary,
+.se-mpa .se-mpa-secondary {
+  min-height: 48px;
+  padding: 12px 18px;
+  border: 1px solid #99551e;
+  border-radius: 13px;
+  background: #99551e;
+  color: #fff;
+  font-weight: 650;
+  font-size: 14px;
+}
+
+.se-mpa .se-mpa-secondary {
+  border-color: #dfd4c8;
+  background: #fff;
+  color: #6a594a;
+}
+
+.se-mpa button:disabled {
+  opacity: 0.55;
+}
+
+.se-mpa button:focus-visible,
+.se-mpa input:focus-visible,
+.se-mpa select:focus-visible,
+.se-mpa textarea:focus-visible {
+  outline: 3px solid #d5ac7b;
+  outline-offset: 2px;
+}
+
+.se-mpa-scopes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 5px;
+  margin: 20px 0 14px;
+  border: 1px solid #e2d7ca;
+  border-radius: 14px;
+  background: #eee5da;
+}
+
+.se-mpa-scopes button {
+  min-height: 44px;
+  padding: 7px 5px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #6d5c4b;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.se-mpa-scopes button[aria-pressed="true"] {
+  background: #fff;
+  color: #784316;
+  box-shadow: 0 2px 8px #67402012;
+}
+
+.se-mpa-scopes button > span {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 18px;
+  padding: 2px 4px;
+  margin-left: 4px;
+  border-radius: 6px;
+  background: #f3dfc8;
+  font-size: 10px;
+}
+
+.se-mpa-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 8px;
+  scrollbar-width: thin;
+}
+
+.se-mpa-tabs button {
+  min-height: 40px;
+  padding: 8px 15px;
+  flex-shrink: 0;
+  border: 1px solid #e5dbd0;
+  border-radius: 20px;
+  background: #fff9;
+  color: #7c6e62;
+  font-size: 12px;
+}
+
+.se-mpa-tabs button[aria-pressed="true"] {
+  border-color: #704d6f;
+  background: #704d6f;
+  color: #fff;
+}
+
+.se-mpa-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0 12px;
+}
+
+.se-mpa-list-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.se-mpa-list-heading button,
+.se-mpa-text-button {
+  min-height: 44px;
+  padding: 8px 2px;
+  border: 0;
+  background: transparent;
+  color: #89552d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.se-mpa-register {
+  display: grid;
+  gap: 13px;
+}
+
+.se-mpa-card {
+  min-width: 0;
+  width: 100%;
+  padding: 17px;
+  border: 1px solid #e6ddd4;
+  border-radius: 18px;
+  background: #fffefc;
+  color: var(--mpa-ink);
+  text-align: left;
+  box-shadow: 0 4px 12px #533b2605;
+}
+
+.se-mpa-card-top,
+.se-mpa-card-facts,
+.se-mpa-card-bottom,
+.se-mpa-badges {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.se-mpa-card-top {
+  margin-bottom: 12px;
+  color: #8b8178;
+  font-size: 11px;
+}
+
+.se-mpa-card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.3px;
+  overflow-wrap: anywhere;
+}
+
+.se-mpa-card > p {
+  margin: 0 0 16px;
+  color: #87796f;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.se-mpa-card-facts {
+  padding: 11px 0;
+  border-top: 1px solid #f0e9e1;
+  color: #89776a;
+  font-size: 11px;
+}
+
+.se-mpa-card-facts strong {
+  color: #53463c;
+  font-weight: 650;
+}
+
+.se-mpa-card-bottom {
+  padding-top: 12px;
+  border-top: 1px solid #f0e9e1;
+  color: #856046;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.se-mpa [data-tone] {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: #eef0f3;
+  color: #687083;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.se-mpa [data-tone="warning"] {
+  background: #fff0ce;
+  color: #91610b;
+}
+
+.se-mpa [data-tone="success"] {
+  background: #e3f2e8;
+  color: #34734c;
+}
+
+.se-mpa [data-tone="danger"],
+.se-mpa [data-tone="error"] {
+  background: #fbe7e5;
+  color: #a24a40;
+}
+
+.se-mpa [data-tone="purple"],
+.se-mpa [data-tone="primary"] {
+  background: #eee7f8;
+  color: #74539b;
+}
+
+.se-mpa-state {
+  padding: 34px 18px;
+  text-align: center;
+  color: #88766b;
+  line-height: 1.6;
+}
+
+.se-mpa-error {
+  padding: 13px;
+  margin: 12px 0;
+  border: 1px solid #efd5c9;
+  border-radius: 12px;
+  background: #fff2eb;
+  color: #9b5037;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.se-mpa-error button {
+  display: block;
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+}
+
+.se-mpa-load-more {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 16px;
+  border: 1px solid #ded0c1;
+  border-radius: 12px;
+  background: #fff7ed;
+  color: #89552d;
+}
+
+.se-mpa-form-heading h2 {
+  margin: 9px 0 20px;
+  font-size: 26px;
+  letter-spacing: -0.6px;
+}
+
+.se-mpa-steps {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 23px;
+  padding: 0;
+  list-style: none;
+}
+
+.se-mpa-steps li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #978475;
+  font-size: 11px;
+}
+
+.se-mpa-steps li > span {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 9px;
+  background: #eadfd3;
+}
+
+.se-mpa-steps li[aria-current="step"] {
+  color: #8d4f1d;
+  font-weight: 700;
+}
+
+.se-mpa-steps li[aria-current="step"] > span {
+  background: #99551e;
+  color: #fff;
+}
+
+.se-mpa-form-section,
+.se-mpa-review,
+.se-mpa-detail-section {
+  padding: 20px 17px;
+  border: 1px solid #e7ddd1;
+  border-radius: 18px;
+  background: #fffefc;
+}
+
+.se-mpa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  margin-bottom: 19px;
+}
+
+.se-mpa-field > span {
+  font-size: 12px;
+  font-weight: 650;
+  color: #6c5949;
+}
+
+.se-mpa-field input,
+.se-mpa-field select,
+.se-mpa-field textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 12px;
+  border: 1px solid #ddd3c8;
+  border-radius: 11px;
+  background: #fff;
+  color: #423b35;
+  font: inherit;
+  font-size: 16px;
+}
+
+.se-mpa-field textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.se-mpa-field [aria-invalid="true"] {
+  border-color: #b65544;
+}
+
+.se-mpa-field > small {
+  color: #a24a40;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.se-mpa-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.se-mpa-form-actions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.se-mpa-detail-hero {
+  padding: 22px;
+  border: 1px solid #dbc9d7;
+  border-radius: 20px;
+  background: linear-gradient(120deg, #eee3ef, #f5ebe2);
+}
+
+.se-mpa-detail-hero > span {
+  color: #93768c;
+  font-size: 11px;
+}
+
+.se-mpa-detail-hero h2 {
+  margin: 12px 0 7px;
+  font-size: 25px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.se-mpa-detail-hero p {
+  color: #8c7384;
+}
+
+.se-mpa-detail-section {
+  margin-top: 16px;
+}
+
+.se-mpa h3 {
+  font-size: 16px;
+}
+
+.se-mpa dl {
+  margin: 0;
+}
+
+.se-mpa dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee6dd;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.se-mpa dt {
+  color: #998779;
+}
+
+.se-mpa dd {
+  margin: 0;
+  color: #5b493b;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.se-mpa-review > p,
+.se-mpa-detail-section > p {
+  color: #817063;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.se-mpa-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 16px;
+}
+
+.se-mpa-skills > span {
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #f3ebde;
+  color: #866743;
+  font-size: 12px;
+}
+
+@media (min-width: 600px) {
+  .se-mpa-register {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .se-mpa-form,
+  .se-mpa-detail {
+    max-width: 620px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 359px) {
+  .se-mpa {
+    padding-inline: 12px;
+  }
+
+  .se-mpa-pair {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .se-mpa-scopes button {
+    font-size: 11px;
+  }
+}
+
+.se-mpa [data-tone="info"] {
+  background: #e9f0fb;
+  color: #436491;
+}
+
+/* Fifty-card pages, with touch controls and direct page selection. */
+.se-mpa-list-heading {
+  scroll-margin-top: 110px;
+}
+
+.se-mpa-pagination {
+  margin-top: 20px;
+  padding: 15px 12px;
+  border: 1px solid #e1d5c8;
+  border-radius: 16px;
+  background: #faf3e9;
+}
+
+.se-mpa-pagination-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: #817063;
+  font-size: 12px;
+}
+
+.se-mpa-pagination-summary strong {
+  color: #69503d;
+  font-weight: 650;
+}
+
+.se-mpa-pagination-controls {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 1.2fr) 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.se-mpa-pagination-controls button,
+.se-mpa-pagination-controls select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 5px;
+  border: 1px solid #dfd0bf;
+  border-radius: 10px;
+  background: #fff;
+  color: #80522e;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.se-mpa-pagination-controls select {
+  cursor: pointer;
+}
+
+.se-mpa-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

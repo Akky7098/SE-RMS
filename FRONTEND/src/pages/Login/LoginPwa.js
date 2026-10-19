@@ -1,3 +1,4 @@
+import { publicAsset } from "../../config/urls";
 import React, {
   useEffect,
   useState,
@@ -153,7 +154,7 @@ const LoginPwa = () => {
   <div
     className="se-pwa-login-background"
     style={{
-      backgroundImage: "url('/se-factory.jpg')",
+      backgroundImage: `url("${publicAsset("se-factory.jpg")}")`,
     }}
   />
 
@@ -162,7 +163,7 @@ const LoginPwa = () => {
       <section className="se-pwa-login-content">
         <div className="se-pwa-login-top">
           <img
-            src="/se-logo.png"
+            src={publicAsset("se-logo.png")}
             alt="Sandeep Edgetech"
             className="se-pwa-login-logo"
           />

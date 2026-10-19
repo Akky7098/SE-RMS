@@ -1,3 +1,4 @@
+import { publicAsset } from "../../config/urls";
 import React, {
   useState,
 } from "react";
@@ -81,7 +82,7 @@ const ForgotPasswordPwa =
 
         <section className="se-pwa-forgot-content">
           <img
-            src="/se-logo.png"
+            src={publicAsset("se-logo.png")}
             alt="Sandeep Edgetech"
             className="se-pwa-forgot-logo"
           />

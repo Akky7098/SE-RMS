@@ -1,0 +1,40 @@
+import React from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import PayrollForms from "./PayrollForms";
+import { createPayrollAdjustment, createPayrollRun, createSalaryStructure } from "../../../../services/payrollService";
+jest.mock("../../../../services/payrollService", () => ({ createPayrollAdjustment: jest.fn(), createPayrollRun: jest.fn(), createSalaryStructure: jest.fn() }));
+const policies = [{ _id: "p1", companyCode: "SANDEEP_EDGETECH", name: "Company payroll", active: true }];
+beforeEach(() => jest.clearAllMocks());
+test("new payroll needs review and keeps the chosen company and policy", async () => {
+  createPayrollRun.mockResolvedValue({ _id: "run1", payrollMonth: "2026-10" });
+  const saved = jest.fn();
+  render(<PayrollForms kind="create" month="2026-10" policies={policies} onClose={jest.fn()} onSaved={saved} />);
+  fireEvent.change(screen.getByLabelText("Company"), { target: { value: "SANDEEP_EDGETECH" } });
+  fireEvent.change(screen.getByLabelText("Payroll policy"), { target: { value: "p1" } });
+  fireEvent.click(screen.getByRole("button", { name: "Review details →" }));
+  expect(createPayrollRun).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Confirm & save draft" }));
+  await waitFor(() => expect(saved).toHaveBeenCalled());
+  expect(createPayrollRun).toHaveBeenCalledWith({ payrollMonth: "2026-10", companyCode: "SANDEEP_EDGETECH", policyId: "p1", notes: "" });
+});
+test("adjustment cannot use a zero amount or whitespace reason", () => {
+  render(<PayrollForms kind="adjustment" month="2026-10" employee={{ _id: "e1" }} policies={policies} onClose={jest.fn()} onSaved={jest.fn()} />);
+  fireEvent.change(screen.getByLabelText("Amount (₹)"), { target: { value: "0" } });
+  fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "  " } });
+  fireEvent.click(screen.getByRole("button", { name: "Review details →" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("greater than zero");
+  expect(createPayrollAdjustment).not.toHaveBeenCalled();
+});
+test("salary revision sends the existing component payload and stays a draft", async () => {
+  createSalaryStructure.mockResolvedValue({ _id: "s1", status: "DRAFT" });
+  render(<PayrollForms kind="salary" month="2026-10" employee={{ _id: "e1", companyCode: "SANDEEP_EDGETECH", fullName: "Demo Employee" }} policies={policies} onClose={jest.fn()} onSaved={jest.fn()} />);
+  fireEvent.change(screen.getByLabelText("Payroll policy"), { target: { value: "p1" } });
+  fireEvent.change(screen.getByLabelText("Effective from"), { target: { value: "2026-10-01" } });
+  fireEvent.change(screen.getByLabelText("Basic salary (₹)"), { target: { value: "20000" } });
+  fireEvent.change(screen.getByLabelText("HRA (₹)"), { target: { value: "5000" } });
+  fireEvent.click(screen.getByRole("button", { name: "Review details →" }));
+  expect(createSalaryStructure).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Confirm & save draft" }));
+  await waitFor(() => expect(createSalaryStructure).toHaveBeenCalledWith("e1", expect.objectContaining({ monthlyGross: 25000, annualCTC: 300000, effectiveFrom: "2026-10-01", policyId: "p1", earnings: expect.arrayContaining([expect.objectContaining({ code: "BASIC", amount: 20000 }), expect.objectContaining({ code: "HRA", amount: 5000 })]) })));
+});

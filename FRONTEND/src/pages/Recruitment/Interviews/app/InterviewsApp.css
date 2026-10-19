@@ -1,0 +1,654 @@
+/* Scoped mobile interview workspace: plum actions and clear appointment cards. */
+.se-iva {
+  --interview-accent: #623457;
+  --interview-accent-dark: #43213c;
+  --interview-text: #26283a;
+  color: var(--interview-text);
+  background: #f1eff2;
+  padding: 12px 10px 24px;
+  font-family: inherit;
+  font-size: 14px;
+}
+.se-iva *, .se-iva *::before, .se-iva *::after {
+  box-sizing: border-box;
+}
+.se-iva button, .se-iva input, .se-iva select, .se-iva textarea {
+  font: inherit;
+}
+.se-iva button, .se-iva a {
+  -webkit-tap-highlight-color: transparent;
+}
+.se-iva button {
+  cursor: pointer;
+}
+.se-iva button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+.se-iva :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid #ce8f23;
+  outline-offset: 2px;
+}
+.se-iva :is(h1, h2, h3, p) {
+  overflow-wrap: anywhere;
+}
+.se-iva .se-iva-primary, .se-iva .se-iva-secondary,
+.se-iva .se-iva-danger, .se-iva .se-iva-call {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--interview-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-decoration: none;
+  white-space: normal;
+}
+.se-iva .se-iva-secondary, .se-iva .se-iva-call {
+  background: #303748;
+}
+.se-iva .se-iva-danger {
+  background: #a1373f;
+}
+.se-iva-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.se-iva-section-label {
+  margin-right: auto;
+  font-size: 14px;
+  font-weight: 700;
+}
+.se-iva-refresh {
+  flex-shrink: 0;
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid #d0c8d2;
+  border-radius: 11px;
+  background: #fff;
+  color: var(--interview-accent);
+  font-size: 25px !important;
+}
+.se-iva-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 8px;
+  overscroll-behavior-inline: contain;
+}
+.se-iva-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d0c8d2;
+  border-radius: 12px;
+  background: #fff;
+  color: #4f4356;
+  font-size: 13px;
+  font-weight: 650;
+}
+.se-iva-tabs button[aria-pressed="true"] {
+  border-color: var(--interview-accent);
+  background: var(--interview-accent);
+  color: #fff;
+}
+.se-iva-tabs span {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 6px;
+  background: #ece7ee;
+  color: #5c3a56;
+  font-size: 11px;
+}
+.se-iva-tabs button[aria-pressed="true"] span {
+  background: #ffffff26;
+  color: #fff;
+}
+.se-iva-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 12px 2px 10px;
+}
+.se-iva-list-heading h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.se-iva-list-heading > button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--interview-accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.se-iva-cards {
+  display: grid;
+  gap: 10px;
+}
+.se-iva-card {
+  min-width: 0;
+  border: 1px solid #dcd5df;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 2px 6px #43213c07;
+}
+.se-iva-card-main {
+  display: block;
+  width: 100%;
+  padding: 14px 14px 10px;
+  border: 0;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+}
+.se-iva-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.se-iva-person > span:nth-child(2), .se-iva-person > div {
+  min-width: 0;
+}
+.se-iva-person strong {
+  display: block;
+  font-size: 17px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.se-iva-person small {
+  display: block;
+  margin-top: 4px;
+  color: #6a6172;
+  font-size: 13px;
+}
+.se-iva-avatar {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 13px;
+  background: var(--interview-accent);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+}
+.se-iva-chevron {
+  margin-left: auto;
+  color: #827388;
+  font-size: 28px;
+}
+.se-iva-appointment {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  border-radius: 10px;
+  background: #f3f0f5;
+  border-left: 3px solid var(--interview-accent);
+}
+.se-iva-appointment strong {
+  display: block;
+  font-size: 14px;
+}
+.se-iva-appointment small {
+  display: block;
+  margin-top: 4px;
+  color: #5e5165;
+  font-size: 13px;
+}
+.se-iva-round {
+  max-width: 48%;
+  font-size: 12px;
+  text-align: right;
+  color: #5e5165;
+  overflow-wrap: anywhere;
+}
+.se-iva-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: #6b6070;
+  font-size: 12px;
+}
+.se-iva-badge {
+  display: inline-block;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #49435e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.se-iva-badge[data-status="COMPLETED"] { background: #286044; }
+.se-iva-badge[data-status="CHECKED_IN"] { background: #623457; }
+.se-iva-badge[data-status="RESCHEDULED"] { background: #80541c; }
+.se-iva-badge[data-status="CANCELLED"],
+.se-iva-badge[data-status="NO_SHOW"] { background: #9c3b45; }
+.se-iva-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+.se-iva-card-footer > span {
+  flex: 1;
+  min-width: 0;
+  color: #60576a;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.se-iva-card-footer small {
+  display: block;
+  margin-top: 4px;
+  color: #7c7384;
+  font-size: 10px;
+}
+.se-iva-card-footer :is(a, button) {
+  flex-shrink: 0;
+  padding: 9px 11px;
+}
+.se-iva-message {
+  margin: 12px 0;
+  padding: 18px;
+  border: 1px solid #dcd5df;
+  border-radius: 14px;
+  background: #fff;
+  line-height: 1.5;
+}
+.se-iva-pagination {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  margin-top: 16px;
+  border: 1px solid #dcd5df;
+  border-radius: 14px;
+  background: #fff;
+}
+.se-iva-pagination > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.se-iva-pagination small {
+  color: #746779;
+  font-size: 11px;
+  font-weight: 400;
+}
+.se-iva-pagination > div {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 8px;
+}
+.se-iva-pagination :is(button, select) {
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid #d0c8d2;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--interview-accent);
+  padding: 8px;
+}
+.se-iva-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: #1e152b99;
+}
+.se-iva-sheet {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 24px 24px 0 0;
+  background: #fff;
+  box-shadow: 0 -6px 30px #1e152b26;
+}
+.se-iva-sheet::before {
+  content: "";
+  width: 38px;
+  height: 4px;
+  flex-shrink: 0;
+  margin: 10px auto 0;
+  border-radius: 4px;
+  background: #d0c8d2;
+}
+.se-iva-sheet > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+}
+.se-iva-sheet h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.se-iva-sheet > header button {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #efebf1;
+  color: #4f4356;
+  font-size: 26px;
+}
+.se-iva-sheet-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 16px 16px;
+}
+.se-iva-sheet fieldset {
+  min-width: 0;
+  padding: 0;
+  margin: 0 0 20px;
+  border: 0;
+}
+.se-iva-sheet legend {
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.se-iva-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.se-iva-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px;
+  border: 1px solid #d0c8d2;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.se-iva-options .selected {
+  background: var(--interview-accent);
+  border-color: var(--interview-accent);
+  color: #fff;
+}
+.se-iva-options input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: #9b6625;
+}
+.se-iva-sheet > footer {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid #ded7e2;
+}
+.se-iva-sheet > footer > :last-child {
+  flex: 1;
+}
+.se-iva-field {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.se-iva-field :is(input, textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid #cbbfd0;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--interview-text);
+  font-size: 16px;
+}
+.se-iva-sheet-candidate {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  margin: 0;
+  border-radius: 12px;
+  background: #f3f0f5;
+}
+.se-iva-sheet-candidate span {
+  font-size: 12px;
+  color: #6b6070;
+}
+.se-iva-detail .se-iva-toolbar {
+  justify-content: space-between;
+}
+.se-iva-profile, .se-iva-schedule, .se-iva-action-card, .se-iva-disclosure {
+  min-width: 0;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #dcd5df;
+  border-radius: 16px;
+  background: #fff;
+}
+.se-iva-profile h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  line-height: 1.3;
+}
+.se-iva-profile p {
+  margin: 0;
+  color: #6b6070;
+  font-size: 14px;
+}
+.se-iva-profile > .se-iva-badge {
+  margin-top: 12px;
+}
+.se-iva-contact, .se-iva-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.se-iva-schedule-date {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  margin: -16px -16px 16px;
+  border-radius: 15px 15px 0 0;
+  background: var(--interview-accent);
+  color: #fff;
+}
+.se-iva-schedule-date span, .se-iva-schedule-date small {
+  color: #ecdfeb;
+  font-size: 12px;
+}
+.se-iva-schedule-date strong {
+  font-size: 22px;
+}
+.se-iva-schedule-date b {
+  font-size: 18px;
+}
+.se-iva-detail dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 10px;
+  margin: 0;
+}
+.se-iva-detail dt {
+  margin-bottom: 5px;
+  color: #75677a;
+  font-size: 12px;
+}
+.se-iva-detail dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.se-iva-location {
+  padding-top: 10px;
+  margin-bottom: 0;
+  color: #5f5366;
+  font-size: 14px;
+}
+.se-iva-schedule > a {
+  margin-top: 12px;
+}
+.se-iva-action-card h2 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+.se-iva-action-card > p {
+  color: #5f5366;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.se-iva-action-card small {
+  color: #75677a;
+  font-size: 12px;
+}
+.se-iva-management-actions {
+  padding-top: 14px;
+  border-top: 1px solid #ece5ef;
+}
+.se-iva-disclosure {
+  padding: 0;
+  overflow: hidden;
+}
+.se-iva-disclosure > summary {
+  min-height: 52px;
+  padding: 17px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.se-iva-disclosure > :is(dl, p) {
+  margin: 0;
+  padding: 0 14px 16px;
+}
+.se-iva-round-record {
+  padding: 0 14px 14px;
+  border-top: 1px solid #e7dfea;
+}
+.se-iva-round-record > summary {
+  padding: 14px 0 4px;
+  cursor: pointer;
+}
+.se-iva-round-record summary span {
+  display: block;
+  margin: 6px 0 0 15px;
+  color: #75677a;
+  font-size: 12px;
+}
+.se-iva-round-record dl {
+  margin-top: 14px;
+}
+.se-iva-round-record p {
+  color: #5f5366;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.se-iva-round-record > button {
+  margin-top: 12px;
+}
+.se-iva .se-interview-evaluate-trigger {
+  width: auto;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--interview-accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+/* Existing evaluation rules and attachments retain a phone-sized form. */
+.se-iva .se-interview-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  padding: 0;
+  align-items: flex-end;
+}
+.se-iva .se-interview-evaluation-modal {
+  width: 100%;
+  max-width: 600px;
+  max-height: 94dvh;
+  border-radius: 22px 22px 0 0;
+}
+.se-iva .se-interview-modal-head {
+  padding: 16px;
+}
+.se-iva .se-interview-modal-head h2 {
+  font-size: 20px;
+}
+.se-iva .se-interview-modal-head p {
+  display: none;
+}
+.se-iva .se-interview-evaluation-body {
+  padding: 14px;
+}
+.se-iva .se-interview-rating-grid {
+  grid-template-columns: 1fr;
+}
+.se-iva .se-interview-decision-grid, .se-iva .se-interview-final-decision {
+  grid-template-columns: 1fr 1fr;
+}
+.se-iva .se-interview-rating-options button {
+  min-height: 44px;
+}
+.se-iva .se-interview-rating-options button.active,
+.se-iva .se-interview-decision-grid button.active {
+  background: var(--interview-accent);
+  color: #fff;
+  border-color: var(--interview-accent);
+}
+.se-iva .se-interview-evaluation-modal :is(input:not([type="file"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 16px;
+}
+.se-iva .se-interview-modal-footer {
+  padding: 12px 14px max(14px, env(safe-area-inset-bottom));
+}
+@media (max-width: 350px) {
+  .se-iva-section-label {
+    font-size: 12px;
+  }
+  .se-iva-options {
+    grid-template-columns: 1fr;
+  }
+  .se-iva-card-footer {
+    flex-wrap: wrap;
+  }
+  .se-iva-card-footer > span {
+    flex-basis: 100%;
+    margin-bottom: 5px;
+  }
+}

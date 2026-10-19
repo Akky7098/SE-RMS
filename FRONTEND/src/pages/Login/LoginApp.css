@@ -1,0 +1,349 @@
+/* App-only login. Desktop and legacy PWA styles remain independent. */
+
+.se-app-login {
+  --app-ink: #1b243b;
+  --app-muted: #778096;
+  --app-accent: #3659d9;
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #162238;
+  background-image: linear-gradient(180deg, rgba(13, 25, 47, 0.42), rgba(20, 28, 49, 0.68)),
+    var(--se-login-photo);
+  background-position: center, 58% center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: var(--app-ink);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.se-app-login *, .se-app-login *::before, .se-app-login *::after {
+  box-sizing: border-box;
+}
+
+.se-app-login__shell {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 480px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+  background: transparent;
+}
+
+.se-app-login__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 34px;
+}
+
+.se-app-login__logo {
+  display: block;
+  width: 154px;
+  height: 54px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.se-app-login__product {
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(15, 25, 45, 0.4);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
+
+.se-app-login__content {
+  width: 100%;
+  margin: auto 0 20px;
+  padding: 28px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 26px;
+  background: #fbfcff;
+  box-shadow: 0 18px 54px rgba(8, 18, 36, 0.24);
+}
+
+.se-app-login__symbol {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 18px;
+  border: 1px solid #dfe5fc;
+  border-radius: 16px;
+  background: #edf1ff;
+  color: var(--app-accent);
+}
+
+.se-app-login svg {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+}
+
+.se-app-login__content h1 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: clamp(28px, 7.5vw, 34px);
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.se-app-login__subtitle {
+  margin: 10px 0 26px;
+  font-size: 15px;
+  color: var(--app-muted);
+  line-height: 1.6;
+}
+
+.se-app-login__field {
+  margin-bottom: 20px;
+}
+
+.se-app-login__field label {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3b455f;
+}
+
+.se-app-login__field input {
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  padding: 0 16px;
+  border: 1px solid #dce1ed;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.se-app-login__field input::placeholder {
+  color: #9aa7ad;
+}
+
+.se-app-login__field input:focus {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 3px #087c7614;
+}
+
+.se-app-login__password {
+  position: relative;
+}
+
+.se-app-login__password input {
+  padding-right: 56px;
+}
+
+.se-app-login__password button {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #6a8089;
+  cursor: pointer;
+}
+
+.se-app-login__recovery {
+  display: flex;
+  justify-content: flex-end;
+  margin: -10px 0 22px;
+}
+
+.se-app-login__recovery button, .se-app-login__back {
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: #3659c9;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.se-app-login__back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -24px 0 22px;
+}
+
+.se-app-login__primary {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border: 1px solid #3659d9;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #3659d9, #4d6ae4);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 7px 18px #3659d929;
+}
+
+.se-app-login__primary:hover:not(:disabled) {
+  background: #2c49bc;
+  border-color: #2c49bc;
+}
+
+.se-app-login button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.se-app-login input:disabled {
+  opacity: 0.7;
+}
+
+.se-app-login button:focus-visible {
+  outline: 3px solid #94a7f3;
+  outline-offset: 3px;
+}
+
+.se-app-login__divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 26px 0;
+  color: #829198;
+  font-size: 12px;
+}
+
+.se-app-login__divider::before, .se-app-login__divider::after {
+  content: "";
+  height: 1px;
+  background: #e1e8e9;
+  flex: 1;
+}
+
+.se-app-login__google {
+  width: 100%;
+}
+
+.se-app-login__google fieldset {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.se-app-login__error, .se-app-login__notice {
+  padding: 12px 14px;
+  border: 1px solid #ecd0cc;
+  border-radius: 10px;
+  background: #fff4f1;
+  color: #963e31;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+  overflow-wrap: anywhere;
+}
+
+.se-app-login__notice {
+  border-color: #d8e0fb;
+  background: #eef2ff;
+  color: #344a86;
+}
+
+.se-app-login__field .se-app-login__otp {
+  letter-spacing: 10px;
+  font-size: 24px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.se-app-login__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #e3e7f1;
+  font-size: 11px;
+  text-align: center;
+}
+
+.se-app-login__footer-line {
+  width: 30px;
+  height: 3px;
+  border-radius: 2px;
+  background: #b8c6ee;
+}
+
+.se-app-login__spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ffffff60;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: seAppLoginSpin 700ms linear infinite;
+}
+
+@keyframes seAppLoginSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 359px) {
+  .se-app-login__shell {
+    padding-inline: 12px;
+  }
+}
+
+@media (max-height: 720px) {
+  .se-app-login__content {
+    padding: 22px 20px;
+  }
+  .se-app-login__symbol {
+    margin-bottom: 16px;
+  }
+  .se-app-login__subtitle {
+    margin-bottom: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .se-app-login__spinner {
+    animation: none;
+  }
+  .se-app-login__field input {
+    transition: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .se-app-login__content {
+    padding-inline: 18px;
+  }
+}
+
+/* Keep the original logo fully visible without a zoomed crop. */
+.se-app-login__logo { object-fit: contain; padding: 3px; box-sizing: border-box; }

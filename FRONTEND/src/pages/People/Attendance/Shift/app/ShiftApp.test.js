@@ -1,0 +1,88 @@
+import React from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import ShiftApp from "./ShiftApp";
+import { useAuth } from "../../../../../auth/AuthContext";
+import { getAttendanceShifts, getMyShiftWeek, publishShiftRoster } from "../../../../../services/shiftService";
+import { loadMobileRoster, loadShiftEmployees } from "./shiftAppData";
+import { startOfWeek, todayKey } from "../utils/shiftHelpers";
+jest.mock("../../../../../auth/AuthContext", () => ({ useAuth: jest.fn() }));
+jest.mock("../../../../../services/shiftService", () => ({ getAttendanceShifts: jest.fn(), getMyShiftWeek: jest.fn(), publishShiftRoster: jest.fn(), saveShiftAssignment: jest.fn() }));
+jest.mock("./shiftAppData", () => ({ ...jest.requireActual("./shiftAppData"), loadMobileRoster: jest.fn(), loadShiftEmployees: jest.fn() }));
+const week = startOfWeek(todayKey());
+const shifts = [{ _id: "night", name: "Night shift", code: "NIGHT", type: "NIGHT", active: true, startTime: "17:30", endTime: "03:00", crossesMidnight: true }];
+const employee = { _id: "e1", fullName: "Demo Employee", employeeCode: "SE1001", orgUnitCode: "MACHINING", workLocation: "Sonipat" };
+const assignment = { employeeId: "e1", assignmentDate: week, dayType: "SHIFT", shiftId: "night", rosterId: "r1" };
+beforeEach(() => {
+  jest.clearAllMocks();
+  useAuth.mockReturnValue({ user: { role: "EMPLOYEE" } });
+  getAttendanceShifts.mockResolvedValue({ records: shifts });
+  getMyShiftWeek.mockResolvedValue({ assignments: [assignment] });
+  loadShiftEmployees.mockResolvedValue({ employees: [employee], units: [{ code: "MACHINING", name: "Machining" }, { code: "CUTTING", name: "Cutting" }] });
+  loadMobileRoster.mockResolvedValue({ employees: [], assignments: [assignment], rosters: [{ _id: "r1", orgUnitCode: "MACHINING", status: "DRAFT" }] });
+  publishShiftRoster.mockResolvedValue({ published: true, publishedRosterCount: 1 });
+});
+test("employees see a clear personal week and no management controls", async () => {
+  render(<ShiftApp />);
+  await screen.findByText("Night shift");
+  expect(screen.getAllByText("Normal day shift")).toHaveLength(6);
+  expect(screen.queryByRole("button", { name: "Team schedule" })).not.toBeInTheDocument();
+  expect(loadMobileRoster).not.toHaveBeenCalled();
+});
+test("failed personal loads cannot appear as automatic normal days", async () => {
+  getMyShiftWeek.mockRejectedValue(new Error("Offline"));
+  render(<ShiftApp />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("Offline");
+  expect(screen.queryByText("Normal day shift")).not.toBeInTheDocument();
+});
+test("management can work even if their own employee profile is unavailable", async () => {
+  useAuth.mockReturnValue({ user: { systemRole: "SUPER_ADMIN" } });
+  getMyShiftWeek.mockRejectedValue(new Error("No employee profile"));
+  render(<ShiftApp />);
+  fireEvent.click(screen.getByRole("button", { name: "Team schedule" }));
+  await screen.findByRole("button", { name: "View schedule for Demo Employee" });
+  await waitFor(() => expect(screen.getByRole("button", { name: "＋ Assign shift" })).toBeEnabled());
+});
+test("team lists paginate fifty employees and open a weekly drilldown", async () => {
+  useAuth.mockReturnValue({ user: { role: "MANAGER" } });
+  loadShiftEmployees.mockResolvedValue({ employees: Array.from({ length: 51 }, (_, index) => ({ ...employee, _id: `e${index}`, fullName: `Employee ${index}` })), units: [] });
+  render(<ShiftApp />);
+  fireEvent.click(screen.getByRole("button", { name: "Team schedule" }));
+  await screen.findByRole("button", { name: "View schedule for Employee 0" });
+  expect(screen.getAllByRole("button", { name: /View schedule for/ })).toHaveLength(50);
+  fireEvent.click(screen.getByRole("button", { name: "Next ›" }));
+  expect(screen.getAllByRole("button", { name: /View schedule for/ })).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "View schedule for Employee 50" }));
+  expect(screen.getAllByText("Normal day shift")).toHaveLength(7);
+  expect(screen.getByRole("button", { name: /Back to team/ })).toBeInTheDocument();
+});
+test("publication always needs explicit whole-week confirmation", async () => {
+  useAuth.mockReturnValue({ user: { role: "SUPER_ADMIN" } });
+  render(<ShiftApp />);
+  fireEvent.click(screen.getByRole("button", { name: "Team schedule" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Publish week" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "Publish week" }));
+  expect(publishShiftRoster).not.toHaveBeenCalled();
+  expect(screen.getByRole("dialog", { name: "Publish this week?" })).toHaveTextContent("all eligible department rosters");
+  fireEvent.click(screen.getByRole("button", { name: "Confirm publish week" }));
+  await waitFor(() => expect(publishShiftRoster).toHaveBeenCalledWith("r1", { directPublish: true }));
+});
+test("optional demo previews", async () => {
+  if (!process.env.SHIFT_PREVIEW_DIR) return;
+  const fs = require("fs"), path = require("path");
+  fs.mkdirSync(process.env.SHIFT_PREVIEW_DIR, { recursive: true });
+  useAuth.mockReturnValue({ user: { role: "SUPER_ADMIN" } });
+  loadShiftEmployees.mockResolvedValue({ employees: [employee, { ...employee, _id: "e2", fullName: "Demo Employee Two", orgUnitCode: "CUTTING" }], units: [{ code: "MACHINING", name: "Machining" }, { code: "CUTTING", name: "Cutting" }] });
+  const { container } = render(<ShiftApp />);
+  await screen.findByText("Night shift");
+  const css = ["../../../Leave/app/LeaveApp.css", "ShiftApp.css", "../../../../Dashboard/DashboardApp.css"].map(file => fs.readFileSync(path.join(__dirname, file), "utf8")).join("\n");
+  const wrap = html => `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}${css}</style></head><body><main class="se-app-dashboard se-app-dashboard--workspace"><header class="se-app-dashboard__topbar"><button class="se-app-dashboard__back">‹</button><h1>Shift management</h1><button class="se-app-dashboard__back">⌕</button><button class="se-app-dashboard__avatar">D</button></header><div class="se-app-dashboard__body">${html}</div><nav class="se-app-dashboard__bottom"><button>⌂ Home</button><button aria-current="page">▦ Apps</button><button>♙ Profile</button></nav></main></body></html>`;
+  const save = name => fs.writeFileSync(path.join(process.env.SHIFT_PREVIEW_DIR, name), wrap(container.innerHTML));
+  save("personal.html");
+  fireEvent.click(screen.getByRole("button", { name: "Team schedule" }));
+  await screen.findByRole("button", { name: "View schedule for Demo Employee" });
+  save("team.html");
+  fireEvent.click(screen.getByRole("button", { name: "＋ Assign shift" }));
+  container.querySelectorAll("select").forEach(select => [...select.options].forEach(option => option.selected && option.setAttribute("selected", "")));
+  save("assign.html");
+});

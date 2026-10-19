@@ -1,3 +1,5 @@
+import { employeeShiftDepartment, shiftDepartmentOptions } from "../utils/shiftDepartments";
+
 import React, {
   useEffect,
   useMemo,
@@ -158,34 +160,7 @@ const getEmployeeCode = (
    Backend will canonicalize to Department ObjectId.
 ========================================================= */
 
-const getEmployeeDepartment =
-  (
-    employee
-  ) => ({
-    value:
-      String(
-        employee
-          ?.department
-          ?._id ||
-        employee
-          ?.departmentId ||
-        employee
-          ?.departmentName ||
-        employee
-          ?.orgUnitCode ||
-        ""
-      ),
-
-    label:
-      employee
-        ?.department
-        ?.name ||
-      employee
-        ?.departmentName ||
-      employee
-        ?.orgUnitCode ||
-      "",
-  });
+const getEmployeeDepartment = employeeShiftDepartment;
 
 /* =========================================================
    OFFICE
@@ -279,6 +254,8 @@ function ShiftAssignmentForm({
   onClose,
 
   employees = [],
+
+  organizationUnits = [],
 
   weekStart,
 
@@ -469,18 +446,10 @@ function ShiftAssignmentForm({
      DEPARTMENTS
   ===================================================== */
 
-  const departments =
-    useMemo(
-      () =>
-        uniqueOptions(
-          employees.map(
-            getEmployeeDepartment
-          )
-        ),
-      [
-        employees,
-      ]
-    );
+  const departments = useMemo(
+    () => shiftDepartmentOptions(employees, organizationUnits),
+    [employees, organizationUnits]
+  );
 
   /* =====================================================
      OFFICES

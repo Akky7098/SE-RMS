@@ -528,6 +528,41 @@ export const DASHBOARD_APPS = [
         ],
       },
 
+
+      /* =====================================================
+   PAYROLL
+===================================================== */
+
+{
+  code:
+    "PAYROLL",
+
+  label:
+    "Payroll",
+
+  icon:
+    "₹",
+
+  path:
+    "/dashboard?app=people&page=payroll",
+
+  module:
+    "PAYROLL",
+
+  section:
+    "PAYROLL",
+
+  comingSoon:
+    false,
+
+  allowedRoles: [
+    "SUPER_ADMIN",
+    "ADMIN",
+    "HEAD",
+    "MANAGER",
+  ],
+},
+
       /* =====================================================
          PERSONAL
       ===================================================== */

@@ -1,3 +1,4 @@
+import { APP_BASENAME } from "./config/urls";
 import React from "react";
 
 import {
@@ -50,7 +51,7 @@ function App() {
         googleClientId
       }
     >
-      <BrowserRouter>
+      <BrowserRouter basename={APP_BASENAME || "/"}>
         <Routes>
 
           {/* ===============================================

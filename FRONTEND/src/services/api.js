@@ -1,8 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL ||
-  "http://localhost:5000/api/v1";
+import { API_BASE_URL, appUrl } from "../config/urls";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -147,10 +145,10 @@ api.interceptors.response.use(
 
         if (
           window.location.pathname !==
-          "/login"
+          appUrl("login")
         ) {
           window.location.href =
-            "/login";
+            appUrl("login");
         }
 
         return Promise.reject(

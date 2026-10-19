@@ -1,3 +1,4 @@
+import { publicAsset } from "../../config/urls";
 import React, {
   useEffect,
   useMemo,
@@ -946,7 +947,7 @@ const LoginWeb = () => {
           className="se-web-login-backdrop"
           style={{
             backgroundImage:
-              "url('/se-factory.jpg')",
+              `url("${publicAsset("se-factory.jpg")}")`,
           }}
         />
 
@@ -968,7 +969,7 @@ const LoginWeb = () => {
               className="se-web-login-brand"
             >
               <img
-                src="/se-logo.png"
+                src={publicAsset("se-logo.png")}
                 alt="Sandeep Edgetech"
                 className="se-web-login-logo"
               />
@@ -1413,7 +1414,7 @@ const LoginWeb = () => {
                 className="se-reset-brand"
               >
                 <img
-                  src="/se-logo.png"
+                  src={publicAsset("se-logo.png")}
                   alt="Sandeep Edgetech"
                 />
 

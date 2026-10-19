@@ -4,7 +4,7 @@ import React, {
 } from "react";
 
 import DashboardWeb from "./DashboardWeb";
-import DashboardPwa from "./DashboardPwa";
+import DashboardApp from "./DashboardApp";
 
 import {
   shouldUsePwaUi,
@@ -39,7 +39,7 @@ const DashboardPage = () => {
   }, []);
 
   if (usePwaUi) {
-    return <DashboardPwa />;
+    return <DashboardApp />;
   }
 
   return <DashboardWeb />;

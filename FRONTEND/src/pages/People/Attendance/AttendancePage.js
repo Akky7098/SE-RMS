@@ -4956,9 +4956,7 @@ const download =
                   Attendance register
                 </h2>
 
-                <p>
-                  One worker per day. Biometric scans are consolidated into first IN and final OUT for the register.
-                </p>
+               
 
               </div>
 

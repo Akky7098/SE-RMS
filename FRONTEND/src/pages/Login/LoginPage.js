@@ -4,7 +4,7 @@ import React, {
 } from "react";
 
 import LoginWeb from "./LoginWeb";
-import LoginPwa from "./LoginPwa";
+import LoginApp from "./LoginApp";
 
 import {
   shouldUsePwaUi,
@@ -39,7 +39,7 @@ const LoginPage = () => {
   }, []);
 
   if (usePwaUi) {
-    return <LoginPwa />;
+    return <LoginApp />;
   }
 
   return <LoginWeb />;

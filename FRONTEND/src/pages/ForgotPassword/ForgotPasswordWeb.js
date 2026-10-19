@@ -1,3 +1,4 @@
+import { publicAsset } from "../../config/urls";
 import React, {
   useState,
 } from "react";
@@ -83,7 +84,7 @@ const ForgotPasswordWeb =
 
         <section className="se-web-forgot-card">
           <img
-            src="/se-logo.png"
+            src={publicAsset("se-logo.png")}
             alt="Sandeep Edgetech"
             className="se-web-forgot-logo"
           />
