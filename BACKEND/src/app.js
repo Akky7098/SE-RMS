@@ -101,6 +101,8 @@ const employeeActivationRoutes =
   require(
     "./payroll/payroll.routes"
   );
+  const machineRoutes =
+  require("./machine/machine.route");
 
 
 /* =========================================================
@@ -684,6 +686,11 @@ app.use(
   recruitmentRoutes
 );
 
+
+app.use(
+  "/api/machine",
+  machineRoutes
+);
 /* =========================================================
    RESUME PARSER
 ========================================================= */

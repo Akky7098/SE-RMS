@@ -1,3 +1,4 @@
+const { findRegisteredGoogleAccount } = require("./googleAccount");
 const mongoose =
   require("mongoose");
 
@@ -532,92 +533,8 @@ const googleLogin =
       );
     }
 
-    const payload =
-      ticket.getPayload();
-
-    if (
-      !payload
-    ) {
-      throw new ApiError(
-        401,
-        "Invalid Google account"
-      );
-    }
-
-    if (
-      !payload.email_verified
-    ) {
-      throw new ApiError(
-        403,
-        "Google email is not verified"
-      );
-    }
-
-    const email =
-      normalizeEmail(
-        payload.email
-      );
-
-    if (
-      !email
-    ) {
-      throw new ApiError(
-        401,
-        "Google account does not contain a valid email"
-      );
-    }
-
-    /*
-     * CRITICAL:
-     *
-     * Never auto-create an ERP account from
-     * a Google login.
-     *
-     * Exact email must already exist.
-     */
-    const user =
-      await User.findOne({
-        email,
-      });
-
-    if (
-      !user
-    ) {
-      throw new ApiError(
-        403,
-        "Your Google account is not registered in SE-RMS. Contact the administrator."
-      );
-    }
-
-    if (
-      user.status !==
-      "ACTIVE"
-    ) {
-      throw new ApiError(
-        403,
-        "Your account is not active"
-      );
-    }
-
-    /*
-     * If this user was previously linked to
-     * another Google subject, do not silently
-     * replace that identity.
-     */
-    if (
-      user.googleId &&
-      String(
-        user.googleId
-      ) !==
-      String(
-        payload.sub
-      )
-    ) {
-      throw new ApiError(
-        403,
-        "This SE-RMS account is already linked to another Google account."
-      );
-    }
+    const payload = ticket.getPayload();
+    const user = await findRegisteredGoogleAccount(payload, User);
 
     user.googleId =
       payload.sub;

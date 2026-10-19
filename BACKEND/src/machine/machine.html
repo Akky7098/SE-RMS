@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Machine PLC Monitor</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #9ca3af;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+
+      padding: 12px 0;
+
+      border-bottom:
+        1px solid #374151;
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .label {
+      color: #9ca3af;
+    }
+
+    .value {
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .success {
+      color: #4ade80;
+    }
+
+    .error {
+      color: #f87171;
+    }
+
+    .warning {
+      color: #facc15;
+    }
+
+    .status {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #error {
+      display: none;
+      margin-top: 20px;
+      color: #f87171;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Machine PLC Monitor</h1>
+
+    <div class="subtitle">
+      OMRON CP2E — Read Only Diagnostic
+    </div>
+
+
+    <div class="card">
+
+      <div class="row">
+        <span class="label">
+          PLC
+        </span>
+
+        <span
+          class="value"
+          id="plc"
+        >
+          -
+        </span>
+      </div>
+
+
+      <div class="row">
+        <span class="label">
+          PLC IP
+        </span>
+
+        <span
+          class="value"
+          id="ip"
+        >
+          Not configured
+        </span>
+      </div>
+
+
+      <div class="row">
+        <span class="label">
+          Mode
+        </span>
+
+        <span
+          class="value"
+          id="mode"
+        >
+          READ ONLY
+        </span>
+      </div>
+
+
+      <div class="row">
+        <span class="label">
+          Connection
+        </span>
+
+        <span
+          class="value status warning"
+          id="connection"
+        >
+          CHECKING...
+        </span>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>
+        Network Communication
+      </h2>
+
+
+      <div class="row">
+
+        <span class="label">
+          Modbus TCP : 502
+        </span>
+
+        <span
+          class="value"
+          id="modbus"
+        >
+          -
+        </span>
+
+      </div>
+
+
+      <div class="row">
+
+        <span class="label">
+          FINS TCP : 9600
+        </span>
+
+        <span
+          class="value"
+          id="fins"
+        >
+          -
+        </span>
+
+      </div>
+
+
+      <div class="row">
+
+        <span class="label">
+          Last Check
+        </span>
+
+        <span
+          class="value"
+          id="timestamp"
+        >
+          -
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div id="error"></div>
+
+  </div>
+
+
+  <script>
+
+    function setPortStatus(
+      elementId,
+      status
+    ) {
+
+      const element =
+        document.getElementById(
+          elementId
+        );
+
+      if (!status) {
+        element.textContent = "-";
+        return;
+      }
+
+      if (status.reachable) {
+
+        element.textContent =
+          "REACHABLE";
+
+        element.className =
+          "value success";
+
+      } else {
+
+        element.textContent =
+          "NOT REACHABLE" +
+          (
+            status.reason
+              ? ` (${status.reason})`
+              : ""
+          );
+
+        element.className =
+          "value error";
+      }
+    }
+
+
+    async function loadMachine() {
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/machine/status"
+          );
+
+        const result =
+          await response.json();
+
+
+        if (!result.success) {
+          throw new Error(
+            result.message ||
+            "Request failed"
+          );
+        }
+
+
+        const data =
+          result.data;
+
+
+        document.getElementById(
+          "plc"
+        ).textContent =
+          data.plc || "-";
+
+
+        document.getElementById(
+          "ip"
+        ).textContent =
+          data.ip ||
+          "Not configured";
+
+
+        document.getElementById(
+          "mode"
+        ).textContent =
+          data.mode ||
+          "READ_ONLY";
+
+
+        const connection =
+          document.getElementById(
+            "connection"
+          );
+
+
+        if (!data.configured) {
+
+          connection.textContent =
+            "PLC IP REQUIRED";
+
+          connection.className =
+            "value status warning";
+
+        } else if (data.connected) {
+
+          connection.textContent =
+            "NETWORK REACHABLE";
+
+          connection.className =
+            "value status success";
+
+        } else {
+
+          connection.textContent =
+            "NOT REACHABLE";
+
+          connection.className =
+            "value status error";
+        }
+
+
+        setPortStatus(
+          "modbus",
+          data.network?.modbusTcp
+        );
+
+
+        setPortStatus(
+          "fins",
+          data.network?.finsTcp
+        );
+
+
+        document.getElementById(
+          "timestamp"
+        ).textContent =
+          data.timestamp
+            ? new Date(
+                data.timestamp
+              ).toLocaleString()
+            : "-";
+
+
+        document.getElementById(
+          "error"
+        ).style.display =
+          "none";
+
+
+      } catch (error) {
+
+        const errorBox =
+          document.getElementById(
+            "error"
+          );
+
+        errorBox.textContent =
+          error.message;
+
+        errorBox.style.display =
+          "block";
+      }
+    }
+
+
+    loadMachine();
+
+    setInterval(
+      loadMachine,
+      3000
+    );
+
+  </script>
+
+</body>
+</html>

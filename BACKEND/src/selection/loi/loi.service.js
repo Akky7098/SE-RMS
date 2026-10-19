@@ -1315,7 +1315,7 @@ const sendSelectionLoi =
           .CANDIDATE_PORTAL_BASE_URL ||
         process.env
           .APP_BASE_URL ||
-        "http://localhost:3000"
+        "https://nuvanata.io/"
       ).replace(
         /\/+$/,
         ""

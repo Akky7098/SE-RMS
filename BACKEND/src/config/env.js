@@ -20,7 +20,7 @@ const env = {
 
   mongoUri: process.env.MONGO_URI,
 
-  frontendUrls: (process.env.FRONTEND_URL || "http://localhost:5173")
+  frontendUrls: (process.env.FRONTEND_URL || "https://nuvanata.io")
     .split(",")
     .map((url) => url.trim()),
 

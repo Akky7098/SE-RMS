@@ -2886,7 +2886,7 @@ const submitCandidateDocuments =
         process
           .env
           .APP_BASE_URL ||
-        "http://localhost:3000"
+        "https://nuvanata.io"
       ).replace(
         /\/+$/,
         ""
@@ -3215,7 +3215,7 @@ const createFreshPortalUrl =
         process
           .env
           .APP_BASE_URL ||
-        "http://localhost:3000"
+        "https://nuvanata.io"
       ).replace(
         /\/+$/,
         ""

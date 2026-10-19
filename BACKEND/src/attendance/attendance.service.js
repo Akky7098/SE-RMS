@@ -6260,30 +6260,7 @@ const startWebAttendance =
           ""
       ).trim();
 
-    if (
-      [
-        "FIELD_VISIT",
-        "ON_DUTY",
-      ].includes(
-        normalizedMode
-      )
-    ) {
-      if (
-        !normalizedPurpose
-      ) {
-        throw createError(
-          "Work purpose is required for Field Visit / On Duty attendance."
-        );
-      }
-
-      if (
-        !normalizedLocation
-      ) {
-        throw createError(
-          "Work location is required for Field Visit / On Duty attendance."
-        );
-      }
-    }
+    // GPS is required for every non-office punch. Typed visit details are optional.
 
     const existing =
       await Attendance
