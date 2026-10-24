@@ -258,65 +258,9 @@ app.use(
    CORS
 ========================================================= */
 
-app.use(
-  cors({
-    origin: (
-      origin,
-      callback
-    ) => {
-      /*
-       * Allow Postman / curl / server tools where
-       * browser Origin is not present.
-       */
-      if (
-        !origin
-      ) {
-        return callback(
-          null,
-          true
-        );
-      }
+const { createCorsOptions } = require("./config/cors");
 
-      const allowedOrigins = [
-  ...env.frontendUrls,
-  "https://api.nuvanata.io",
-];
-
-if (
-  allowedOrigins.includes(
-    origin
-  )
-) {
-  return callback(
-    null,
-    true
-  );
-}
-      return callback(
-        new Error(
-          `CORS origin not allowed: ${origin}`
-        )
-      );
-    },
-
-    credentials:
-      true,
-
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
-
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
-  })
-);
+app.use(cors(createCorsOptions(env.frontendUrls)));
 
 /* =========================================================
    FKWEB BIOMETRIC RECEIVER
